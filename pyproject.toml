@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=42"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gramps_gedcom7"
+version = "0.1.0"
+description = "A GEDCOM 7 support library for Gramps genealogy software"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "David Straub", email = "straub@protonmail.com"},
+]
+dependencies = [
+    "gramps>=6.0.0",
+    "gedcom7",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/DavidMStraub/gramps-gedcom7"
+
+[tool.setuptools]
+packages = ["gramps_gedcom7"]
