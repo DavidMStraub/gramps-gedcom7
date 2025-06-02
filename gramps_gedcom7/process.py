@@ -8,9 +8,10 @@ from .header import handle_header
 from .individual import handle_individual
 from .multimedia import handle_multimedia
 from .repository import handle_repository
-from .shared_note import handle_shared_note
+from .note import handle_shared_note
 from .source import handle_source
 from .submitter import handle_submitter
+from .util import make_handle
 
 
 def process_gedcom_structures(
@@ -37,15 +38,23 @@ def process_gedcom_structures(
 
     handle_header(first_structure, db)
 
+    # Create a map of handles to XREFs
+    xref_handle_map = {}
+    for structure in gedcom_structures:
+        if structure.xref and structure.xref not in xref_handle_map:
+            xref_handle_map[structure.xref] = make_handle()
+
     # Handle the remaining structures (excluding header and trailer)
     objects = []
     for structure in gedcom_structures[1:-1]:
-        objects += handle_structure(structure)
+        objects += handle_structure(structure, xref_handle_map=xref_handle_map) or []
 
     # add_objects_to_databse(objects, db)
 
 
-def handle_structure(structure: g7types.GedcomStructure):
+def handle_structure(
+    structure: g7types.GedcomStructure, xref_handle_map: dict[str, str]
+) -> list | None:
     """Handle a single GEDCOM structure and import it into the Gramps database.
 
     Args:
@@ -55,15 +64,15 @@ def handle_structure(structure: g7types.GedcomStructure):
     if structure.tag == g7const.FAM:
         return handle_family(structure)
     elif structure.tag == g7const.INDI:
-        return handle_individual(structure)
+        return handle_individual(structure, xref_handle_map=xref_handle_map)
     elif structure.tag == g7const.OBJE:
-        return handle_multimedia(structure)
+        return handle_multimedia(structure, xref_handle_map=xref_handle_map)
     elif structure.tag == g7const.REPO:
-        return handle_repository(structure)
+        return handle_repository(structure, xref_handle_map=xref_handle_map)
     elif structure.tag == g7const.SNOTE:
-        return handle_shared_note(structure)
+        return handle_shared_note(structure, xref_handle_map=xref_handle_map)
     elif structure.tag == g7const.SOUR:
-        return handle_source(structure)
+        return handle_source(structure, xref_handle_map=xref_handle_map)
     elif structure.tag == g7const.SUBM:
         return handle_submitter(structure)
 
