@@ -6,18 +6,18 @@ from gedcom7 import const as g7const
 from gedcom7 import grammar as g7grammar
 from gedcom7 import types as g7types
 from gramps.gen.lib import (
-    Event,
+    EventRef,
     EventType,
     MediaRef,
     Name,
     NameType,
     Person,
     Surname,
-    EventRef,
 )
 from gramps.gen.lib.primaryobj import BasicPrimaryObject
 
 from . import util
+from .event import handle_event
 
 GENDER_MAP = {
     "M": Person.MALE,
@@ -129,7 +129,9 @@ def handle_individual(
                 # Consequently, image dimensions need to be known to convert.
                 person.add_media_reference(media_ref)
         elif child.tag in EVENT_TYPE_MAP:
-            event, other_objects = handle_event(child, xref_handle_map=xref_handle_map)
+            event, other_objects = handle_event(
+                child, xref_handle_map=xref_handle_map, event_type_map=EVENT_TYPE_MAP
+            )
             objects.extend(other_objects)
             event_ref = EventRef()
             event_ref.ref = event.handle
@@ -207,32 +209,3 @@ def handle_name(
     if name.is_empty():
         name.set_first_name(personal_name.fullname)
     return name, objects
-
-
-def handle_event(
-    structure: g7types.GedcomStructure, xref_handle_map: dict[str, str]
-) -> tuple[Event, list[BasicPrimaryObject]]:
-    """Convert a GEDCOM event structure to a Gramps Event object.
-
-    Args:
-        structure: The GEDCOM structure containing the event data.
-
-    Returns:
-        A tuple containing the Gramps Event object and a list of additional objects created.
-    """
-    event = Event()
-    event.handle = util.make_handle()
-    objects = []
-    for child in structure.children:
-        if child.tag == g7const.SNOTE and child.pointer != g7grammar.voidptr:
-            try:
-                note_handle = xref_handle_map[child.pointer]
-            except KeyError:
-                raise ValueError(f"Shared note {child.pointer} not found")
-            event.add_note(note_handle)
-        elif child.tag == g7const.NOTE:
-            event, note = util.add_note_to_object(child, event)
-            objects.append(note)
-        # TODO handle media
-        # TODO handle source citation
-    return event, objects

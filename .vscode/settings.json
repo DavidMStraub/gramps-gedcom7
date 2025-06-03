@@ -1,0 +1,5 @@
+{
+    "python.analysis.extraPaths": [
+        "/home/david/Dokumente/Code/gramps/python-gedcom7/"
+    ]
+}

@@ -1,14 +1,15 @@
 """Process GEDCOM structures and import them into the Gramps database."""
 
-from gramps.gen.db import DbWriteBase
-from gedcom7 import types as g7types, const as g7const
+from gedcom7 import const as g7const
+from gedcom7 import types as g7types
+from gramps.gen.db import DbTxn, DbWriteBase
 
 from .family import handle_family
 from .header import handle_header
 from .individual import handle_individual
 from .multimedia import handle_multimedia
-from .repository import handle_repository
 from .note import handle_shared_note
+from .repository import handle_repository
 from .source import handle_source
 from .submitter import handle_submitter
 from .util import make_handle
@@ -49,7 +50,7 @@ def process_gedcom_structures(
     for structure in gedcom_structures[1:-1]:
         objects += handle_structure(structure, xref_handle_map=xref_handle_map) or []
 
-    # add_objects_to_databse(objects, db)
+    add_objects_to_database(objects, db)
 
 
 def handle_structure(
@@ -62,7 +63,7 @@ def handle_structure(
         db: The Gramps database to import the GEDCOM structure into.
     """
     if structure.tag == g7const.FAM:
-        return handle_family(structure)
+        return handle_family(structure, xref_handle_map=xref_handle_map)
     elif structure.tag == g7const.INDI:
         return handle_individual(structure, xref_handle_map=xref_handle_map)
     elif structure.tag == g7const.OBJE:
@@ -78,22 +79,25 @@ def handle_structure(
 
 
 def add_objects_to_database(objects, db):
-    for obj in objects:
-        if obj.__class__.__name__ == "Person":
-            db.add_person(obj, obj.gramps_id)
-        elif obj.__class__.__name__ == "Family":
-            db.add_family(obj, obj.gramps_id)
-        elif obj.__class__.__name__ == "Citation":
-            db.add_citation(obj, obj.gramps_id)
-        elif obj.__class__.__name__ == "Source":
-            db.add_source(obj, obj.gramps_id)
-        elif obj.__class__.__name__ == "Note":
-            db.add_note(obj, obj.gramps_id)
-        elif obj.__class__.__name__ == "Media":
-            db.add_media(obj, obj.gramps_id)
-        elif obj.__class__.__name__ == "Place":
-            db.add_place(obj, obj.gramps_id)
-        elif obj.__class__.__name__ == "Repository":
-            db.add_repository(obj, obj.gramps_id)
-        elif obj.__class__.__name__ == "Tag":
-            db.add_tag(obj, obj.gramps_id)
+    with DbTxn("Add child to family", db) as transaction:
+        for obj in objects:
+            if obj.__class__.__name__ == "Person":
+                db.add_person(obj, transaction)
+            elif obj.__class__.__name__ == "Family":
+                db.add_family(obj, transaction)
+            elif obj.__class__.__name__ == "Event":
+                db.add_event(obj, transaction)
+            elif obj.__class__.__name__ == "Citation":
+                db.add_citation(obj, transaction)
+            elif obj.__class__.__name__ == "Source":
+                db.add_source(obj, transaction)
+            elif obj.__class__.__name__ == "Note":
+                db.add_note(obj, transaction)
+            elif obj.__class__.__name__ == "Media":
+                db.add_media(obj, transaction)
+            elif obj.__class__.__name__ == "Place":
+                db.add_place(obj, transaction)
+            elif obj.__class__.__name__ == "Repository":
+                db.add_repository(obj, transaction)
+            elif obj.__class__.__name__ == "Tag":
+                db.add_tag(obj, transaction)

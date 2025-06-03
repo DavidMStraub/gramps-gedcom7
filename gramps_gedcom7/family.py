@@ -1,18 +1,92 @@
 """Handle GEDCOM family records and import them into the Gramps database."""
 
 from typing import List
-from gramps.gen.lib.primaryobj import BasicPrimaryObject
+
+from gedcom7 import const as g7const
+from gedcom7 import grammar as g7grammar
 from gedcom7 import types as g7types
+from gramps.gen.lib import ChildRef, ChildRefType, Family, MediaRef, EventRef, EventType
+from gramps.gen.lib.primaryobj import BasicPrimaryObject
+
+from . import util
+from .event import handle_event
+
+EVENT_TYPE_MAP = {
+    g7const.ANUL: EventType.ANNULMENT,
+    g7const.CENS: EventType.CENSUS,
+    g7const.DIV: EventType.DIVORCE,
+    g7const.DIVF: EventType.DIV_FILING,
+    g7const.ENGA: EventType.ENGAGEMENT,
+    g7const.MARB: EventType.MARR_BANNS,
+    g7const.MARC: EventType.MARR_CONTR,
+    g7const.MARL: EventType.MARR_LIC,
+    g7const.MARS: EventType.MARR_SETTL,
+    g7const.EVEN: EventType.CUSTOM,
+}
 
 
-def handle_family(structure: g7types.GedcomStructure) -> List[BasicPrimaryObject]:
-    """Handle a family record and convert it to Gramps objects.
-    
+def handle_family(
+    structure: g7types.GedcomStructure, xref_handle_map: dict[str, str]
+) -> List[BasicPrimaryObject]:
+    """Handle an family record and convert it to Gramps objects.
+
     Args:
-        structure: The GEDCOM family structure to handle.
-        
+        structure: The GEDCOM note structure to handle.
+        xref_handle_map: A map of XREFs to Gramps handles.
+
     Returns:
         A list of Gramps objects created from the GEDCOM structure.
     """
-    # TODO: Implement family import
-    return []
+    family = Family()
+    objects = []
+    for child in structure.children:
+        # TODO handle RESN
+        if child.tag == g7const.HUSB and child.pointer != g7grammar.voidptr:
+            person_handle = xref_handle_map.get(child.pointer)
+            if not person_handle:
+                raise ValueError(f"Person {child.pointer} not found")
+            family.set_father_handle(person_handle)
+        elif child.tag == g7const.WIFE and child.pointer != g7grammar.voidptr:
+            person_handle = xref_handle_map.get(child.pointer)
+            if not person_handle:
+                raise ValueError(f"Person {child.pointer} not found")
+            family.set_mother_handle(person_handle)
+        elif child.tag == g7const.CHIL and child.pointer != g7grammar.voidptr:
+            person_handle = xref_handle_map.get(child.pointer)
+            if not person_handle:
+                raise ValueError(f"Child {child.pointer} not found")
+            child_ref = ChildRef()
+            family.add_child_ref(child_ref)
+        elif child.tag == g7const.SNOTE and child.pointer != g7grammar.voidptr:
+            try:
+                note_handle = xref_handle_map[child.pointer]
+            except KeyError:
+                raise ValueError(f"Shared note {child.pointer} not found")
+            family.add_note(note_handle)
+        elif child.tag == g7const.NOTE:
+            family, note = util.add_note_to_object(child, family)
+            objects.append(note)
+        elif child.tag == g7const.OBJE:
+            media_ref = MediaRef()
+            if child.pointer != g7grammar.voidptr:
+                media_handle = xref_handle_map.get(child.pointer)
+                if not media_handle:
+                    raise ValueError(f"Multimedia object {child.pointer} not found")
+                media_ref.ref = media_handle
+                # TODO crop is not implement yet
+                # one complication is that GEDCOM uses pixels, Gramps uses fractions.
+                # Consequently, image dimensions need to be known to convert.
+                family.add_media_reference(media_ref)
+        elif child.tag in EVENT_TYPE_MAP:
+            event, other_objects = handle_event(
+                child, xref_handle_map=xref_handle_map, event_type_map=EVENT_TYPE_MAP
+            )
+            objects.extend(other_objects)
+            event_ref = EventRef()
+            event_ref.ref = event.handle
+            family.add_event_ref(event_ref)
+            objects.append(event)
+    family = util.add_ids(family, structure=structure, xref_handle_map=xref_handle_map)
+    util.set_change_date(structure=structure, obj=family)
+    objects.append(family)
+    return objects
