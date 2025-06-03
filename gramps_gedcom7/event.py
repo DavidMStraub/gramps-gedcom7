@@ -47,8 +47,9 @@ def handle_event(
             objects.append(place)
             objects.extend(other_objects)
         elif child.tag == g7const.DATE:
-            # TODO handle date
-            pass
+            assert isinstance(child.value, g7types.DateValue), "Expected value to be a DateValue object"
+            date = util.gedcom_date_value_to_gramps_date(child.value)
+            event.set_date_object(date)
     return event, objects
 
 

@@ -7,7 +7,7 @@ import uuid
 from gedcom7 import const as g7const
 from gedcom7 import types as g7types
 from gedcom7 import util as g7util
-from gramps.gen.lib import Note, NoteType
+from gramps.gen.lib import Date, Note, NoteType
 
 from .types import BasicPrimaryObjectT, NoteBaseT
 
@@ -134,3 +134,35 @@ def get_next_gramps_id(
     while f"{prefix}{next_id:04d}" in existing_ids:
         next_id += 1
     return f"{prefix}{next_id:04d}"
+
+
+CALENDAR_MAP = {
+    "GREGORIAN": Date.CAL_GREGORIAN,
+    "JULIAN": Date.CAL_JULIAN,
+    "HEBREW": Date.CAL_HEBREW,
+    "FRENCH_R": Date.CAL_FRENCH,
+}
+
+
+def gedcom_date_value_to_gramps_date(
+    date_value: g7types.DateValue,
+) -> Date:
+    """Convert a GEDCOM date value to a Gramps date."""
+    date = Date()
+    if isinstance(date_value, g7types.Date):
+        year = date_value.year or 0
+        month = GEDCOM_MONTHS.get(date_value.month or "", 0)
+        day = date_value.day or 0
+        date.set_yr_mon_day(year=year, month=month, day=day)
+        if date_value.calendar is not None and date_value.calendar in CALENDAR_MAP:
+            date.set_calendar(CALENDAR_MAP[date_value.calendar])
+    elif isinstance(date_value, g7types.DatePeriod):
+        # TODO
+        pass
+    elif isinstance(date_value, g7types.DateApprox):
+        # TODO
+        pass
+    elif isinstance(date_value, g7types.DateRange):
+        # TODO
+        pass
+    return date
