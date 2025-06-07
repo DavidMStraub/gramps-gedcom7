@@ -41,22 +41,28 @@ def handle_family(
     objects = []
     for child in structure.children:
         # TODO handle RESN
+        # TODO handle family attributes
         if child.tag == g7const.HUSB and child.pointer != g7grammar.voidptr:
             person_handle = xref_handle_map.get(child.pointer)
             if not person_handle:
                 raise ValueError(f"Person {child.pointer} not found")
             family.set_father_handle(person_handle)
+            # TODO handle HUSB PHRASE
         elif child.tag == g7const.WIFE and child.pointer != g7grammar.voidptr:
             person_handle = xref_handle_map.get(child.pointer)
             if not person_handle:
                 raise ValueError(f"Person {child.pointer} not found")
             family.set_mother_handle(person_handle)
+            # TODO handle WIFE PHRASE
         elif child.tag == g7const.CHIL and child.pointer != g7grammar.voidptr:
             person_handle = xref_handle_map.get(child.pointer)
             if not person_handle:
                 raise ValueError(f"Child {child.pointer} not found")
             child_ref = ChildRef()
+            child_ref.ref = person_handle
             family.add_child_ref(child_ref)
+            # TODO handle CHIL PHRASE
+        # TODO handle associations
         elif child.tag == g7const.SNOTE and child.pointer != g7grammar.voidptr:
             try:
                 note_handle = xref_handle_map[child.pointer]
@@ -66,6 +72,7 @@ def handle_family(
         elif child.tag == g7const.NOTE:
             family, note = util.add_note_to_object(child, family)
             objects.append(note)
+        # TODO handle source citations
         elif child.tag == g7const.OBJE:
             media_ref = MediaRef()
             if child.pointer != g7grammar.voidptr:
