@@ -25,7 +25,7 @@ jobs:
           pip install .
       - name: Static type check
         run: |
-          mypy gedcom7
+          mypy gramps_gedcom7
       - name: Test with pytest
         run: |
           pytest
