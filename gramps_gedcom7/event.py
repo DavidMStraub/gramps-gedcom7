@@ -78,7 +78,7 @@ def handle_place(
             lat = g7util.get_first_child_with_tag(child, g7const.LATI)
             lon = g7util.get_first_child_with_tag(child, g7const.LONG)
             if lat is not None and lon is not None:
-                if not isinstance(lat, str) or not isinstance(lon, str):
+                if not isinstance(lat.value, str) or not isinstance(lon.value, str):
                     raise ValueError("Latitude and longitude must be strings")
                 place.set_latitude(lat.value)
                 place.set_longitude(lon.value)

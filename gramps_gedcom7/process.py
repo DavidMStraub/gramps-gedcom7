@@ -78,6 +78,7 @@ def handle_structure(
         return handle_source(structure, xref_handle_map=xref_handle_map)
     elif structure.tag == g7const.SUBM:
         return handle_submitter(structure)
+    return None
 
 
 def add_objects_to_database(objects, db):
