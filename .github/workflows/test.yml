@@ -25,6 +25,7 @@ jobs:
           python -m pip install --upgrade pip wheel
           pip install pytest mypy
           pip install .
+          pip install gramps[all]
       - name: Static type check
         run: |
           mypy --install-types --non-interactive --ignore-missing-imports gramps_gedcom7
