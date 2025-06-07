@@ -1,5 +1,7 @@
 """Process GEDCOM structures and import them into the Gramps database."""
 
+from __future__ import annotations
+
 from gedcom7 import const as g7const
 from gedcom7 import types as g7types
 from gramps.gen.db import DbTxn, DbWriteBase
