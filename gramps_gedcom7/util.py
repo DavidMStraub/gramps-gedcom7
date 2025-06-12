@@ -9,7 +9,7 @@ from gedcom7 import types as g7types
 from gedcom7 import util as g7util
 from gramps.gen.lib import Date, Note, NoteType
 
-from .types import BasicPrimaryObjectT, NoteBaseT
+from .types import BasicPrimaryObject, BasicPrimaryObjectT, NoteBaseT
 
 
 def make_handle() -> str:
@@ -168,3 +168,16 @@ def gedcom_date_value_to_gramps_date(
         # TODO
         pass
     return date
+
+
+def set_privacy_on_object(
+    resn_structure: g7types.GedcomStructure, obj: BasicPrimaryObject
+) -> None:
+    """Set the privacy on a Gramps object based on a RESN structure."""
+    assert resn_structure.tag == g7const.RESN, "Not a RESN structure"
+    value = resn_structure.value
+    assert isinstance(value, list), "Expected RESN value to be a list"
+    if "CONFIDENTIAL" or "PRIVACY" in value:
+        obj.set_privacy(True)
+    else:
+        obj.set_privacy(False)

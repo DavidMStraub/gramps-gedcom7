@@ -30,11 +30,13 @@ def handle_event(
     event.handle = util.make_handle()
     objects = []
     for child in structure.children:
+        if child.tag == g7const.RESN:
+            util.set_privacy_on_object(resn_structure=child, obj=event)
         # TODO handle association
         # TODO handle UID
         # TODO handle address
-        # TODO handle PHON, EMAIL, FAX, WWW, AGNC, RELI, CAUS, RESN, 
-        if child.tag == g7const.SNOTE and child.pointer != g7grammar.voidptr:
+        # TODO handle PHON, EMAIL, FAX, WWW, AGNC, RELI, CAUS
+        elif child.tag == g7const.SNOTE and child.pointer != g7grammar.voidptr:
             try:
                 note_handle = xref_handle_map[child.pointer]
             except KeyError:

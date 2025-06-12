@@ -26,7 +26,9 @@ def handle_multimedia(
     media = Media()
     objects = []
     for child in structure.children:
-        if child.tag == g7const.SNOTE:
+        if child.tag == g7const.RESN:
+            util.set_privacy_on_object(resn_structure=child, obj=media)
+        elif child.tag == g7const.SNOTE:
             try:
                 note_handle = xref_handle_map[child.pointer]
             except KeyError:
@@ -35,7 +37,6 @@ def handle_multimedia(
         elif child.tag == g7const.NOTE:
             media, note = util.add_note_to_object(child, media)
             objects.append(note)
-    # TODO handle RESN
     # TODO handle multiple files
     file_structure = g7util.get_first_child_with_tag(structure, g7const.FILE)
     assert file_structure is not None, "Multimedia structure must have a FILE tag"

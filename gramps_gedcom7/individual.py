@@ -75,8 +75,9 @@ def handle_individual(
     person = Person()
     objects = []
     for child in structure.children:
-        # TODO handle RESN
-        if child.tag == g7const.SEX:
+        if child.tag == g7const.RESN:
+            util.set_privacy_on_object(resn_structure=child, obj=person)
+        elif child.tag == g7const.SEX:
             assert isinstance(child.value, str), "Expected SEX to be a string"
             try:
                 gender = GENDER_MAP[child.value]
