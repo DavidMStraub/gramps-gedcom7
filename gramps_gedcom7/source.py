@@ -43,6 +43,7 @@ def handle_source(
     source = Source()
     objects = []
     for child in structure.children:
+        # TODO handle event data
         if child.tag == g7const.TITL:
             # set source title
             if child.value is not None:
@@ -91,6 +92,7 @@ def handle_source(
                         media_type.value, SourceMediaType.CUSTOM
                     )
                     repo_ref.set_media_type(SourceMediaType(gramps_source_media_type))
+                # TODO handle PHRASE
             source.add_repo_reference(repo_ref)
         elif child.tag == g7const.SNOTE:
             try:
@@ -111,6 +113,7 @@ def handle_source(
             # one complication is that GEDCOM uses pixels, Gramps uses fractions.
             # Consequently, image dimensions need to be known to convert.
             source.add_media_reference(media_ref)
+        # TODO handle identifier
     source = util.add_ids(source, structure=structure, xref_handle_map=xref_handle_map)
     util.set_change_date(structure=structure, obj=source)
     objects.append(source)

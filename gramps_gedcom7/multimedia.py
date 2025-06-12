@@ -48,6 +48,8 @@ def handle_multimedia(
     ), "Expected FORM value to be a MediaType"
     media.set_mime_type(form_structure.value.media_type)
     media = util.add_ids(media, structure=structure, xref_handle_map=xref_handle_map)
+    # TODO handle identifier
+    # TODO handle source citation
     util.set_change_date(structure=structure, obj=media)
     objects.append(media)
     return objects

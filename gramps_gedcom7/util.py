@@ -107,6 +107,8 @@ def structure_to_note(structure: g7types.GedcomStructure) -> Note:
                 continue
             assert isinstance(child.value, str), "Expected value to be a string"
             note.append("\n\n" + child.value)
+        # TODO handle identifier
+        # TODO handle source citation
     return note
 
 

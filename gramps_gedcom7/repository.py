@@ -48,6 +48,9 @@ def handle_repository(
         elif child.tag == g7const.NOTE:
             repository, note = util.add_note_to_object(child, repository)
             objects.append(note)
+        # TODO handle PHON
+        # TODO handle address
+        # TODO handle identifier
     repository = util.add_ids(
         repository, structure=structure, xref_handle_map=xref_handle_map
     )
