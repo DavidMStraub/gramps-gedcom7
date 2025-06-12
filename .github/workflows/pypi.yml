@@ -6,10 +6,16 @@ on:
 
 jobs:
   build-and-publish:
+    name: Upload release to PyPI
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: [3.11]
+    environment:
+      name: pypi
+      url: https://pypi.org/p/gramps-gedcom7
+    permissions:
+      id-token: write
 
     steps:
       - uses: actions/checkout@v2
