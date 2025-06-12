@@ -30,6 +30,10 @@ def handle_event(
     event.handle = util.make_handle()
     objects = []
     for child in structure.children:
+        # TODO handle association
+        # TODO handle UID
+        # TODO handle address
+        # TODO handle PHON, EMAIL, FAX, WWW, AGNC, RELI, CAUS, RESN, 
         if child.tag == g7const.SNOTE and child.pointer != g7grammar.voidptr:
             try:
                 note_handle = xref_handle_map[child.pointer]
@@ -58,6 +62,7 @@ def handle_event(
             ), "Expected value to be a date-related object"
             date = util.gedcom_date_value_to_gramps_date(child.value)
             event.set_date_object(date)
+            # TODO handle date PHRASE, time
     return event, objects
 
 
@@ -107,4 +112,5 @@ def handle_place(
             place, note = util.add_note_to_object(child, place)
             # Add the note to the list of objects to be returned
             objects.append(note)
+        # TODO handle EXID
     return place, objects
