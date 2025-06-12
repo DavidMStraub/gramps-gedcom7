@@ -97,17 +97,20 @@ def handle_individual(
         # TODO handle ANCI
         # TODO handle DESI
         # TODO handle source citations
+        # TODO handle indentifier
         elif child.tag == g7const.FAMC and child.pointer != g7grammar.voidptr:
             family_handle = xref_handle_map.get(child.pointer)
             if not family_handle:
                 raise ValueError(f"Family {child.pointer} not found")
             person.add_parent_family_handle(family_handle)
             # TODO child ref type should be handled in the family!
+            # TODO handle FAMC PHRASE
         elif child.tag == g7const.FAMS and child.pointer != g7grammar.voidptr:
             family_handle = xref_handle_map.get(child.pointer)
             if not family_handle:
                 raise ValueError(f"Family {child.pointer} not found")
             person.add_family_handle(family_handle)
+            # TODO handle FAMS PHRASE
         elif child.tag == g7const.SNOTE and child.pointer != g7grammar.voidptr:
             try:
                 note_handle = xref_handle_map[child.pointer]

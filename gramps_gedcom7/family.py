@@ -73,6 +73,7 @@ def handle_family(
             family, note = util.add_note_to_object(child, family)
             objects.append(note)
         # TODO handle source citations
+        # TODO handle indentifier
         elif child.tag == g7const.OBJE:
             media_ref = MediaRef()
             if child.pointer != g7grammar.voidptr:
