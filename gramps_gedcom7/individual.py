@@ -18,6 +18,7 @@ from gramps.gen.lib.primaryobj import BasicPrimaryObject
 
 from . import util
 from .event import handle_event
+from .citation import handle_citation
 
 GENDER_MAP = {
     "M": Person.MALE,
@@ -97,7 +98,6 @@ def handle_individual(
         # TODO handle ALIA
         # TODO handle ANCI
         # TODO handle DESI
-        # TODO handle source citations
         # TODO handle indentifier
         elif child.tag == g7const.FAMC and child.pointer != g7grammar.voidptr:
             family_handle = xref_handle_map.get(child.pointer)
@@ -141,6 +141,13 @@ def handle_individual(
             event_ref.ref = event.handle
             person.add_event_ref(event_ref)
             objects.append(event)
+        elif child.tag == g7const.SOUR:
+            citation, other_objects = handle_citation(
+                child, xref_handle_map=xref_handle_map
+            )
+            objects.extend(other_objects)
+            person.add_citation(citation.handle)
+            objects.append(citation)
     person = util.add_ids(person, structure=structure, xref_handle_map=xref_handle_map)
     util.set_change_date(structure=structure, obj=person)
     objects.append(person)
@@ -199,7 +206,6 @@ def handle_name(
         elif child.tag == g7const.NOTE:
             name, note = util.add_note_to_object(child, name)
             objects.append(note)
-        # TODO handle source citation
     # if name parts are not given, use the personal name parts
     if not name.first_name and personal_name.given:
         name.set_first_name(personal_name.given)
