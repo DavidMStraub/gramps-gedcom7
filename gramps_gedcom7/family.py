@@ -9,6 +9,7 @@ from gramps.gen.lib import ChildRef, ChildRefType, Family, MediaRef, EventRef, E
 from gramps.gen.lib.primaryobj import BasicPrimaryObject
 
 from . import util
+from .citation import handle_citation
 from .event import handle_event
 
 EVENT_TYPE_MAP = {
@@ -73,7 +74,13 @@ def handle_family(
         elif child.tag == g7const.NOTE:
             family, note = util.add_note_to_object(child, family)
             objects.append(note)
-        # TODO handle source citations
+        elif child.tag == g7const.SOUR:
+            citation, other_objects = handle_citation(
+                child, xref_handle_map=xref_handle_map
+            )
+            objects.extend(other_objects)
+            family.add_citation(citation.handle)
+            objects.append(citation)
         # TODO handle indentifier
         elif child.tag == g7const.OBJE:
             family = util.add_media_ref_to_object(child, family, xref_handle_map)

@@ -9,6 +9,7 @@ from gramps.gen.lib import Media
 from gramps.gen.lib.primaryobj import BasicPrimaryObject
 
 from . import util
+from .citation import handle_citation
 
 
 def handle_multimedia(
@@ -37,6 +38,13 @@ def handle_multimedia(
         elif child.tag == g7const.NOTE:
             media, note = util.add_note_to_object(child, media)
             objects.append(note)
+        elif child.tag == g7const.SOUR:
+            citation, other_objects = handle_citation(
+                child, xref_handle_map=xref_handle_map
+            )
+            objects.extend(other_objects)
+            media.add_citation(citation.handle)
+            objects.append(citation)
     # TODO handle multiple files
     file_structure = g7util.get_first_child_with_tag(structure, g7const.FILE)
     assert file_structure is not None, "Multimedia structure must have a FILE tag"
@@ -50,7 +58,6 @@ def handle_multimedia(
     media.set_mime_type(form_structure.value.media_type)
     media = util.add_ids(media, structure=structure, xref_handle_map=xref_handle_map)
     # TODO handle identifier
-    # TODO handle source citation
     util.set_change_date(structure=structure, obj=media)
     objects.append(media)
     return objects

@@ -29,6 +29,7 @@ def handle_citation(
         A list of Gramps objects created from the GEDCOM structure.
     """
     citation = Citation()
+    citation.handle = util.make_handle()
     objects = []
 
     for child in structure.children:

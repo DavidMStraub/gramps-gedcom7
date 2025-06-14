@@ -8,6 +8,7 @@ from gramps.gen.lib import Event, EventType, Place, PlaceName
 from gramps.gen.lib.primaryobj import BasicPrimaryObject
 
 from . import util
+from .citation import handle_citation
 
 
 def handle_event(
@@ -46,7 +47,13 @@ def handle_event(
             event, note = util.add_note_to_object(child, event)
             objects.append(note)
         # TODO handle media
-        # TODO handle source citation
+        elif child.tag == g7const.SOUR:
+            citation, other_objects = handle_citation(
+                child, xref_handle_map=xref_handle_map
+            )
+            objects.extend(other_objects)
+            event.add_citation(citation.handle)
+            objects.append(citation)
         elif child.tag == g7const.PLAC:
             place, other_objects = handle_place(child, xref_handle_map)
             event.set_place_handle(place.handle)
