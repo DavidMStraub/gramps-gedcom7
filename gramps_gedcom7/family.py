@@ -76,16 +76,7 @@ def handle_family(
         # TODO handle source citations
         # TODO handle indentifier
         elif child.tag == g7const.OBJE:
-            media_ref = MediaRef()
-            if child.pointer != g7grammar.voidptr:
-                media_handle = xref_handle_map.get(child.pointer)
-                if not media_handle:
-                    raise ValueError(f"Multimedia object {child.pointer} not found")
-                media_ref.ref = media_handle
-                # TODO crop is not implement yet
-                # one complication is that GEDCOM uses pixels, Gramps uses fractions.
-                # Consequently, image dimensions need to be known to convert.
-                family.add_media_reference(media_ref)
+            family = util.add_media_ref_to_object(child, family, xref_handle_map)
         elif child.tag in EVENT_TYPE_MAP:
             event, other_objects = handle_event(
                 child, xref_handle_map=xref_handle_map, event_type_map=EVENT_TYPE_MAP

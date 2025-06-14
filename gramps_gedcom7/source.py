@@ -104,15 +104,7 @@ def handle_source(
             source, note = util.add_note_to_object(child, source)
             objects.append(note)
         elif child.tag == g7const.OBJE:
-            media_ref = MediaRef()
-            media_handle = xref_handle_map.get(child.pointer)
-            if not media_handle:
-                raise ValueError(f"Multimedia object {child.pointer} not found")
-            media_ref.ref = media_handle
-            # TODO crop is not implement yet
-            # one complication is that GEDCOM uses pixels, Gramps uses fractions.
-            # Consequently, image dimensions need to be known to convert.
-            source.add_media_reference(media_ref)
+            source = util.add_media_ref_to_object(child, source, xref_handle_map)
         # TODO handle identifier
     source = util.add_ids(source, structure=structure, xref_handle_map=xref_handle_map)
     util.set_change_date(structure=structure, obj=source)

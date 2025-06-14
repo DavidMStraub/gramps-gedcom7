@@ -15,6 +15,7 @@ CONFIDENCE_MAP = {
     "3": Citation.CONF_HIGH,
 }
 
+
 def handle_citation(
     structure: g7types.GedcomStructure, xref_handle_map: dict[str, str]
 ) -> tuple[Citation, List[BasicPrimaryObject]]:
@@ -51,14 +52,6 @@ def handle_citation(
             citation, note = util.add_note_to_object(child, citation)
             objects.append(note)
         elif child.tag == g7const.OBJE:
-            media_ref = MediaRef()
-            media_handle = xref_handle_map.get(child.pointer)
-            if not media_handle:
-                raise ValueError(f"Multimedia object {child.pointer} not found")
-            media_ref.ref = media_handle
-            # TODO crop is not implemented yet
-            # one complication is that GEDCOM uses pixels, Gramps uses fractions.
-            # Consequently, image dimensions need to be known to convert.
-            citation.add_media_reference(media_ref)
+            citation = util.add_media_ref_to_object(child, citation, xref_handle_map)
         # TODO handle DATA and EVEN
     return citation, objects

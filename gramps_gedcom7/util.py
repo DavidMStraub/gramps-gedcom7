@@ -5,11 +5,12 @@ from __future__ import annotations
 import uuid
 
 from gedcom7 import const as g7const
+from gedcom7 import grammar as g7grammar
 from gedcom7 import types as g7types
 from gedcom7 import util as g7util
-from gramps.gen.lib import Date, Note, NoteType
+from gramps.gen.lib import Date, Note, NoteType, MediaRef
 
-from .types import BasicPrimaryObject, BasicPrimaryObjectT, NoteBaseT
+from .types import BasicPrimaryObject, BasicPrimaryObjectT, MediaBaseT, NoteBaseT
 
 
 def make_handle() -> str:
@@ -181,3 +182,25 @@ def set_privacy_on_object(
         obj.set_privacy(True)
     else:
         obj.set_privacy(False)
+
+def add_media_ref_to_object(
+    multimedia_link_structure: g7types.GedcomStructure,
+    obj: MediaBaseT,
+    xref_handle_map: dict[str, str],
+) -> MediaBaseT:
+    """Add a media reference to a Gramps object."""
+    pointer = multimedia_link_structure.pointer
+    if pointer == g7grammar.voidptr:
+        # no media reference, return the object as is
+        return obj
+    media_ref = MediaRef()
+    media_handle = xref_handle_map.get(pointer)
+    if not media_handle:
+        raise ValueError(f"Multimedia object {pointer} not found")
+    media_ref.ref = media_handle
+    # TODO implement CROP
+    # one complication is that GEDCOM uses pixels, Gramps uses fractions.
+    # Consequently, image dimensions need to be known to convert.
+    # TODO handle TITLE
+    obj.add_media_reference(media_ref)
+    return obj
