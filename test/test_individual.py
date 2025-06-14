@@ -2,7 +2,7 @@ import pytest
 from util import import_to_memory
 
 from gramps.gen.db import DbWriteBase
-from gramps.gen.lib import Citation, Person
+from gramps.gen.lib import Citation, Person, Source
 
 from gedcom7 import cast as g7cast
 from gedcom7 import const as g7const
@@ -88,3 +88,25 @@ def test_citation_without_source():
     citation_handle = person.citation_list[0]
     citation = db.get_citation_from_handle(citation_handle)
     assert citation.gramps_id
+
+
+def test_citation_with_source():
+    # Create a source reference with valid xref
+    children = [
+        g7types.GedcomStructure(tag=g7const.SOUR, pointer="@S1@", text="", xref="")
+    ]
+    individual = get_individual(children)
+    # Create a source structure with matching xref
+    source = g7types.GedcomStructure(tag=g7const.SOUR, pointer="", text="", xref="@S1@")
+    db: DbWriteBase = import_to_memory([individual, source])
+    assert db.get_number_of_citations() == 1
+    assert db.get_number_of_sources() == 1
+    person = db.get_person_from_gramps_id(GRAMPS_ID)
+    assert isinstance(person, Person)
+    assert len(person.citation_list) == 1
+    citation_handle = person.citation_list[0]
+    citation = db.get_citation_from_handle(citation_handle)
+    assert isinstance(citation, Citation)
+    assert citation.gramps_id
+    gramps_source: Source = db.get_source_from_gramps_id("S1")
+    assert citation.source_handle == gramps_source.handle
