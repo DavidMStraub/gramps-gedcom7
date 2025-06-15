@@ -56,6 +56,11 @@ def handle_multimedia(
         form_structure.value, g7types.MediaType
     ), "Expected FORM value to be a MediaType"
     media.set_mime_type(form_structure.value.media_type)
+    title = g7util.get_first_child_with_tag(file_structure, g7const.TITL)
+    if title is not None:
+        assert isinstance(title.value, str), "Expected TITL value to be a string"
+        media.set_description(title.value)
+    # TODO handle MEDIA & PHRASE
     media = util.add_ids(media, structure=structure, xref_handle_map=xref_handle_map)
     # TODO handle identifier
     util.set_change_date(structure=structure, obj=media)
