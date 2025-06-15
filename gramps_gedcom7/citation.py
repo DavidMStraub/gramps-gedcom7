@@ -2,6 +2,7 @@
 
 from typing import List
 from gedcom7 import const as g7const
+from gedcom7 import grammar as g7grammar
 from gedcom7 import types as g7types
 from gramps.gen.lib import Citation, MediaRef
 from gramps.gen.lib.primaryobj import BasicPrimaryObject
@@ -19,7 +20,7 @@ CONFIDENCE_MAP = {
 def handle_citation(
     structure: g7types.GedcomStructure, xref_handle_map: dict[str, str]
 ) -> tuple[Citation, List[BasicPrimaryObject]]:
-    """Handle a citation record and convert it to Gramps objects.
+    """Handle a source citation record and convert it to Gramps objects.
 
     Args:
         structure: The GEDCOM citation structure to handle.
@@ -30,8 +31,9 @@ def handle_citation(
     """
     citation = Citation()
     citation.handle = util.make_handle()
+    if structure.pointer != g7grammar.voidptr and structure.pointer in xref_handle_map:
+        citation.source_handle = xref_handle_map.get(structure.pointer)
     objects = []
-
     for child in structure.children:
         if child.tag == g7const.PAGE:
             if child.value is not None:
