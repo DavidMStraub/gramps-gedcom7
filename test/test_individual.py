@@ -1,5 +1,6 @@
+"""Tests for GEDCOM individual record handling."""
+
 import pytest
-from gedcom7 import cast as g7cast
 from gedcom7 import const as g7const
 from gedcom7 import types as g7types
 from gramps.gen.db import DbWriteBase
@@ -13,7 +14,9 @@ from gramps.gen.lib import (
     Person,
     Source,
 )
+
 from util import import_to_memory
+
 
 GRAMPS_ID = "I1"
 
@@ -23,23 +26,9 @@ def get_individual(
 ) -> g7types.GedcomStructure:
 
     xref = f"@{GRAMPS_ID}@"
-    individual = g7types.GedcomStructure(
-        tag=g7const.INDI, pointer="", text="", xref=xref
+    return g7types.GedcomStructure(
+        tag=g7const.INDI, pointer="", text="", xref=xref, children=children_structures
     )
-    if not children_structures:
-        return individual
-    individual.children = children_structures
-    _recursively_add_value_and_parent(individual)
-    return individual
-
-
-def _recursively_add_value_and_parent(structure: g7types.GedcomStructure) -> None:
-    """Recursively add value and parent to all children of the structure."""
-    structure.value = g7cast.cast_value(text=structure.text, type_id=structure.type_id)
-    for child in structure.children:
-        child.parent = structure
-        child.value = g7cast.cast_value(text=child.text, type_id=child.type_id)
-        _recursively_add_value_and_parent(child)
 
 
 def test_individual_minimal():
@@ -157,7 +146,6 @@ def test_name_with_parts():
     givn = g7types.GedcomStructure(
         tag=g7const.GIVN, pointer="", text="Jonathan", xref=""
     )
-    givn.value = "Jonathan"
     givn.parent = name_structure
 
     surn = g7types.GedcomStructure(
@@ -166,19 +154,15 @@ def test_name_with_parts():
     surn.parent = name_structure
 
     npfx = g7types.GedcomStructure(tag=g7const.NPFX, pointer="", text="Dr.", xref="")
-    npfx.value = "Dr."
     npfx.parent = name_structure
 
     nsfx = g7types.GedcomStructure(tag=g7const.NSFX, pointer="", text="Jr.", xref="")
-    nsfx.value = "Jr."
     nsfx.parent = name_structure
 
     nick = g7types.GedcomStructure(tag=g7const.NICK, pointer="", text="Jon", xref="")
-    nick.value = "Jon"
     nick.parent = name_structure
 
     spfx = g7types.GedcomStructure(tag=g7const.SPFX, pointer="", text="van", xref="")
-    spfx.value = "van"
     spfx.parent = name_structure
 
     name_structure.children = [givn, surn, npfx, nsfx, nick, spfx]
@@ -212,7 +196,6 @@ def test_name_type():
         type_struct = g7types.GedcomStructure(
             tag=g7const.TYPE, pointer="", text=name_type, xref=""
         )
-        type_struct.value = name_type
         type_struct.parent = name_structure
         name_structure.children = [type_struct]
 
@@ -227,7 +210,6 @@ def test_note_on_person():
     note_struct = g7types.GedcomStructure(
         tag=g7const.NOTE, pointer="", text="Test note text", xref=""
     )
-    note_struct.value = "Test note text"
 
     individual = get_individual([note_struct])
     db: DbWriteBase = import_to_memory([individual])
@@ -246,7 +228,6 @@ def test_shared_note_on_person():
     shared_note = g7types.GedcomStructure(
         tag=g7const.SNOTE, pointer="", text="Shared note text", xref=shared_note_xref
     )
-    _recursively_add_value_and_parent(shared_note)
     note_ref = g7types.GedcomStructure(
         tag=g7const.SNOTE, pointer=shared_note_xref, text="", xref=""
     )
@@ -270,7 +251,6 @@ def test_note_on_name():
     note_struct = g7types.GedcomStructure(
         tag=g7const.NOTE, pointer="", text="Name note", xref=""
     )
-    note_struct.value = "Name note"
     note_struct.parent = name_structure
     name_structure.children = [note_struct]
 
@@ -314,7 +294,6 @@ def test_media_reference():
             ),
         ],
     )
-    _recursively_add_value_and_parent(media_obj)
 
     media_ref = g7types.GedcomStructure(
         tag=g7const.OBJE, pointer=media_xref, text="", xref=""
