@@ -48,6 +48,13 @@ GEDCOM_MONTHS = {
     "DEC": 12,
 }
 
+# map from GEDCOM date approx qualifiers to Gramps date quality and modifier
+DATE_QUALITY_MODIFIER_MAP = {
+    "ABT": (Date.QUAL_NONE, Date.MOD_ABOUT),
+    "CAL": (Date.QUAL_CALCULATED, Date.MOD_NONE),
+    "EST": (Date.QUAL_ESTIMATED, Date.MOD_NONE),
+}
+
 
 def set_change_date(
     structure: g7types.GedcomStructure,
@@ -163,8 +170,21 @@ def gedcom_date_value_to_gramps_date(
         # TODO
         pass
     elif isinstance(date_value, g7types.DateApprox):
-        # TODO
-        pass
+        year = date_value.date.year or 0
+        month = GEDCOM_MONTHS.get(date_value.date.month or "", 0)
+        day = date_value.date.day or 0
+        date.set_yr_mon_day(year=year, month=month, day=day)
+        if (
+            date_value.date.calendar is not None
+            and date_value.date.calendar in CALENDAR_MAP
+        ):
+            date.set_calendar(CALENDAR_MAP[date_value.date.calendar])
+        if date_value.approx is not None:
+            quality, modifier = DATE_QUALITY_MODIFIER_MAP.get(
+                date_value.approx, (Date.QUAL_NONE, Date.MOD_NONE)
+            )
+            date.set_quality(quality)
+            date.set_modifier(modifier)
     elif isinstance(date_value, g7types.DateRange):
         # TODO
         pass
@@ -182,6 +202,7 @@ def set_privacy_on_object(
         obj.set_privacy(True)
     else:
         obj.set_privacy(False)
+
 
 def add_media_ref_to_object(
     multimedia_link_structure: g7types.GedcomStructure,
