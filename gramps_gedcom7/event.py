@@ -112,6 +112,7 @@ def handle_place(
             alt_name.set_value(child.value)
             if lang := g7util.get_first_child_with_tag(child, g7const.LANG):
                 alt_name.set_language(lang.value)
+            place.add_alternative_name(alt_name)
         elif child.tag == g7const.SNOTE and child.pointer != g7grammar.voidptr:
             try:
                 note_handle = xref_handle_map[child.pointer]
