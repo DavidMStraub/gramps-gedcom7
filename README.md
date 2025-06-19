@@ -2,6 +2,10 @@
 
 A GEDCOM 7 import library for Gramps.
 
+## Project Status
+
+The project is currently in active development. The implmentation of GEDCOM 7 import is almost complete. You can search for the `TODO` comments in the code to see what is still missing.
+
 ## Installation
 
 To install the library, simply run:
