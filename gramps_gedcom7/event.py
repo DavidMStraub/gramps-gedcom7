@@ -34,7 +34,6 @@ def handle_event(
         if child.tag == g7const.RESN:
             util.set_privacy_on_object(resn_structure=child, obj=event)
         # TODO handle association
-        # TODO handle UID
         # TODO handle address
         # TODO handle PHON, EMAIL, FAX, WWW, AGNC, RELI, CAUS
         elif child.tag == g7const.SNOTE and child.pointer != g7grammar.voidptr:
@@ -72,6 +71,8 @@ def handle_event(
             date = util.gedcom_date_value_to_gramps_date(child.value)
             event.set_date_object(date)
             # TODO handle date PHRASE, time
+        elif child.tag == g7const.UID:
+            util.add_uid_to_object(child, event)
     return event, objects
 
 
