@@ -34,16 +34,3 @@ def import_gedcom(input_file: str | Path | TextIO | BinaryIO, db: DbWriteBase) -
 
     gedcom_structures = gedcom7.loads(gedcom_data)
     process.process_gedcom_structures(gedcom_structures, db)
-
-
-def import_gedcom_gramps(database: DbWriteBase, filename: str, user: UserBase) -> None:
-    """Import a GEDCOM file into a Gramps database with user context.
-
-    This function has the right signature to be used as a Gramps import plugin.
-
-    Args:
-        database: The Gramps database to import the GEDCOM file into.
-        filename: The path to the GEDCOM file to import.
-        user: The user context for the import operation.
-    """
-    import_gedcom(filename, database)
