@@ -31,7 +31,12 @@ def handle_event(
     event.handle = util.make_handle()
     objects = []
     for child in structure.children:
-        if child.tag == g7const.RESN:
+        if child.tag == g7const.TYPE:
+            if event.get_type() == EventType.CUSTOM:
+                # If the event type is custom, set it to the value from the TYPE tag
+                assert isinstance(child.value, str), "Expected TYPE value to be a string"
+                event.set_type(EventType(child.value))
+        elif child.tag == g7const.RESN:
             util.set_privacy_on_object(resn_structure=child, obj=event)
         # TODO handle association
         # TODO handle address

@@ -76,10 +76,14 @@ def test_importer_maximal70():
     assert isinstance(marriage_place, Place)
     assert marriage_place.name.value == "Place"
     assert marriage.get_privacy()
+    
+    # event notes
     assert len(marriage.note_list) == 1
     marriage_note = db.get_note_from_handle(marriage.note_list[0])
     assert isinstance(marriage_note, Note)
     assert marriage_note.gramps_id == "N1"
+
+    # event source citations
     assert len(marriage.citation_list) == 2
     marriage_citation1 = db.get_citation_from_handle(marriage.citation_list[0])
     assert isinstance(marriage_citation1, Citation)
@@ -92,6 +96,8 @@ def test_importer_maximal70():
     assert marriage_source.gramps_id == "S1"
     assert marriage_citation1.page == "1"
     assert marriage_citation2.page == "2"
+    
+    # event media
     assert len(marriage.media_list) == 2
     marriage_media1 = db.get_media_from_handle(marriage.media_list[0].ref)
     assert isinstance(marriage_media1, Media)
@@ -99,3 +105,16 @@ def test_importer_maximal70():
     assert isinstance(marriage_media2, Media)
     assert marriage_media1.gramps_id == "O1"
     assert marriage_media2.gramps_id == "O2"
+
+    # event UID
+    assert len(marriage.attribute_list) == 2
+    assert marriage.attribute_list[0].get_type() == "UID"
+    assert marriage.attribute_list[0].get_value() == "bbcc0025-34cb-4542-8cfb-45ba201c9c2c"
+    assert marriage.attribute_list[1].get_type() == "UID"
+    assert marriage.attribute_list[1].get_value() == "9ead4205-5bad-4c05-91c1-0aecd3f5127d"
+
+    # custom event (line 123)
+    event = db.get_event_from_handle(family.event_ref_list[10].ref)
+    assert isinstance(event, Event)
+    assert event.get_type().value == EventType.CUSTOM
+    assert event.get_type().string == "Event type"
