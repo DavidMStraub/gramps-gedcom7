@@ -118,3 +118,64 @@ def test_importer_maximal70():
     assert isinstance(event, Event)
     assert event.get_type().value == EventType.CUSTOM
     assert event.get_type().string == "Event type"
+
+    # husband
+    father = db.get_person_from_handle(family.father_handle)
+    assert isinstance(father, Person)
+    assert father.gramps_id == "I1"
+
+    # wife
+    mother = db.get_person_from_handle(family.mother_handle)
+    assert isinstance(mother, Person)
+    assert mother.gramps_id == "I2"
+
+    # children
+    assert len(family.child_ref_list) == 1
+    child1 = db.get_person_from_handle(family.child_ref_list[0].ref)
+    assert isinstance(child1, Person)
+    assert child1.gramps_id == "I4"
+
+    # family UID
+    assert len(family.attribute_list) == 2
+    assert family.attribute_list[0].get_type() == "UID"
+    assert family.attribute_list[0].get_value() == "bbcc0025-34cb-4542-8cfb-45ba201c9c2c"
+    assert family.attribute_list[1].get_type() == "UID"
+    assert family.attribute_list[1].get_value() == "9ead4205-5bad-4c05-91c1-0aecd3f5127d"
+
+    # family note
+    assert len(family.note_list) == 2
+    family_note1 = db.get_note_from_handle(family.note_list[0])
+    assert isinstance(family_note1, Note)
+    assert family_note1.text.string == "Note text"
+    family_note2 = db.get_note_from_handle(family.note_list[1])
+    assert isinstance(family_note2, Note)
+    assert family_note2.gramps_id == "N1"
+
+    # family source citations (line 209ff)
+    assert len(family.citation_list) == 2
+    
+    family_citation1 = db.get_citation_from_handle(family.citation_list[0])
+    assert isinstance(family_citation1, Citation)
+    family_source1 = db.get_source_from_handle(family_citation1.source_handle)
+    assert isinstance(family_source1, Source)
+    assert family_source1.gramps_id == "S1"
+    assert family_citation1.page == "1"
+    assert family_citation1.confidence == 1
+    
+    family_citation2 = db.get_citation_from_handle(family.citation_list[1])
+    assert isinstance(family_citation2, Citation)
+    family_source2 = db.get_source_from_handle(family_citation2.source_handle)
+    assert isinstance(family_source2, Source)
+    assert family_source2.gramps_id == "S2"
+    assert family_citation2.page == "2"
+    assert family_citation2.confidence == 2
+
+    # family media
+
+    assert len(family.media_list) == 2
+    family_media1 = db.get_media_from_handle(family.media_list[0].ref)
+    assert isinstance(family_media1, Media)
+    family_media2 = db.get_media_from_handle(family.media_list[1].ref)
+    assert isinstance(family_media2, Media)
+    assert family_media1.gramps_id == "O1"
+    assert family_media2.gramps_id == "O2"
