@@ -1,7 +1,7 @@
 """Script to convert a GEDCOM file to a file in Gramps XML format."""
 
 import click
-from gramps_gedcom7.importer import import_gedcom_gramps
+from gramps_gedcom7.importer import import_gedcom
 from gramps.gen.db.utils import make_database
 from gramps.gen.db import DbWriteBase
 from gramps.cli.user import User
@@ -26,7 +26,7 @@ def main(input_file: str, output_file: str) -> None:
     db: DbWriteBase = make_database("sqlite")
     db.load(":memory:", callback=None)
     user = User()
-    import_gedcom_gramps(database=db, filename=input_file, user=user)
+    import_gedcom(input_file=input_file, db=db)
     export_data(database=db, filename=output_file, user=user)
 
 
