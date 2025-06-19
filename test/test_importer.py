@@ -75,3 +75,27 @@ def test_importer_maximal70():
     marriage_place = db.get_place_from_handle(marriage.place)
     assert isinstance(marriage_place, Place)
     assert marriage_place.name.value == "Place"
+    assert marriage.get_privacy()
+    assert len(marriage.note_list) == 1
+    marriage_note = db.get_note_from_handle(marriage.note_list[0])
+    assert isinstance(marriage_note, Note)
+    assert marriage_note.gramps_id == "N1"
+    assert len(marriage.citation_list) == 2
+    marriage_citation1 = db.get_citation_from_handle(marriage.citation_list[0])
+    assert isinstance(marriage_citation1, Citation)
+    marriage_citation2 = db.get_citation_from_handle(marriage.citation_list[1])
+    assert isinstance(marriage_citation2, Citation)
+    marriage_source = db.get_source_from_handle(marriage_citation1.source_handle)
+    assert isinstance(marriage_source, Source)
+    assert marriage_citation1.source_handle == marriage_source.handle
+    assert marriage_citation2.source_handle == marriage_source.handle
+    assert marriage_source.gramps_id == "S1"
+    assert marriage_citation1.page == "1"
+    assert marriage_citation2.page == "2"
+    assert len(marriage.media_list) == 2
+    marriage_media1 = db.get_media_from_handle(marriage.media_list[0].ref)
+    assert isinstance(marriage_media1, Media)
+    marriage_media2 = db.get_media_from_handle(marriage.media_list[1].ref)
+    assert isinstance(marriage_media2, Media)
+    assert marriage_media1.gramps_id == "O1"
+    assert marriage_media2.gramps_id == "O2"

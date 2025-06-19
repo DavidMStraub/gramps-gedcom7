@@ -71,6 +71,8 @@ def handle_event(
             date = util.gedcom_date_value_to_gramps_date(child.value)
             event.set_date_object(date)
             # TODO handle date PHRASE, time
+        elif child.tag == g7const.OBJE:
+            event = util.add_media_ref_to_object(child, event, xref_handle_map)
         elif child.tag == g7const.UID:
             util.add_uid_to_object(child, event)
     return event, objects
