@@ -22,6 +22,7 @@ EVENT_TYPE_MAP = {
     g7const.MARC: EventType.MARR_CONTR,
     g7const.MARL: EventType.MARR_LIC,
     g7const.MARS: EventType.MARR_SETTL,
+    g7const.MARR: EventType.MARRIAGE,
     g7const.EVEN: EventType.CUSTOM,
 }
 
