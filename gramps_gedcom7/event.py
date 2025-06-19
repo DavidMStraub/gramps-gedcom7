@@ -94,8 +94,13 @@ def handle_place(
     place.handle = util.make_handle()
     if structure.value:
         name = PlaceName()
-        name.set_value(structure.value)
+        assert isinstance(structure.value, list), "Expected place name value to be a list"
+        assert len(structure.value) >= 1, "Expected place name value list to be non-empty"
+        # The first element is the main place name
+        name.set_value(structure.value[0])
         place.set_name(name)
+    # TODO handle FORM
+    # TODO handle entire place list
     for child in structure.children:
         if child.tag == g7const.MAP:
             lat = g7util.get_first_child_with_tag(child, g7const.LATI)
@@ -108,8 +113,11 @@ def handle_place(
         elif child.tag == g7const.LANG and child.value:
             place.name.set_language(child.value)
         elif child.tag == g7const.TRAN:
+            assert isinstance(child.value, list), "Expected place name value to be a list"
+            assert len(child.value) >= 1, "Expected place name value list to be non-empty"
             alt_name = PlaceName()
-            alt_name.set_value(child.value)
+            alt_name.set_value(child.value[0])
+            # TODO handle entire place list
             if lang := g7util.get_first_child_with_tag(child, g7const.LANG):
                 alt_name.set_language(lang.value)
             place.add_alternative_name(alt_name)
