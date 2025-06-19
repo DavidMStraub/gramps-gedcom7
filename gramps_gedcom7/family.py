@@ -81,7 +81,9 @@ def handle_family(
             objects.extend(other_objects)
             family.add_citation(citation.handle)
             objects.append(citation)
-        # TODO handle indentifier
+        # TODO EXID & REFN
+        elif child.tag == g7const.UID:
+            util.add_uid_to_object(child, family)
         elif child.tag == g7const.OBJE:
             family = util.add_media_ref_to_object(child, family, xref_handle_map)
         elif child.tag in EVENT_TYPE_MAP:

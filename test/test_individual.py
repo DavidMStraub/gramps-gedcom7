@@ -386,3 +386,23 @@ def test_invalid_family_reference():
 
     with pytest.raises(ValueError, match="Family @NONEXISTENT@ not found"):
         import_to_memory([individual])
+
+
+def test_uid_identifier():
+    """Test handling of UID as an identifier."""
+    uid_value = "1234-5678-9012-3456"
+    uid_structure = g7types.GedcomStructure(
+        tag=g7const.UID, pointer="", text=uid_value, xref=""
+    )
+
+    individual = get_individual([uid_structure])
+    db: DbWriteBase = import_to_memory([individual])
+    person: Person = db.get_person_from_gramps_id(GRAMPS_ID)
+
+    # Check that the UID was properly stored as an attribute
+    attributes = person.get_attribute_list()
+    assert len(attributes) == 1
+
+    uid_attribute = attributes[0]
+    assert uid_attribute.get_type() == "UID"  # Gramps uses _UID for GEDCOM UIDs
+    assert uid_attribute.get_value() == uid_value

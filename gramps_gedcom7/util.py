@@ -8,9 +8,16 @@ from gedcom7 import const as g7const
 from gedcom7 import grammar as g7grammar
 from gedcom7 import types as g7types
 from gedcom7 import util as g7util
-from gramps.gen.lib import Date, Note, NoteType, MediaRef
+from gramps.gen.lib import Date, Note, NoteType, MediaRef, Attribute, SrcAttribute, SrcAttributeType, AttributeType
 
-from .types import BasicPrimaryObject, BasicPrimaryObjectT, MediaBaseT, NoteBaseT
+from .types import (
+    BasicPrimaryObject,
+    BasicPrimaryObjectT,
+    MediaBaseT,
+    NoteBaseT,
+    AttributeBase,
+    SrcAttributeBase,
+)
 
 
 def make_handle() -> str:
@@ -195,12 +202,18 @@ def gedcom_date_value_to_gramps_date(
             date.set_yr_mon_day(
                 **gedcom_date_to_numeric_year_month_day(date_value.from_)
             )
-            if date_value.from_.calendar is not None and date_value.from_.calendar in CALENDAR_MAP:
+            if (
+                date_value.from_.calendar is not None
+                and date_value.from_.calendar in CALENDAR_MAP
+            ):
                 date.set_calendar(CALENDAR_MAP[date_value.from_.calendar])
         elif date_value.to:
             date.set_modifier(Date.MOD_TO)
             date.set_yr_mon_day(**gedcom_date_to_numeric_year_month_day(date_value.to))
-            if date_value.to.calendar is not None and date_value.to.calendar in CALENDAR_MAP:
+            if (
+                date_value.to.calendar is not None
+                and date_value.to.calendar in CALENDAR_MAP
+            ):
                 date.set_calendar(CALENDAR_MAP[date_value.to.calendar])
     elif isinstance(date_value, g7types.DateApprox):
         date.set_yr_mon_day(**gedcom_date_to_numeric_year_month_day(date_value.date))
@@ -239,12 +252,18 @@ def gedcom_date_value_to_gramps_date(
             date.set_yr_mon_day(
                 **gedcom_date_to_numeric_year_month_day(date_value.start)
             )
-            if date_value.start.calendar is not None and date_value.start.calendar in CALENDAR_MAP:
+            if (
+                date_value.start.calendar is not None
+                and date_value.start.calendar in CALENDAR_MAP
+            ):
                 date.set_calendar(CALENDAR_MAP[date_value.start.calendar])
         elif date_value.end:
             date.set_modifier(Date.MOD_BEFORE)
             date.set_yr_mon_day(**gedcom_date_to_numeric_year_month_day(date_value.end))
-            if date_value.end.calendar is not None and date_value.end.calendar in CALENDAR_MAP:
+            if (
+                date_value.end.calendar is not None
+                and date_value.end.calendar in CALENDAR_MAP
+            ):
                 date.set_calendar(CALENDAR_MAP[date_value.end.calendar])
     return date
 
@@ -283,3 +302,24 @@ def add_media_ref_to_object(
     # TODO handle TITLE
     obj.add_media_reference(media_ref)
     return obj
+
+
+def add_uid_to_object(
+    structure: g7types.GedcomStructure,
+    obj: AttributeBase | SrcAttributeBase,
+) -> None:
+    """Add a unique ID to a Gramps object."""
+    assert structure.tag == g7const.UID, "Not a UID structure"
+    assert isinstance(structure.value, str), "Expected UID value to be a string"
+    if isinstance(obj, SrcAttributeBase):
+        attribute = SrcAttribute()
+        attribute.set_type(SrcAttributeType("UID"))
+        attribute.set_value(structure.value)
+        obj.add_attribute(attribute)
+    elif isinstance(obj, AttributeBase):
+        attribute = Attribute()
+        attribute.set_type(AttributeType("UID"))
+        attribute.set_value(structure.value)
+        obj.add_attribute(attribute)
+    else:
+        raise TypeError(f"Object must be an AttributeBase or SrcAttributeBase, got {type(obj)}")

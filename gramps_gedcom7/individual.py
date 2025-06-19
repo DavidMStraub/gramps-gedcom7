@@ -98,7 +98,9 @@ def handle_individual(
         # TODO handle ALIA
         # TODO handle ANCI
         # TODO handle DESI
-        # TODO handle indentifier
+        # TODO EXID & REFN
+        elif child.tag == g7const.UID:
+            util.add_uid_to_object(child, person)
         elif child.tag == g7const.FAMC and child.pointer != g7grammar.voidptr:
             family_handle = xref_handle_map.get(child.pointer)
             if not family_handle:

@@ -105,7 +105,9 @@ def handle_source(
             objects.append(note)
         elif child.tag == g7const.OBJE:
             source = util.add_media_ref_to_object(child, source, xref_handle_map)
-        # TODO handle identifier
+        # TODO EXID & REFN
+        elif child.tag == g7const.UID:
+            util.add_uid_to_object(child, source)
     source = util.add_ids(source, structure=structure, xref_handle_map=xref_handle_map)
     util.set_change_date(structure=structure, obj=source)
     objects.append(source)

@@ -45,6 +45,9 @@ def handle_multimedia(
             objects.extend(other_objects)
             media.add_citation(citation.handle)
             objects.append(citation)
+        # TODO EXID & REFN
+        elif child.tag == g7const.UID:
+            util.add_uid_to_object(child, media)
     # TODO handle multiple files
     file_structure = g7util.get_first_child_with_tag(structure, g7const.FILE)
     assert file_structure is not None, "Multimedia structure must have a FILE tag"
@@ -62,7 +65,6 @@ def handle_multimedia(
         media.set_description(title.value)
     # TODO handle MEDIA & PHRASE
     media = util.add_ids(media, structure=structure, xref_handle_map=xref_handle_map)
-    # TODO handle identifier
     util.set_change_date(structure=structure, obj=media)
     objects.append(media)
     return objects
