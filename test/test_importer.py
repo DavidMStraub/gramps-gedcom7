@@ -69,3 +69,9 @@ def test_importer_maximal70():
     marriage = db.get_event_from_handle(family.event_ref_list[9].ref)
     assert isinstance(marriage, Event)
     assert marriage.get_type().value == EventType.MARRIAGE
+    # TODO AGE
+    assert marriage.date.dateval == (27, 3, 2022, False)
+    # TODO PHRASE
+    marriage_place = db.get_place_from_handle(marriage.place)
+    assert isinstance(marriage_place, Place)
+    assert marriage_place.name.value == "Place"
