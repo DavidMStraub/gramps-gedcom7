@@ -154,26 +154,56 @@ CALENDAR_MAP = {
 }
 
 
+def gedcom_date_to_numeric_year_month_day(
+    date_value: g7types.Date,
+) -> dict[str, int]:
+    """Convert a GEDCOM date to a numeric year, month, and day."""
+    year = date_value.year or 0
+    month = GEDCOM_MONTHS.get(date_value.month or "", 0)
+    day = date_value.day or 0
+    return {"year": year, "month": month, "day": day}
+
+
 def gedcom_date_value_to_gramps_date(
     date_value: g7types.DateValue,
 ) -> Date:
     """Convert a GEDCOM date value to a Gramps date."""
     date = Date()
     if isinstance(date_value, g7types.Date):
-        year = date_value.year or 0
-        month = GEDCOM_MONTHS.get(date_value.month or "", 0)
-        day = date_value.day or 0
-        date.set_yr_mon_day(year=year, month=month, day=day)
+        date.set_yr_mon_day(**gedcom_date_to_numeric_year_month_day(date_value))
         if date_value.calendar is not None and date_value.calendar in CALENDAR_MAP:
             date.set_calendar(CALENDAR_MAP[date_value.calendar])
     elif isinstance(date_value, g7types.DatePeriod):
-        # TODO
-        pass
+        if date_value.from_ and date_value.to:
+            date.set_modifier(Date.MOD_SPAN)
+            date.set_yr_mon_day(
+                **gedcom_date_to_numeric_year_month_day(date_value.from_),
+                remove_stop_date=False,
+            )
+            date.set2_yr_mon_day(**gedcom_date_to_numeric_year_month_day(date_value.to))
+            if date_value.from_.calendar and date_value.to.calendar:
+                if date_value.from_.calendar == date_value.to.calendar:
+                    if date_value.from_.calendar in CALENDAR_MAP:
+                        date.set_calendar(CALENDAR_MAP[date_value.from_.calendar])
+                else:
+                    # TODO handle mixed calendars
+                    raise NotImplementedError(
+                        "Mixed calendars in date period are not yet implemented"
+                    )
+        elif date_value.from_:
+            date.set_modifier(Date.MOD_FROM)
+            date.set_yr_mon_day(
+                **gedcom_date_to_numeric_year_month_day(date_value.from_)
+            )
+            if date_value.from_.calendar is not None and date_value.from_.calendar in CALENDAR_MAP:
+                date.set_calendar(CALENDAR_MAP[date_value.from_.calendar])
+        elif date_value.to:
+            date.set_modifier(Date.MOD_TO)
+            date.set_yr_mon_day(**gedcom_date_to_numeric_year_month_day(date_value.to))
+            if date_value.to.calendar is not None and date_value.to.calendar in CALENDAR_MAP:
+                date.set_calendar(CALENDAR_MAP[date_value.to.calendar])
     elif isinstance(date_value, g7types.DateApprox):
-        year = date_value.date.year or 0
-        month = GEDCOM_MONTHS.get(date_value.date.month or "", 0)
-        day = date_value.date.day or 0
-        date.set_yr_mon_day(year=year, month=month, day=day)
+        date.set_yr_mon_day(**gedcom_date_to_numeric_year_month_day(date_value.date))
         if (
             date_value.date.calendar is not None
             and date_value.date.calendar in CALENDAR_MAP
@@ -186,8 +216,36 @@ def gedcom_date_value_to_gramps_date(
             date.set_quality(quality)
             date.set_modifier(modifier)
     elif isinstance(date_value, g7types.DateRange):
-        # TODO
-        pass
+        if date_value.start and date_value.end:
+            date.set_modifier(Date.MOD_RANGE)
+            date.set_yr_mon_day(
+                **gedcom_date_to_numeric_year_month_day(date_value.start),
+                remove_stop_date=False,
+            )
+            date.set2_yr_mon_day(
+                **gedcom_date_to_numeric_year_month_day(date_value.end)
+            )
+            if date_value.start.calendar and date_value.end.calendar:
+                if date_value.start.calendar == date_value.end.calendar:
+                    if date_value.start.calendar in CALENDAR_MAP:
+                        date.set_calendar(CALENDAR_MAP[date_value.start.calendar])
+                else:
+                    # TODO handle mixed calendars
+                    raise NotImplementedError(
+                        "Mixed calendars in date range are not yet implemented"
+                    )
+        elif date_value.start:
+            date.set_modifier(Date.MOD_AFTER)
+            date.set_yr_mon_day(
+                **gedcom_date_to_numeric_year_month_day(date_value.start)
+            )
+            if date_value.start.calendar is not None and date_value.start.calendar in CALENDAR_MAP:
+                date.set_calendar(CALENDAR_MAP[date_value.start.calendar])
+        elif date_value.end:
+            date.set_modifier(Date.MOD_BEFORE)
+            date.set_yr_mon_day(**gedcom_date_to_numeric_year_month_day(date_value.end))
+            if date_value.end.calendar is not None and date_value.end.calendar in CALENDAR_MAP:
+                date.set_calendar(CALENDAR_MAP[date_value.end.calendar])
     return date
 
 
