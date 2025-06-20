@@ -300,4 +300,105 @@ def test_importer_maximal70():
     event = db.get_event_from_handle(person.event_ref_list[10].ref)
     assert isinstance(event, Event)
     assert event.get_type().value == EventType.DEATH
-    # TODO death details
+    assert event.date.dateval == (28, 3, 2022, False)
+    place = db.get_place_from_handle(event.place)
+    assert isinstance(place, Place)
+    assert place.name.value == "Somewhere"
+    assert event.get_privacy()
+
+    # TODO associations (lines 335-338)
+
+    # person event notes
+    assert len(event.note_list) == 2
+    event_note1 = db.get_note_from_handle(event.note_list[0])
+    assert isinstance(event_note1, Note)
+    assert event_note1.text.string == "Note text"
+
+    event_note2 = db.get_note_from_handle(event.note_list[1])
+    assert isinstance(event_note2, Note)
+    assert event_note2.gramps_id == "N1"
+
+    # person event source citations
+    assert len(event.citation_list) == 2
+    event_citation1 = db.get_citation_from_handle(event.citation_list[0])
+    assert isinstance(event_citation1, Citation)
+    event_source1 = db.get_source_from_handle(event_citation1.source_handle)
+    assert isinstance(event_source1, Source)
+    assert event_source1.gramps_id == "S1"
+    assert event_citation1.page == "1"
+    event_citation2 = db.get_citation_from_handle(event.citation_list[1])
+    assert isinstance(event_citation2, Citation)
+    event_source2 = db.get_source_from_handle(event_citation2.source_handle)
+    assert isinstance(event_source2, Source)
+    assert event_source2.gramps_id == "S2"
+    assert event_citation2.page == "2"
+
+    # person event media
+    assert len(event.media_list) == 2
+    event_media1 = db.get_media_from_handle(event.media_list[0].ref)
+    assert isinstance(event_media1, Media)
+    event_media2 = db.get_media_from_handle(event.media_list[1].ref)
+    assert isinstance(event_media2, Media)
+    assert event_media1.gramps_id == "O1"
+    assert event_media2.gramps_id == "O2"
+
+    # person event UID
+    assert len(event.attribute_list) == 2
+    assert event.attribute_list[0].get_type() == "UID"
+    assert (
+        event.attribute_list[0].get_value() == "bbcc0025-34cb-4542-8cfb-45ba201c9c2c"
+    )
+    assert event.attribute_list[1].get_type() == "UID"
+    assert (
+        event.attribute_list[1].get_value() == "9ead4205-5bad-4c05-91c1-0aecd3f5127d"
+    )
+
+    # EMIG - Emigration
+    event = db.get_event_from_handle(person.event_ref_list[11].ref)
+    assert isinstance(event, Event)
+    assert event.get_type().value == EventType.EMIGRATION
+
+    # FCOM - First Communion
+    event = db.get_event_from_handle(person.event_ref_list[12].ref)
+    assert isinstance(event, Event)
+    assert event.get_type().value == EventType.FIRST_COMMUN
+
+    # GRAD - Graduation
+    event = db.get_event_from_handle(person.event_ref_list[13].ref)
+    assert isinstance(event, Event)
+    assert event.get_type().value == EventType.GRADUATION
+
+    # IMMI - Immigration
+    event = db.get_event_from_handle(person.event_ref_list[14].ref)
+    assert isinstance(event, Event)
+    assert event.get_type().value == EventType.IMMIGRATION
+
+    # NATU - Naturalization
+    event = db.get_event_from_handle(person.event_ref_list[15].ref)
+    assert isinstance(event, Event)
+    assert event.get_type().value == EventType.NATURALIZATION
+
+    # ORDN - Ordination
+    event = db.get_event_from_handle(person.event_ref_list[16].ref)
+    assert isinstance(event, Event)
+    assert event.get_type().value == EventType.ORDINATION
+
+    # PROB - Probate
+    event = db.get_event_from_handle(person.event_ref_list[17].ref)
+    assert isinstance(event, Event)
+    assert event.get_type().value == EventType.PROBATE
+
+    # RETI - Retirement
+    event = db.get_event_from_handle(person.event_ref_list[18].ref)
+    assert isinstance(event, Event)
+    assert event.get_type().value == EventType.RETIREMENT
+
+    # WILL - Will
+    event = db.get_event_from_handle(person.event_ref_list[19].ref)
+    assert isinstance(event, Event)
+    assert event.get_type().value == EventType.WILL
+
+    # ADOP - Adoption
+    event = db.get_event_from_handle(person.event_ref_list[20].ref)
+    assert isinstance(event, Event)
+    assert event.get_type().value == EventType.ADOPT
