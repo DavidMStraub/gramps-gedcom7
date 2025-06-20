@@ -27,7 +27,7 @@ TODO
 The tool can be used to convert a GEDCOM 7 file to a Gramps XML file on the command line. The command is:
 
 ```bash
-python -m gramps-gedcom7.gedcom2xml <input.ged> <output.gramps.xml>
+python -m gramps_gedcom7.gedcom2xml path/to/input.ged path/to/output.gramps
 ```
 
 Instead of an output file name, you can also specify `-` to write the output to standard output.
