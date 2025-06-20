@@ -345,13 +345,9 @@ def test_importer_maximal70():
     # person event UID
     assert len(event.attribute_list) == 2
     assert event.attribute_list[0].get_type() == "UID"
-    assert (
-        event.attribute_list[0].get_value() == "bbcc0025-34cb-4542-8cfb-45ba201c9c2c"
-    )
+    assert event.attribute_list[0].get_value() == "bbcc0025-34cb-4542-8cfb-45ba201c9c2c"
     assert event.attribute_list[1].get_type() == "UID"
-    assert (
-        event.attribute_list[1].get_value() == "9ead4205-5bad-4c05-91c1-0aecd3f5127d"
-    )
+    assert event.attribute_list[1].get_value() == "9ead4205-5bad-4c05-91c1-0aecd3f5127d"
 
     # EMIG - Emigration
     event = db.get_event_from_handle(person.event_ref_list[11].ref)
@@ -402,3 +398,74 @@ def test_importer_maximal70():
     event = db.get_event_from_handle(person.event_ref_list[20].ref)
     assert isinstance(event, Event)
     assert event.get_type().value == EventType.ADOPT
+
+    # TODO FAMC & ADOP structure of ADOP event (lines 368-371)
+
+    # BIRTH - Birth
+    event = db.get_event_from_handle(person.event_ref_list[23].ref)
+    assert isinstance(event, Event)
+    assert event.get_type().value == EventType.BIRTH
+    assert event.date.dateval == (1, 1, 2000, False)
+
+    # CHR - Christening
+    event = db.get_event_from_handle(person.event_ref_list[24].ref)
+    assert isinstance(event, Event)
+    assert event.get_type().value == EventType.CHRISTEN
+    assert event.date.dateval == (9, 1, 2000, False)
+
+    # EVEN - Custom event
+    event = db.get_event_from_handle(person.event_ref_list[25].ref)
+    assert isinstance(event, Event)
+    assert event.get_type().value == EventType.CUSTOM
+    assert event.get_type().string == "Event type"
+
+    # family relations
+    assert len(person.parent_family_list) == 1
+    parent_family = db.get_family_from_handle(person.parent_family_list[0])
+    assert isinstance(parent_family, Family)
+    assert parent_family.gramps_id == "F2"
+    assert person.handle in [cref.ref for cref in parent_family.child_ref_list]
+
+    assert len(person.family_list) == 1
+    family = db.get_family_from_handle(person.family_list[0])
+    assert isinstance(family, Family)
+    assert family.gramps_id == "F1"
+    assert family.father_handle == person.handle
+
+    # TODO associations (lines 459-476)
+
+    # person UIDs
+    assert len(person.attribute_list) == 2
+    assert person.attribute_list[0].get_type() == "UID"
+    assert (
+        person.attribute_list[0].get_value() == "bbcc0025-34cb-4542-8cfb-45ba201c9c2c"
+    )
+    assert person.attribute_list[1].get_type() == "UID"
+    assert (
+        person.attribute_list[1].get_value() == "9ead4205-5bad-4c05-91c1-0aecd3f5127d"
+    )
+
+    # person notes
+    assert len(person.note_list) == 2
+    person_note1 = db.get_note_from_handle(person.note_list[0])
+    assert isinstance(person_note1, Note)
+    assert person_note1.text.string == "Note text"
+    person_note2 = db.get_note_from_handle(person.note_list[1])
+    assert isinstance(person_note2, Note)
+    assert person_note2.gramps_id == "N1"
+
+    # peron source citations
+    assert len(person.citation_list) == 2
+    person_citation1 = db.get_citation_from_handle(person.citation_list[0])
+    assert isinstance(person_citation1, Citation)
+    person_source1 = db.get_source_from_handle(person_citation1.source_handle)
+    assert isinstance(person_source1, Source)
+    assert person_source1.gramps_id == "S1"
+    assert person_citation1.page == "1"
+    assert person_citation1.confidence == Citation.CONF_HIGH
+    person_citation2 = db.get_citation_from_handle(person.citation_list[1])
+    assert isinstance(person_citation2, Citation)
+    person_source2 = db.get_source_from_handle(person_citation2.source_handle)
+    assert isinstance(person_source2, Source)
+    assert person_source2.gramps_id == "S2"
+        
