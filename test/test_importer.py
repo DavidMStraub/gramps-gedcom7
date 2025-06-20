@@ -9,6 +9,7 @@ from gramps.gen.lib import (
     Name,
     NameType,
     Note,
+    NoteType,
     Person,
     Place,
     Repository,
@@ -616,3 +617,38 @@ def test_importer_maximal70():
     repository = db.get_repository_from_gramps_id("R2")
     assert isinstance(repository, Repository)
     assert repository.name == "Repository 2"
+
+    # shared notes
+    note = db.get_note_from_gramps_id("N1")
+    assert isinstance(note, Note)
+    assert note.text.string == "Shared note 1\n\nShared note 1\n\nShared note 1"
+
+    note = db.get_note_from_gramps_id("N2")
+    assert isinstance(note, Note)
+    assert note.text.string == "Shared note 2"
+
+    # sources
+    source = db.get_source_from_gramps_id("S1")
+    assert isinstance(source, Source)
+    # TODO DATA
+    assert source.author == "Author"
+    assert source.title == "Title"
+    assert source.abbrev == "Abbreviation"
+    assert source.pubinfo == "Publication info"
+
+    # soure text as note
+    assert len(source.note_list) == 3
+    source_note = db.get_note_from_handle(source.note_list[0])
+    assert isinstance(source_note, Note)
+    assert source_note.text.string == "Source text"
+    assert source_note.type.value == NoteType.SOURCE_TEXT
+
+    # TODO lines 731-767
+
+    source_note2 = db.get_note_from_handle(source.note_list[1])
+    assert isinstance(source_note2, Note)
+    assert source_note2.text.string == "Note text"
+
+    source_note3 = db.get_note_from_handle(source.note_list[2])
+    assert isinstance(source_note3, Note)
+    assert source_note3.gramps_id == "N1"

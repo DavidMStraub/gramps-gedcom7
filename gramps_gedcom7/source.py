@@ -76,6 +76,7 @@ def handle_source(
                 note.set(child.value)
             note.handle = util.make_handle()
             source.add_note(note.handle)
+            objects.append(note)
         elif child.tag == g7const.REPO:
             repo_ref = RepoRef()
             try:
