@@ -14,6 +14,7 @@ from gramps.gen.lib import (
     Repository,
     Source,
     Surname,
+    UrlType,
 )
 
 from gramps_gedcom7.importer import import_gedcom
@@ -468,7 +469,7 @@ def test_importer_maximal70():
     person_source2 = db.get_source_from_handle(person_citation2.source_handle)
     assert isinstance(person_source2, Source)
     assert person_source2.gramps_id == "S2"
-    
+
     # person media objects
     assert len(person.media_list) == 2
     person_media1 = db.get_media_from_handle(person.media_list[0].ref)
@@ -481,7 +482,7 @@ def test_importer_maximal70():
     # other individuals (lines 511-524)
     person = db.get_person_from_gramps_id("I2")
     assert isinstance(person, Person)
-    
+
     # names
     name: Name = person.get_primary_name()
     assert name.first_name == "Maiden Name"
@@ -491,7 +492,7 @@ def test_importer_maximal70():
     assert len(person.alternate_names) == 2
 
     name: Name = person.alternate_names[0]
-    assert name.first_name == "Married Name" 
+    assert name.first_name == "Married Name"
     assert name.type.value == NameType.CUSTOM
     assert name.type.string == "MARRIED"
 
@@ -529,17 +530,13 @@ def test_importer_maximal70():
     assert media.path == "/path/to/file1"
     assert media.mime == "text/plain"
     # TODO handle other files
-    
+
     # media UID
     assert len(media.attribute_list) == 2
     assert media.attribute_list[0].get_type() == "UID"
-    assert (
-        media.attribute_list[0].get_value() == "bbcc0025-34cb-4542-8cfb-45ba201c9c2c"
-    )
+    assert media.attribute_list[0].get_value() == "bbcc0025-34cb-4542-8cfb-45ba201c9c2c"
     assert media.attribute_list[1].get_type() == "UID"
-    assert (
-        media.attribute_list[1].get_value() == "9ead4205-5bad-4c05-91c1-0aecd3f5127d"
-    )
+    assert media.attribute_list[1].get_value() == "9ead4205-5bad-4c05-91c1-0aecd3f5127d"
 
     # media notes
     assert len(media.note_list) == 2
@@ -576,7 +573,7 @@ def test_importer_maximal70():
     media_citation_note2 = db.get_note_from_handle(media_citation1.note_list[1])
     assert isinstance(media_citation_note2, Note)
     assert media_citation_note2.gramps_id == "N1"
-    
+
     # media source citation
     media_citation2 = db.get_citation_from_handle(media.citation_list[1])
     assert isinstance(media_citation2, Citation)
@@ -590,3 +587,32 @@ def test_importer_maximal70():
     assert media.get_privacy()
     assert media.path == "http://host.example.com/path/to/file2"
     assert media.mime == "text/plain"
+
+    # repositories
+    repository = db.get_repository_from_gramps_id("R1")
+    assert isinstance(repository, Repository)
+    assert repository.name == "Repository 1"
+    # TODO repository address
+    assert len(repository.urls) == 4
+    assert repository.urls[0].path == "GEDCOM@FamilySearch.org"
+    assert repository.urls[0].type.value == UrlType.EMAIL
+    assert repository.urls[1].path == "GEDCOM@example.com"
+    assert repository.urls[1].type.value == UrlType.EMAIL
+    assert repository.urls[2].path == "http://gedcom.io"
+    assert repository.urls[2].type.value == UrlType.WEB_HOME
+    assert repository.urls[3].path == "http://gedcom.info"
+    assert repository.urls[3].type.value == UrlType.WEB_HOME
+
+    # repository notes
+    assert len(repository.note_list) == 2
+    repository_note1 = db.get_note_from_handle(repository.note_list[0])
+    assert isinstance(repository_note1, Note)
+    assert repository_note1.text.string == "Note text"
+    repository_note2 = db.get_note_from_handle(repository.note_list[1])
+    assert isinstance(repository_note2, Note)
+    assert repository_note2.gramps_id == "N1"
+
+    # other repository
+    repository = db.get_repository_from_gramps_id("R2")
+    assert isinstance(repository, Repository)
+    assert repository.name == "Repository 2"
