@@ -6,11 +6,14 @@ from gramps.gen.lib import (
     EventType,
     Family,
     Media,
+    Name,
+    NameType,
     Note,
     Person,
     Place,
     Repository,
     Source,
+    Surname,
 )
 
 from gramps_gedcom7.importer import import_gedcom
@@ -190,4 +193,38 @@ def test_importer_maximal70():
     assert marriage.date.dateval == (0, 0, 1998, False)
     assert len(family.child_ref_list) == 1
     person = db.get_person_from_handle(family.child_ref_list[0].ref)
+    assert isinstance(person, Person)
     assert person.gramps_id == "I1"
+
+    # first individual (line 231-510)
+    assert person.get_privacy()
+
+    # primary name
+    name: Name = person.get_primary_name()
+    assert name.type.value == NameType.CUSTOM
+    assert name.title == "Lt. Cmndr."
+    assert name.first_name == "Joseph"
+    assert name.nick == "John"
+    assert name.suffix == "jr."
+    assert len(name.surname_list) == 1
+    surname: Surname = name.surname_list[0]
+    assert surname.prefix == "de"
+    assert surname.surname == "Allen"
+
+    # alternate names
+    assert len(person.alternate_names) == 3
+    alt_name1: Name = person.alternate_names[0]
+    assert alt_name1.type.value == NameType.BIRTH
+    assert alt_name1.first_name == "John"
+    assert alt_name1.surname_list[0].surname == "Doe"
+
+    alt_name2: Name = person.alternate_names[1]
+    assert alt_name2.type.value == NameType.AKA
+    assert alt_name2.first_name == "Aka"
+    assert len(alt_name2.surname_list) == 0
+    
+    alt_name3: Name = person.alternate_names[2]
+    assert alt_name3.type.value == NameType.CUSTOM
+    assert alt_name3.type.string == "IMMIGRANT"
+    assert alt_name3.first_name == "Immigrant Name"
+    assert len(alt_name2.surname_list) == 0

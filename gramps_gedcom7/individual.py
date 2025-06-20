@@ -8,7 +8,6 @@ from gedcom7 import types as g7types
 from gramps.gen.lib import (
     EventRef,
     EventType,
-    MediaRef,
     Name,
     NameType,
     Person,
@@ -168,10 +167,11 @@ def handle_name(
     for child in structure.children:
         if child.tag == g7const.TYPE:
             assert isinstance(child.value, str), "Expected TYPE value to be a string"
-            gramps_name_type = NAME_TYPE_MAP.get(child.value, NameType.CUSTOM)
-            if gramps_name_type == NameType.CUSTOM:
-                pass  # TODO handle custom name types
-            name.set_type(NameType(gramps_name_type))
+            gramps_name_type_value = NAME_TYPE_MAP.get(child.value, NameType.CUSTOM)
+            gramps_name_type = NameType(gramps_name_type_value)
+            if gramps_name_type_value == NameType.CUSTOM:
+                gramps_name_type.string = child.value
+            name.set_type(gramps_name_type)
         elif child.tag == g7const.NPFX:
             assert isinstance(child.value, str), "Expected NPFX value to be a string"
             name.set_title(child.value)
