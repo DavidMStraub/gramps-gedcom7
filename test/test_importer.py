@@ -79,7 +79,7 @@ def test_importer_maximal70():
     assert isinstance(marriage_place, Place)
     assert marriage_place.name.value == "Place"
     assert marriage.get_privacy()
-    
+
     # event notes
     assert len(marriage.note_list) == 1
     marriage_note = db.get_note_from_handle(marriage.note_list[0])
@@ -99,7 +99,7 @@ def test_importer_maximal70():
     assert marriage_source.gramps_id == "S1"
     assert marriage_citation1.page == "1"
     assert marriage_citation2.page == "2"
-    
+
     # event media
     assert len(marriage.media_list) == 2
     marriage_media1 = db.get_media_from_handle(marriage.media_list[0].ref)
@@ -112,9 +112,13 @@ def test_importer_maximal70():
     # event UID
     assert len(marriage.attribute_list) == 2
     assert marriage.attribute_list[0].get_type() == "UID"
-    assert marriage.attribute_list[0].get_value() == "bbcc0025-34cb-4542-8cfb-45ba201c9c2c"
+    assert (
+        marriage.attribute_list[0].get_value() == "bbcc0025-34cb-4542-8cfb-45ba201c9c2c"
+    )
     assert marriage.attribute_list[1].get_type() == "UID"
-    assert marriage.attribute_list[1].get_value() == "9ead4205-5bad-4c05-91c1-0aecd3f5127d"
+    assert (
+        marriage.attribute_list[1].get_value() == "9ead4205-5bad-4c05-91c1-0aecd3f5127d"
+    )
 
     # custom event (line 123)
     event = db.get_event_from_handle(family.event_ref_list[10].ref)
@@ -141,9 +145,13 @@ def test_importer_maximal70():
     # family UID
     assert len(family.attribute_list) == 2
     assert family.attribute_list[0].get_type() == "UID"
-    assert family.attribute_list[0].get_value() == "bbcc0025-34cb-4542-8cfb-45ba201c9c2c"
+    assert (
+        family.attribute_list[0].get_value() == "bbcc0025-34cb-4542-8cfb-45ba201c9c2c"
+    )
     assert family.attribute_list[1].get_type() == "UID"
-    assert family.attribute_list[1].get_value() == "9ead4205-5bad-4c05-91c1-0aecd3f5127d"
+    assert (
+        family.attribute_list[1].get_value() == "9ead4205-5bad-4c05-91c1-0aecd3f5127d"
+    )
 
     # family note
     assert len(family.note_list) == 2
@@ -156,7 +164,7 @@ def test_importer_maximal70():
 
     # family source citations (line 209ff)
     assert len(family.citation_list) == 2
-    
+
     family_citation1 = db.get_citation_from_handle(family.citation_list[0])
     assert isinstance(family_citation1, Citation)
     family_source1 = db.get_source_from_handle(family_citation1.source_handle)
@@ -164,7 +172,7 @@ def test_importer_maximal70():
     assert family_source1.gramps_id == "S1"
     assert family_citation1.page == "1"
     assert family_citation1.confidence == 1
-    
+
     family_citation2 = db.get_citation_from_handle(family.citation_list[1])
     assert isinstance(family_citation2, Citation)
     family_source2 = db.get_source_from_handle(family_citation2.source_handle)
@@ -222,9 +230,74 @@ def test_importer_maximal70():
     assert alt_name2.type.value == NameType.AKA
     assert alt_name2.first_name == "Aka"
     assert len(alt_name2.surname_list) == 0
-    
+
     alt_name3: Name = person.alternate_names[2]
     assert alt_name3.type.value == NameType.CUSTOM
     assert alt_name3.type.string == "IMMIGRANT"
     assert alt_name3.first_name == "Immigrant Name"
     assert len(alt_name2.surname_list) == 0
+
+    # gender
+    assert person.gender == Person.MALE
+
+    # TODO individual attributes (lines 265-294)
+
+    # person events
+    assert len(person.event_ref_list) == 26
+
+    # BAPM - Baptism
+    event = db.get_event_from_handle(person.event_ref_list[0].ref)
+    assert isinstance(event, Event)
+    assert event.get_type().value == EventType.BAPTISM
+
+    # BAPM - Baptism
+    event = db.get_event_from_handle(person.event_ref_list[1].ref)
+    assert isinstance(event, Event)
+    assert event.get_type().value == EventType.BAPTISM
+
+    # BARM - Bar Mitzvah
+    event = db.get_event_from_handle(person.event_ref_list[2].ref)
+    assert isinstance(event, Event)
+    assert event.get_type().value == EventType.BAR_MITZVAH
+
+    # BASM - Bas Mitzvah
+    event = db.get_event_from_handle(person.event_ref_list[3].ref)
+    assert isinstance(event, Event)
+    assert event.get_type().value == EventType.BAS_MITZVAH
+
+    # BLES - Blessing
+    event = db.get_event_from_handle(person.event_ref_list[4].ref)
+    assert isinstance(event, Event)
+    assert event.get_type().value == EventType.BLESS
+
+    # BURI - Burial
+    event = db.get_event_from_handle(person.event_ref_list[5].ref)
+    assert isinstance(event, Event)
+    assert event.get_type().value == EventType.BURIAL
+    assert event.date.dateval == (30, 3, 2022, False)
+
+    # CENS - Census
+    event = db.get_event_from_handle(person.event_ref_list[6].ref)
+    assert isinstance(event, Event)
+    assert event.get_type().value == EventType.CENSUS
+
+    # CHRA - Adult Christening
+    event = db.get_event_from_handle(person.event_ref_list[7].ref)
+    assert isinstance(event, Event)
+    assert event.get_type().value == EventType.ADULT_CHRISTEN
+
+    # CONF - Confirmation
+    event = db.get_event_from_handle(person.event_ref_list[8].ref)
+    assert isinstance(event, Event)
+    assert event.get_type().value == EventType.CONFIRMATION
+
+    # CREM - Cremation
+    event = db.get_event_from_handle(person.event_ref_list[9].ref)
+    assert isinstance(event, Event)
+    assert event.get_type().value == EventType.CREMATION
+
+    # DEAT - Death (line 315)
+    event = db.get_event_from_handle(person.event_ref_list[10].ref)
+    assert isinstance(event, Event)
+    assert event.get_type().value == EventType.DEATH
+    # TODO death details
