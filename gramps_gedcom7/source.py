@@ -85,7 +85,9 @@ def handle_source(
                 raise ValueError(f"Repository {child.pointer} not found")
             repo_ref.ref = repo_handle
             call_number = g7util.get_first_child_with_tag(child, g7const.CALN)
+            # TODO handle reporef notes
             if call_number:
+                # TODO handle multiple call numbers in a single REPO
                 repo_ref.set_call_number(call_number.value)
                 media_type = g7util.get_first_child_with_tag(call_number, g7const.MEDI)
                 if media_type:

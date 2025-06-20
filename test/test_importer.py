@@ -643,7 +643,25 @@ def test_importer_maximal70():
     assert source_note.text.string == "Source text"
     assert source_note.type.value == NoteType.SOURCE_TEXT
 
-    # TODO lines 731-767
+    assert len(source.reporef_list) == 2
+    reporef1 = source.reporef_list[0]
+    reporef1_repository = db.get_repository_from_handle(reporef1.ref)
+    assert isinstance(reporef1_repository, Repository)
+    assert reporef1_repository.gramps_id == "R1"
+    assert reporef1.call_number == "Call number"
+    # TODO reporef notes
+    # assert len(reporef1.note_list) == 2
+    # reporef1_note = db.get_note_from_handle(reporef1.note_list[0])
+    # assert isinstance(reporef1_note, Note)
+    # assert reporef1_note.text.string == "Note text"
+    # reporef1_note2 = db.get_note_from_handle(reporef1.note_list[1])
+    # assert isinstance(reporef1_note2, Note)
+    # assert reporef1_note2.gramps_id == "N1"
+    reporef2 = source.reporef_list[1]
+    reporef2_repository = db.get_repository_from_handle(reporef2.ref)
+    assert isinstance(reporef2_repository, Repository)
+    assert reporef2_repository.gramps_id == "R2"
+    assert reporef2.call_number == "Call number"
 
     source_note2 = db.get_note_from_handle(source.note_list[1])
     assert isinstance(source_note2, Note)
@@ -652,3 +670,10 @@ def test_importer_maximal70():
     source_note3 = db.get_note_from_handle(source.note_list[2])
     assert isinstance(source_note3, Note)
     assert source_note3.gramps_id == "N1"
+
+    # second source
+    source = db.get_source_from_gramps_id("S2")
+    assert isinstance(source, Source)
+    assert source.title == "Source Two"
+
+    # TODO submitter (researcher)
