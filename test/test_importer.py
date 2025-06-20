@@ -508,3 +508,16 @@ def test_importer_maximal70():
     assert isinstance(family, Family)
     assert family.gramps_id == "F1"
     assert family.mother_handle == person.handle
+
+    person = db.get_person_from_gramps_id("I3")
+    assert isinstance(person, Person)
+    assert person.gender == Person.OTHER
+
+    person = db.get_person_from_gramps_id("I4")
+    assert isinstance(person, Person)
+    assert person.gender == Person.UNKNOWN
+    assert len(person.parent_family_list) == 1
+    parent_family = db.get_family_from_handle(person.parent_family_list[0])
+    assert isinstance(parent_family, Family)
+    assert parent_family.gramps_id == "F1"
+    assert person.handle in [cref.ref for cref in parent_family.child_ref_list]
