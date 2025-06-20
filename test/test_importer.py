@@ -521,3 +521,72 @@ def test_importer_maximal70():
     assert isinstance(parent_family, Family)
     assert parent_family.gramps_id == "F1"
     assert person.handle in [cref.ref for cref in parent_family.child_ref_list]
+
+    # media objects
+    media = db.get_media_from_gramps_id("O1")
+    assert isinstance(media, Media)
+    assert media.get_privacy()
+    assert media.path == "/path/to/file1"
+    assert media.mime == "text/plain"
+    # TODO handle other files
+    
+    # media UID
+    assert len(media.attribute_list) == 2
+    assert media.attribute_list[0].get_type() == "UID"
+    assert (
+        media.attribute_list[0].get_value() == "bbcc0025-34cb-4542-8cfb-45ba201c9c2c"
+    )
+    assert media.attribute_list[1].get_type() == "UID"
+    assert (
+        media.attribute_list[1].get_value() == "9ead4205-5bad-4c05-91c1-0aecd3f5127d"
+    )
+
+    # media notes
+    assert len(media.note_list) == 2
+    media_note1 = db.get_note_from_handle(media.note_list[0])
+    assert isinstance(media_note1, Note)
+    # original text with translation appended
+    assert media_note1.text.string == "American English\n\nBritish English"
+
+    # media source citations
+    assert len(media.citation_list) == 2
+    media_citation1 = db.get_citation_from_handle(media.citation_list[0])
+    assert isinstance(media_citation1, Citation)
+    media_source1 = db.get_source_from_handle(media_citation1.source_handle)
+    assert isinstance(media_source1, Source)
+    assert media_source1.gramps_id == "S1"
+    assert media_citation1.page == "1"
+    # TODO DATA
+    assert media_citation1.confidence == Citation.CONF_VERY_LOW
+
+    # media source citation media
+    assert len(media_citation1.media_list) == 2
+    media_citation_media1 = db.get_media_from_handle(media_citation1.media_list[0].ref)
+    assert isinstance(media_citation_media1, Media)
+    media_citation_media2 = db.get_media_from_handle(media_citation1.media_list[1].ref)
+    assert isinstance(media_citation_media2, Media)
+    assert media_citation_media1.gramps_id == "O1"
+    # TODO CROP
+
+    # media source citation note
+    assert len(media_citation1.note_list) == 2
+    media_citation_note = db.get_note_from_handle(media_citation1.note_list[0])
+    assert isinstance(media_citation_note, Note)
+    assert media_citation_note.text.string == "American English\n\nBritish English"
+    media_citation_note2 = db.get_note_from_handle(media_citation1.note_list[1])
+    assert isinstance(media_citation_note2, Note)
+    assert media_citation_note2.gramps_id == "N1"
+    
+    # media source citation
+    media_citation2 = db.get_citation_from_handle(media.citation_list[1])
+    assert isinstance(media_citation2, Citation)
+    media_source2 = db.get_source_from_handle(media_citation2.source_handle)
+    assert isinstance(media_source2, Source)
+    assert media_source2.gramps_id == "S1"
+    assert media_citation2.page == "2"
+
+    # other media object
+    media = db.get_media_from_gramps_id("O2")
+    assert media.get_privacy()
+    assert media.path == "http://host.example.com/path/to/file2"
+    assert media.mime == "text/plain"
