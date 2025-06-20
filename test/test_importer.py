@@ -171,7 +171,6 @@ def test_importer_maximal70():
     assert family_citation2.confidence == 2
 
     # family media
-
     assert len(family.media_list) == 2
     family_media1 = db.get_media_from_handle(family.media_list[0].ref)
     assert isinstance(family_media1, Media)
@@ -179,3 +178,16 @@ def test_importer_maximal70():
     assert isinstance(family_media2, Media)
     assert family_media1.gramps_id == "O1"
     assert family_media2.gramps_id == "O2"
+
+    # second family (line 227ff)
+    family = db.get_family_from_gramps_id("F2")
+    assert isinstance(family, Family)
+    assert not family.get_privacy()
+    assert len(family.event_ref_list) == 1
+    marriage = db.get_event_from_handle(family.event_ref_list[0].ref)
+    assert isinstance(marriage, Event)
+    assert marriage.get_type().value == EventType.MARRIAGE
+    assert marriage.date.dateval == (0, 0, 1998, False)
+    assert len(family.child_ref_list) == 1
+    person = db.get_person_from_handle(family.child_ref_list[0].ref)
+    assert person.gramps_id == "I1"
