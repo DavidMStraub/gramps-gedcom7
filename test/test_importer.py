@@ -468,4 +468,43 @@ def test_importer_maximal70():
     person_source2 = db.get_source_from_handle(person_citation2.source_handle)
     assert isinstance(person_source2, Source)
     assert person_source2.gramps_id == "S2"
-        
+    
+    # person media objects
+    assert len(person.media_list) == 2
+    person_media1 = db.get_media_from_handle(person.media_list[0].ref)
+    assert isinstance(person_media1, Media)
+    person_media2 = db.get_media_from_handle(person.media_list[1].ref)
+    assert isinstance(person_media2, Media)
+    assert person_media1.gramps_id == "O1"
+    assert person_media2.gramps_id == "O2"
+
+    # other individuals (lines 511-524)
+    person = db.get_person_from_gramps_id("I2")
+    assert isinstance(person, Person)
+    
+    # names
+    name: Name = person.get_primary_name()
+    assert name.first_name == "Maiden Name"
+    assert name.type.value == NameType.CUSTOM
+    assert name.type.string == "MAIDEN"
+
+    assert len(person.alternate_names) == 2
+
+    name: Name = person.alternate_names[0]
+    assert name.first_name == "Married Name" 
+    assert name.type.value == NameType.CUSTOM
+    assert name.type.string == "MARRIED"
+
+    name: Name = person.alternate_names[1]
+    assert name.first_name == "Professional Name"
+    assert name.type.value == NameType.CUSTOM
+    assert name.type.string == "PROFESSIONAL"
+
+    assert person.gender == Person.FEMALE
+
+    # family
+    assert len(person.family_list) == 1
+    family = db.get_family_from_handle(person.family_list[0])
+    assert isinstance(family, Family)
+    assert family.gramps_id == "F1"
+    assert family.mother_handle == person.handle
