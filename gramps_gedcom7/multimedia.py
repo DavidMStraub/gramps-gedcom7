@@ -10,10 +10,13 @@ from gramps.gen.lib.primaryobj import BasicPrimaryObject
 
 from . import util
 from .citation import handle_citation
+from .settings import ImportSettings
 
 
 def handle_multimedia(
-    structure: g7types.GedcomStructure, xref_handle_map: dict[str, str]
+    structure: g7types.GedcomStructure,
+    xref_handle_map: dict[str, str],
+    settings: ImportSettings,
 ) -> List[BasicPrimaryObject]:
     """Handle a multimedia record and convert it to Gramps objects.
 
@@ -40,7 +43,9 @@ def handle_multimedia(
             objects.append(note)
         elif child.tag == g7const.SOUR:
             citation, other_objects = handle_citation(
-                child, xref_handle_map=xref_handle_map
+                child,
+                xref_handle_map=xref_handle_map,
+                settings=settings,
             )
             objects.extend(other_objects)
             media.add_citation(citation.handle)

@@ -4,9 +4,10 @@ from typing import List
 from gedcom7 import const as g7const
 from gedcom7 import grammar as g7grammar
 from gedcom7 import types as g7types
-from gramps.gen.lib import Citation, MediaRef
+from gramps.gen.lib import Citation
 from gramps.gen.lib.primaryobj import BasicPrimaryObject
 from . import util
+from .settings import ImportSettings
 
 
 CONFIDENCE_MAP = {
@@ -18,7 +19,9 @@ CONFIDENCE_MAP = {
 
 
 def handle_citation(
-    structure: g7types.GedcomStructure, xref_handle_map: dict[str, str]
+    structure: g7types.GedcomStructure,
+    xref_handle_map: dict[str, str],
+    settings: ImportSettings,
 ) -> tuple[Citation, List[BasicPrimaryObject]]:
     """Handle a source citation record and convert it to Gramps objects.
 

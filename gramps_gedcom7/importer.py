@@ -9,9 +9,14 @@ from pathlib import Path
 from typing import TextIO, BinaryIO
 
 from . import process
+from .settings import ImportSettings
 
 
-def import_gedcom(input_file: str | Path | TextIO | BinaryIO, db: DbWriteBase) -> None:
+def import_gedcom(
+    input_file: str | Path | TextIO | BinaryIO,
+    db: DbWriteBase,
+    settings: ImportSettings = ImportSettings(),
+) -> None:
     """Import a GEDCOM file into a Gramps database.
 
     Args:
@@ -33,4 +38,4 @@ def import_gedcom(input_file: str | Path | TextIO | BinaryIO, db: DbWriteBase) -
         )
 
     gedcom_structures = gedcom7.loads(gedcom_data)
-    process.process_gedcom_structures(gedcom_structures, db)
+    process.process_gedcom_structures(gedcom_structures, db, settings=settings)

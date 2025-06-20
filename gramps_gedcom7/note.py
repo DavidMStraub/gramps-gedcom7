@@ -4,10 +4,13 @@ from typing import List
 from gramps.gen.lib.primaryobj import BasicPrimaryObject
 from gedcom7 import types as g7types
 from . import util
+from .settings import ImportSettings
 
 
 def handle_shared_note(
-    structure: g7types.GedcomStructure, xref_handle_map: dict[str, str]
+    structure: g7types.GedcomStructure,
+    xref_handle_map: dict[str, str],
+    settings: ImportSettings,
 ) -> List[BasicPrimaryObject]:
     """Handle a shared note record and convert it to Gramps objects.
 

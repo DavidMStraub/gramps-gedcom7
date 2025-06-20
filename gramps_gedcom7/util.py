@@ -8,7 +8,16 @@ from gedcom7 import const as g7const
 from gedcom7 import grammar as g7grammar
 from gedcom7 import types as g7types
 from gedcom7 import util as g7util
-from gramps.gen.lib import Date, Note, NoteType, MediaRef, Attribute, SrcAttribute, SrcAttributeType, AttributeType
+from gramps.gen.lib import (
+    Date,
+    Note,
+    NoteType,
+    MediaRef,
+    Attribute,
+    SrcAttribute,
+    SrcAttributeType,
+    AttributeType,
+)
 
 from .types import (
     BasicPrimaryObject,
@@ -322,4 +331,6 @@ def add_uid_to_object(
         attribute.set_value(structure.value)
         obj.add_attribute(attribute)
     else:
-        raise TypeError(f"Object must be an AttributeBase or SrcAttributeBase, got {type(obj)}")
+        raise TypeError(
+            f"Object must be an AttributeBase or SrcAttributeBase, got {type(obj)}"
+        )

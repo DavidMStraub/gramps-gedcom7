@@ -9,6 +9,7 @@ from gramps.gen.lib import MediaRef, Note, NoteType, RepoRef, Source, SourceMedi
 from gramps.gen.lib.primaryobj import BasicPrimaryObject
 
 from . import util
+from .settings import ImportSettings
 
 MEDIA_TYPE_MAP = {
     "AUDIO": SourceMediaType.AUDIO,
@@ -29,7 +30,9 @@ MEDIA_TYPE_MAP = {
 
 
 def handle_source(
-    structure: g7types.GedcomStructure, xref_handle_map: dict[str, str]
+    structure: g7types.GedcomStructure,
+    xref_handle_map: dict[str, str],
+    settings: ImportSettings,
 ) -> List[BasicPrimaryObject]:
     """Handle a source record and convert it to Gramps objects.
 

@@ -12,13 +12,16 @@ from .individual import handle_individual
 from .multimedia import handle_multimedia
 from .note import handle_shared_note
 from .repository import handle_repository
+from .settings import ImportSettings
 from .source import handle_source
 from .submitter import handle_submitter
 from .util import make_handle
 
 
 def process_gedcom_structures(
-    gedcom_structures: list[g7types.GedcomStructure], db: DbWriteBase
+    gedcom_structures: list[g7types.GedcomStructure],
+    db: DbWriteBase,
+    settings: ImportSettings,
 ):
     """Process GEDCOM structures and import them into the Gramps database.
 
@@ -39,7 +42,7 @@ def process_gedcom_structures(
             f"Last structure must be a TRLR structure, but got {last_structure.tag}"
         )
 
-    handle_header(first_structure, db)
+    handle_header(first_structure, db, settings=settings)
 
     # Create a map of handles to XREFs
     xref_handle_map = {}
@@ -50,13 +53,20 @@ def process_gedcom_structures(
     # Handle the remaining structures (excluding header and trailer)
     objects = []
     for structure in gedcom_structures[1:-1]:
-        objects += handle_structure(structure, xref_handle_map=xref_handle_map) or []
+        objects += (
+            handle_structure(
+                structure, xref_handle_map=xref_handle_map, settings=settings
+            )
+            or []
+        )
 
     add_objects_to_database(objects, db)
 
 
 def handle_structure(
-    structure: g7types.GedcomStructure, xref_handle_map: dict[str, str]
+    structure: g7types.GedcomStructure,
+    xref_handle_map: dict[str, str],
+    settings: ImportSettings,
 ) -> list | None:
     """Handle a single GEDCOM structure and import it into the Gramps database.
 
@@ -65,19 +75,33 @@ def handle_structure(
         db: The Gramps database to import the GEDCOM structure into.
     """
     if structure.tag == g7const.FAM:
-        return handle_family(structure, xref_handle_map=xref_handle_map)
+        return handle_family(
+            structure, xref_handle_map=xref_handle_map, settings=settings
+        )
     elif structure.tag == g7const.INDI:
-        return handle_individual(structure, xref_handle_map=xref_handle_map)
+        return handle_individual(
+            structure, xref_handle_map=xref_handle_map, settings=settings
+        )
     elif structure.tag == g7const.OBJE:
-        return handle_multimedia(structure, xref_handle_map=xref_handle_map)
+        return handle_multimedia(
+            structure, xref_handle_map=xref_handle_map, settings=settings
+        )
     elif structure.tag == g7const.REPO:
-        return handle_repository(structure, xref_handle_map=xref_handle_map)
+        return handle_repository(
+            structure, xref_handle_map=xref_handle_map, settings=settings
+        )
     elif structure.tag == g7const.SNOTE:
-        return handle_shared_note(structure, xref_handle_map=xref_handle_map)
+        return handle_shared_note(
+            structure, xref_handle_map=xref_handle_map, settings=settings
+        )
     elif structure.tag == g7const.SOUR:
-        return handle_source(structure, xref_handle_map=xref_handle_map)
+        return handle_source(
+            structure, xref_handle_map=xref_handle_map, settings=settings
+        )
     elif structure.tag == g7const.SUBM:
-        return handle_submitter(structure)
+        return handle_submitter(
+            structure, xref_handle_map=xref_handle_map, settings=settings
+        )
     return None
 
 

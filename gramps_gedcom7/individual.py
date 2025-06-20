@@ -18,6 +18,7 @@ from gramps.gen.lib.primaryobj import BasicPrimaryObject
 from . import util
 from .event import handle_event
 from .citation import handle_citation
+from .settings import ImportSettings
 
 GENDER_MAP = {
     "M": Person.MALE,
@@ -61,7 +62,9 @@ EVENT_TYPE_MAP = {
 
 
 def handle_individual(
-    structure: g7types.GedcomStructure, xref_handle_map: dict[str, str]
+    structure: g7types.GedcomStructure,
+    xref_handle_map: dict[str, str],
+    settings: ImportSettings,
 ) -> List[BasicPrimaryObject]:
     """Handle an individual record and convert it to Gramps objects.
 
@@ -126,7 +129,10 @@ def handle_individual(
             person = util.add_media_ref_to_object(child, person, xref_handle_map)
         elif child.tag in EVENT_TYPE_MAP:
             event, other_objects = handle_event(
-                child, xref_handle_map=xref_handle_map, event_type_map=EVENT_TYPE_MAP
+                child,
+                xref_handle_map=xref_handle_map,
+                event_type_map=EVENT_TYPE_MAP,
+                settings=settings,
             )
             objects.extend(other_objects)
             event_ref = EventRef()
@@ -135,7 +141,9 @@ def handle_individual(
             objects.append(event)
         elif child.tag == g7const.SOUR:
             citation, other_objects = handle_citation(
-                child, xref_handle_map=xref_handle_map
+                child,
+                xref_handle_map=xref_handle_map,
+                settings=settings,
             )
             objects.extend(other_objects)
             person.add_citation(citation.handle)

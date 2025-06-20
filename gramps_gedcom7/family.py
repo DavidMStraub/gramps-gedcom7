@@ -11,6 +11,7 @@ from gramps.gen.lib.primaryobj import BasicPrimaryObject
 from . import util
 from .citation import handle_citation
 from .event import handle_event
+from .settings import ImportSettings
 
 EVENT_TYPE_MAP = {
     g7const.ANUL: EventType.ANNULMENT,
@@ -28,7 +29,9 @@ EVENT_TYPE_MAP = {
 
 
 def handle_family(
-    structure: g7types.GedcomStructure, xref_handle_map: dict[str, str]
+    structure: g7types.GedcomStructure,
+    xref_handle_map: dict[str, str],
+    settings: ImportSettings,
 ) -> List[BasicPrimaryObject]:
     """Handle an family record and convert it to Gramps objects.
 
@@ -77,7 +80,9 @@ def handle_family(
             objects.append(note)
         elif child.tag == g7const.SOUR:
             citation, other_objects = handle_citation(
-                child, xref_handle_map=xref_handle_map
+                child,
+                xref_handle_map=xref_handle_map,
+                settings=settings,
             )
             objects.extend(other_objects)
             family.add_citation(citation.handle)
@@ -89,7 +94,10 @@ def handle_family(
             family = util.add_media_ref_to_object(child, family, xref_handle_map)
         elif child.tag in EVENT_TYPE_MAP:
             event, other_objects = handle_event(
-                child, xref_handle_map=xref_handle_map, event_type_map=EVENT_TYPE_MAP
+                child,
+                xref_handle_map=xref_handle_map,
+                event_type_map=EVENT_TYPE_MAP,
+                settings=settings,
             )
             objects.extend(other_objects)
             event_ref = EventRef()

@@ -5,10 +5,13 @@ from gramps.gen.lib import Repository, NoteType, Url, UrlType
 from gramps.gen.lib.primaryobj import BasicPrimaryObject
 from gedcom7 import types as g7types, const as g7const, util as g7util
 from . import util
+from .settings import ImportSettings
 
 
 def handle_repository(
-    structure: g7types.GedcomStructure, xref_handle_map: dict[str, str]
+    structure: g7types.GedcomStructure,
+    xref_handle_map: dict[str, str],
+    settings: ImportSettings,
 ) -> List[BasicPrimaryObject]:
     """Handle a repository record and convert it to Gramps objects.
 

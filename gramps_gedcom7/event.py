@@ -9,12 +9,14 @@ from gramps.gen.lib.primaryobj import BasicPrimaryObject
 
 from . import util
 from .citation import handle_citation
+from .settings import ImportSettings
 
 
 def handle_event(
     structure: g7types.GedcomStructure,
     xref_handle_map: dict[str, str],
     event_type_map: dict[str, int],
+    settings: ImportSettings,
 ) -> tuple[Event, list[BasicPrimaryObject]]:
     """Convert a GEDCOM event structure to a Gramps Event object.
 
@@ -34,7 +36,9 @@ def handle_event(
         if child.tag == g7const.TYPE:
             if event.get_type() == EventType.CUSTOM:
                 # If the event type is custom, set it to the value from the TYPE tag
-                assert isinstance(child.value, str), "Expected TYPE value to be a string"
+                assert isinstance(
+                    child.value, str
+                ), "Expected TYPE value to be a string"
                 event.set_type(EventType(child.value))
         elif child.tag == g7const.RESN:
             util.set_privacy_on_object(resn_structure=child, obj=event)
@@ -53,7 +57,9 @@ def handle_event(
         # TODO handle media
         elif child.tag == g7const.SOUR:
             citation, other_objects = handle_citation(
-                child, xref_handle_map=xref_handle_map
+                child,
+                xref_handle_map=xref_handle_map,
+                settings=settings,
             )
             objects.extend(other_objects)
             event.add_citation(citation.handle)
@@ -101,8 +107,12 @@ def handle_place(
     place.handle = util.make_handle()
     if structure.value:
         name = PlaceName()
-        assert isinstance(structure.value, list), "Expected place name value to be a list"
-        assert len(structure.value) >= 1, "Expected place name value list to be non-empty"
+        assert isinstance(
+            structure.value, list
+        ), "Expected place name value to be a list"
+        assert (
+            len(structure.value) >= 1
+        ), "Expected place name value list to be non-empty"
         # The first element is the main place name
         name.set_value(structure.value[0])
         place.set_name(name)
@@ -120,8 +130,12 @@ def handle_place(
         elif child.tag == g7const.LANG and child.value:
             place.name.set_language(child.value)
         elif child.tag == g7const.TRAN:
-            assert isinstance(child.value, list), "Expected place name value to be a list"
-            assert len(child.value) >= 1, "Expected place name value list to be non-empty"
+            assert isinstance(
+                child.value, list
+            ), "Expected place name value to be a list"
+            assert (
+                len(child.value) >= 1
+            ), "Expected place name value list to be non-empty"
             alt_name = PlaceName()
             alt_name.set_value(child.value[0])
             # TODO handle entire place list
