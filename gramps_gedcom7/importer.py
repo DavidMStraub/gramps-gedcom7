@@ -8,7 +8,7 @@ import gedcom7
 from pathlib import Path
 from typing import TextIO, BinaryIO
 
-from . import process
+from . import process_enhanced
 from .settings import ImportSettings
 
 
@@ -37,5 +37,5 @@ def import_gedcom(
             "input_file must be a string, Path object, or file-like object."
         )
 
-    gedcom_structures = gedcom7.loads(gedcom_data)
-    process.process_gedcom_structures(gedcom_structures, db, settings=settings)
+    gedcom_structures = list(gedcom7.loads(gedcom_data))
+    process_enhanced.process_gedcom_structures(gedcom_structures, db, settings=settings)

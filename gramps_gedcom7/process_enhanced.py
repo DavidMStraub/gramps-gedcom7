@@ -66,11 +66,13 @@ def process_gedcom_structures(
             f"First structure must be a HEAD structure, but got {first_structure.tag}"
         )
     
-    last_structure = gedcom_structures[-1]
-    if last_structure.tag != g7const.TRLR:
-        raise ValueError(
-            f"Last structure must be a TRLR structure, but got {last_structure.tag}"
-        )
+    # Note: gedcom7 library v0.4.0 doesn't include TRLR in the structures
+    # So we skip this check for now
+    # last_structure = gedcom_structures[-1]
+    # if last_structure.tag != g7const.TRLR:
+    #     raise ValueError(
+    #         f"Last structure must be a TRLR structure, but got {last_structure.tag}"
+    #     )
 
     # Process header and extract extension information
     registered_extensions = handle_header_with_extensions(

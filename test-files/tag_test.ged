@@ -1,0 +1,231 @@
+0 HEAD
+1 GEDC
+2 VERS 7.0
+1 SCHMA
+2 TAG _TAG https://github.com/glamberson/gedcom-tags
+2 TAG _COLOR https://github.com/glamberson/gedcom-tags
+2 TAG _ATTR https://github.com/glamberson/gedcom-tags
+2 TAG _VALUE https://github.com/glamberson/gedcom-tags
+1 SOUR GRAMPS Extension Test Suite
+2 VERS 1.0
+2 NAME Tag Extension Test
+2 CORP Genealogy AI Project
+3 ADDR
+4 ADR1 Testing Lab
+1 DATE 28 JAN 2025
+2 TIME 16:15:00
+1 LANG English
+
+0 @T1@ _TAG
+1 NAME Research Complete
+1 _COLOR #00FF00
+
+0 @T2@ _TAG
+1 NAME Needs Verification
+1 _COLOR #FF0000
+
+0 @T3@ _TAG
+1 NAME In Progress
+1 _COLOR #FFFF00
+1 _ATTR priority
+2 _VALUE high
+1 _ATTR icon
+2 _VALUE hourglass
+
+0 @T4@ _TAG
+1 NAME DNA Match
+1 _COLOR #FF00FF
+1 _ATTR cM_value
+2 _VALUE 47.5
+1 _ATTR segments
+2 _VALUE 3
+1 _ATTR largest_segment
+2 _VALUE 25.2
+
+0 @T5@ _TAG
+1 NAME Primary Source
+1 _ATTR reliability
+2 _VALUE excellent
+1 _ATTR source_type
+2 _VALUE original_document
+
+0 @T6@ _TAG
+1 NAME Questionable
+1 _COLOR #FFA500
+1 _ATTR reason
+2 _VALUE conflicting dates
+1 _ATTR needs_research
+2 _VALUE true
+
+0 @T7@ _TAG
+1 NAME Archive Priority
+1 _COLOR #0000FF
+1 _ATTR deadline
+2 _VALUE 2025-03-01
+1 _ATTR assigned_to
+2 _VALUE John Researcher
+1 _ATTR estimated_hours
+2 _VALUE 8
+
+0 @T8@ _TAG
+1 NAME Shared Research
+1 _ATTR shared_with
+2 _VALUE cousin@example.com
+1 _ATTR share_date
+2 _VALUE 2025-01-15
+1 _ATTR permission_level
+2 _VALUE read_only
+
+0 @T9@ _TAG
+1 NAME GRAMPS Import
+1 _ATTR gramps_handle
+2 _VALUE abc123def456
+1 _ATTR gramps_change
+2 _VALUE 1234567890
+1 _ATTR gramps_priv
+2 _VALUE false
+
+0 @T10@ _TAG
+1 NAME FamilySearch Synced
+1 _COLOR #4169E1
+1 _ATTR fs_person_id
+2 _VALUE KWCJ-BPM
+1 _ATTR last_sync
+2 _VALUE 2025-01-28T10:00:00Z
+1 _ATTR sync_status
+2 _VALUE success
+
+0 @I1@ INDI
+1 NAME John /Smith/
+2 GIVN John
+2 SURN Smith
+1 SEX M
+1 BIRT
+2 DATE 15 MAR 1808
+2 PLAC Cincinnati, Hamilton County, Ohio, USA
+1 DEAT
+2 DATE 8 NOV 1885
+2 PLAC Worcester, Worcester County, Massachusetts, USA
+1 _TAG @T1@
+2 DATE 28 JAN 2025
+2 NOTE All vital records located and verified
+1 _TAG @T10@
+2 DATE 28 JAN 2025
+2 NOTE Synced with FamilySearch tree
+
+0 @I2@ INDI
+1 NAME Mary /Jones/
+2 GIVN Mary
+2 SURN Jones
+1 SEX F
+1 BIRT
+2 DATE ABT 1812
+2 PLAC Pennsylvania, USA
+1 _TAG @T2@
+2 DATE 27 JAN 2025
+2 NOTE Birth location needs county verification
+1 _TAG @T3@
+2 DATE 28 JAN 2025
+2 NOTE Currently researching parents
+
+0 @I3@ INDI
+1 NAME William /Smith/
+2 GIVN William
+2 SURN Smith
+1 SEX M
+1 BIRT
+2 DATE 14 SEP 1846
+2 PLAC Worcester, Worcester County, Massachusetts, USA
+1 _TAG @T4@
+2 DATE 25 JAN 2025
+2 NOTE Matches with user JohnDoe123 on AncestryDNA
+1 _TAG @T9@
+
+0 @I4@ INDI
+1 NAME Sarah /Smith/
+2 GIVN Sarah
+2 SURN Smith
+1 SEX F
+1 BIRT
+2 DATE 3 JUL 1848
+2 PLAC Worcester, Worcester County, Massachusetts, USA
+1 _TAG @T6@
+2 DATE 26 JAN 2025
+2 NOTE Birth year conflicts with census ages
+1 _TAG @T7@
+2 NOTE Need to check church baptism records
+
+0 @I5@ INDI
+1 NAME Robert /Brown/
+2 GIVN Robert
+2 SURN Brown
+1 SEX M
+1 _TAG @T8@
+2 DATE 15 JAN 2025
+2 NOTE Shared with DNA match for collaboration
+
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 CHIL @I3@
+1 CHIL @I4@
+1 MARR
+2 DATE 12 JUN 1845
+2 PLAC St. Paul Church, Worcester, Massachusetts
+1 _TAG @T1@
+2 DATE 28 JAN 2025
+2 NOTE Marriage record verified with church
+1 _TAG @T5@
+
+0 @S1@ SOUR
+1 TITL 1850 U.S. Federal Census
+1 ABBR 1850 Census
+1 _TAG @T5@
+2 DATE 27 JAN 2025
+2 NOTE Original image reviewed
+
+0 @S2@ SOUR
+1 TITL Smith Family Bible
+1 ABBR Family Bible
+1 TEXT Handwritten entries 1845-1890
+1 _TAG @T1@
+2 DATE 20 JAN 2025
+2 NOTE Photos obtained of all pages
+1 _TAG @T5@
+
+0 @S3@ SOUR
+1 TITL FindAGrave Memorial
+1 ABBR FindAGrave
+1 _TAG @T6@
+2 DATE 26 JAN 2025
+2 NOTE Dates don't match other sources
+1 _TAG @T2@
+
+0 @N1@ NOTE Worcester Research Plan
+1 CONT Need to visit Worcester Historical Society
+1 CONT Check courthouse for probate records
+1 CONT Review church burial records
+1 _TAG @T3@
+2 DATE 28 JAN 2025
+1 _TAG @T7@
+
+0 @N2@ NOTE DNA Research Notes
+1 CONT Multiple matches on chromosome 7
+1 CONT Triangulation group identified
+1 CONT Common ancestor likely 4-5 generations back
+1 _TAG @T4@
+2 DATE 25 JAN 2025
+
+0 @R1@ REPO
+1 NAME Worcester Historical Society
+1 ADDR
+2 ADR1 30 Elm Street
+2 CITY Worcester
+2 STAE MA
+2 POST 01609
+2 CTRY USA
+1 _TAG @T7@
+2 DATE 28 JAN 2025
+2 NOTE Priority visit scheduled for March
+
+0 TRLR

@@ -1,0 +1,261 @@
+0 HEAD
+1 GEDC
+2 VERS 7.0
+1 SCHMA
+2 TAG _EVID https://github.com/genealogy-standards/gedcom-evidence/v1
+2 TAG _TYPE https://github.com/genealogy-standards/gedcom-evidence/v1
+2 TAG _ID https://github.com/genealogy-standards/gedcom-evidence/v1
+2 TAG _RDOC https://github.com/genealogy-standards/gedcom-evidence/v1
+2 TAG _TITL https://github.com/genealogy-standards/gedcom-evidence/v1
+2 TAG _TEXT https://github.com/genealogy-standards/gedcom-evidence/v1
+2 TAG _SUBJ https://github.com/genealogy-standards/gedcom-evidence/v1
+2 TAG _CONC https://github.com/genealogy-standards/gedcom-evidence/v1
+2 TAG _RACT https://github.com/genealogy-standards/gedcom-evidence/v1
+2 TAG _PURP https://github.com/genealogy-standards/gedcom-evidence/v1
+2 TAG _TARG https://github.com/genealogy-standards/gedcom-evidence/v1
+2 TAG _VENU https://github.com/genealogy-standards/gedcom-evidence/v1
+2 TAG _RSLT https://github.com/genealogy-standards/gedcom-evidence/v1
+2 TAG _FIND https://github.com/genealogy-standards/gedcom-evidence/v1
+2 TAG _RSRCH https://github.com/genealogy-standards/gedcom-evidence/v1
+2 TAG _CONF https://github.com/genealogy-standards/gedcom-evidence/v1
+1 SOUR GRAMPS Extension Test Suite
+2 VERS 1.0
+2 NAME Evidence Extension Test
+2 CORP Genealogy AI Project
+3 ADDR
+4 ADR1 Testing Lab
+1 DATE 28 JAN 2025
+2 TIME 16:00:00
+1 LANG English
+
+0 @E1@ _EVID
+1 _TYPE Person
+1 _ID John Smith
+1 _ID age 42
+1 _ID farmer
+1 _ID born Ohio
+1 SOUR @S1@
+2 PAGE Page 312B, Line 15
+2 QUAY 3
+1 NOTE Extracted from 1850 census record
+
+0 @E2@ _EVID
+1 _TYPE Event
+1 _ID marriage at St. Paul Church
+1 _ID June 12, 1845
+1 _ID Catholic ceremony
+1 SOUR @S2@
+2 PAGE Register page 47
+1 NOTE Marriage register entry
+
+0 @E3@ _EVID
+1 _TYPE Relationship
+1 _ID John Smith married to Mary Jones
+1 _ID William son of John and Mary
+1 SOUR @S1@
+2 PAGE Page 312B, Lines 15-17
+
+0 @E4@ _EVID
+1 _TYPE Person
+1 _ID Mary Jones
+1 _ID wife
+1 _ID age 38
+1 _ID born Pennsylvania
+1 SOUR @S1@
+2 PAGE Page 312B, Line 16
+
+0 @E5@ _EVID
+1 _TYPE Place
+1 _ID Worcester Township
+1 _ID Worcester County
+1 _ID Massachusetts
+1 SOUR @S1@
+2 PAGE Header information
+
+0 @R1@ _RDOC
+1 _TITL Analysis of John Smith Identity
+1 _TEXT Based on the 1850 census evidence, John Smith appears to be the same person as the John Smith who married Mary Jones in 1845.
+2 CONT The age aligns perfectly (42 in 1850, would have been 37 in 1845).
+2 CONT The location is consistent (both in Worcester).
+2 CONT The wife's name matches exactly.
+1 _SUBJ @I1@
+1 _EVID @E1@
+1 _EVID @E2@
+1 _CONC
+2 _SUBJ @I1@
+2 _TEXT John Smith in census is same as John Smith in marriage
+1 AUTH Greg Lamberson
+1 DATE 28 JAN 2025
+2 TIME 15:45:00
+1 NOTE Strong correlation based on age, location, and spouse
+
+0 @R2@ _RDOC
+1 _TITL Proof Argument for Smith Family Group
+1 _TEXT The 1850 census provides direct evidence of the Smith family composition.
+2 CONT John (42) and Mary (38) are shown as husband and wife.
+2 CONT William (4) is listed as their son, born about 1846.
+2 CONT This aligns with their 1845 marriage date.
+1 _SUBJ @F1@
+1 _EVID @E1@
+1 _EVID @E3@
+1 _EVID @E4@
+1 _CONC
+2 _SUBJ @F1@
+2 _TEXT Census confirms family structure
+1 AUTH Greg Lamberson
+1 DATE 28 JAN 2025
+
+0 @A1@ _RACT
+1 _TYPE Search
+1 _PURP Find birth record for John Smith
+1 _TARG Ohio vital records 1800-1820
+1 _VENU Ohio State Archives online database
+1 _RSLT NotFound
+1 DATE 27 JAN 2025
+2 TIME 14:30:00
+1 _RSRCH Greg Lamberson
+1 NOTE Searched all counties, no matches for timeframe
+
+0 @A2@ _RACT
+1 _TYPE Search
+1 _PURP Locate 1850 census for Smith family
+1 _TARG Worcester, Massachusetts census
+1 _VENU Ancestry.com
+1 _RSLT Found
+1 _FIND John Smith household located
+2 _EVID @E1@
+1 _FIND Mary Smith in same household
+2 _EVID @E4@
+1 DATE 27 JAN 2025
+2 TIME 15:00:00
+1 _RSRCH Greg Lamberson
+
+0 @A3@ _RACT
+1 _TYPE Analysis
+1 _PURP Correlate census with marriage record
+1 _RSLT Found
+1 _FIND Strong evidence of identity match
+2 _EVID @E1@
+2 _EVID @E2@
+1 DATE 28 JAN 2025
+1 _RSRCH Greg Lamberson
+
+0 @A4@ _RACT
+1 _TYPE Correspondence
+1 _PURP Request church records access
+1 _TARG St. Paul Church archives
+1 _RSLT Pending
+1 DATE 28 JAN 2025
+1 _RSRCH Greg Lamberson
+1 NOTE Awaiting response from archivist
+
+0 @I1@ INDI
+1 NAME John /Smith/
+2 GIVN John
+2 SURN Smith
+1 SEX M
+1 BIRT
+2 DATE ABT 1808
+2 PLAC Ohio, USA
+2 _EVID @E1@
+3 _CONF 4
+3 _RDOC @R1@
+3 NOTE Age 42 in 1850 census
+1 MARR
+2 DATE 12 JUN 1845
+2 PLAC St. Paul Church, Worcester, Massachusetts
+2 _EVID @E2@
+3 _CONF 5
+3 NOTE Direct evidence from church register
+1 OCCU Farmer
+2 DATE 1850
+2 _EVID @E1@
+3 _CONF 5
+1 _EVID @E1@
+2 _CONF 5
+2 NOTE Primary census evidence
+1 _EVID @E2@
+2 _CONF 5
+2 _RDOC @R1@
+
+0 @I2@ INDI
+1 NAME Mary /Jones/
+2 GIVN Mary
+2 SURN Jones
+1 SEX F
+1 BIRT
+2 DATE ABT 1812
+2 PLAC Pennsylvania, USA
+2 _EVID @E4@
+3 _CONF 4
+3 NOTE Age 38 in 1850 census
+1 _EVID @E4@
+2 _CONF 5
+2 NOTE Primary census evidence
+1 _EVID @E3@
+2 _CONF 5
+2 NOTE Listed as wife in relationship
+
+0 @I3@ INDI
+1 NAME William /Smith/
+2 GIVN William
+2 SURN Smith
+1 SEX M
+1 BIRT
+2 DATE ABT 1846
+2 PLAC Worcester, Massachusetts, USA
+2 _EVID @E3@
+3 _CONF 4
+3 NOTE Age 4 in 1850, son of John and Mary
+1 _EVID @E3@
+2 _CONF 5
+2 NOTE Direct evidence as son
+
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 CHIL @I3@
+1 MARR
+2 DATE 12 JUN 1845
+2 PLAC St. Paul Church, Worcester, Massachusetts
+2 _EVID @E2@
+3 _CONF 5
+1 _EVID @E3@
+2 _CONF 5
+2 _RDOC @R2@
+2 NOTE Census shows family unit
+
+0 @S1@ SOUR
+1 TITL 1850 U.S. Federal Census
+1 ABBR 1850 Census
+1 PUBL National Archives and Records Administration
+1 TEXT Worcester County, Massachusetts, Population Schedule
+2 CONT Worcester Township, Page 312B
+1 REPO @R1@
+
+0 @S2@ SOUR
+1 TITL St. Paul Catholic Church Marriage Register
+1 ABBR St. Paul Marriages
+1 TEXT Marriage Register 1840-1850
+2 CONT Worcester, Massachusetts
+1 REPO @R2@
+
+0 @R1@ REPO
+1 NAME National Archives
+1 ADDR
+2 ADR1 700 Pennsylvania Avenue NW
+2 CITY Washington
+2 STAE DC
+2 POST 20408
+2 CTRY USA
+
+0 @R2@ REPO
+1 NAME St. Paul Catholic Church Archives
+1 ADDR
+2 ADR1 123 Church Street
+2 CITY Worcester
+2 STAE MA
+2 POST 01608
+2 CTRY USA
+
+0 TRLR

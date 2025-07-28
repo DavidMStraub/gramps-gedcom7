@@ -1,0 +1,396 @@
+0 HEAD
+1 GEDC
+2 VERS 7.0
+1 SCHMA
+2 TAG _OCUR https://github.com/glamberson/gedcom-occurrences
+2 TAG _OCREF https://github.com/glamberson/gedcom-occurrences
+2 TAG _PART https://github.com/glamberson/gedcom-occurrences
+2 TAG _PRESENCE https://github.com/glamberson/gedcom-occurrences
+2 TAG _ATTR https://github.com/glamberson/gedcom-occurrences
+2 TAG _EVID https://github.com/genealogy-standards/gedcom-evidence/v1
+2 TAG _TYPE https://github.com/genealogy-standards/gedcom-evidence/v1
+2 TAG _ID https://github.com/genealogy-standards/gedcom-evidence/v1
+2 TAG _RDOC https://github.com/genealogy-standards/gedcom-evidence/v1
+2 TAG _TITL https://github.com/genealogy-standards/gedcom-evidence/v1
+2 TAG _TEXT https://github.com/genealogy-standards/gedcom-evidence/v1
+2 TAG _SUBJ https://github.com/genealogy-standards/gedcom-evidence/v1
+2 TAG _CONC https://github.com/genealogy-standards/gedcom-evidence/v1
+2 TAG _RACT https://github.com/genealogy-standards/gedcom-evidence/v1
+2 TAG _PURP https://github.com/genealogy-standards/gedcom-evidence/v1
+2 TAG _TARG https://github.com/genealogy-standards/gedcom-evidence/v1
+2 TAG _VENU https://github.com/genealogy-standards/gedcom-evidence/v1
+2 TAG _RSLT https://github.com/genealogy-standards/gedcom-evidence/v1
+2 TAG _FIND https://github.com/genealogy-standards/gedcom-evidence/v1
+2 TAG _RSRCH https://github.com/genealogy-standards/gedcom-evidence/v1
+2 TAG _CONF https://github.com/genealogy-standards/gedcom-evidence/v1
+2 TAG _TAG https://github.com/glamberson/gedcom-tags
+2 TAG _COLOR https://github.com/glamberson/gedcom-tags
+2 TAG _VALUE https://github.com/glamberson/gedcom-tags
+2 TAG _TMPLT https://github.com/dthaler/gedcom-citations
+2 TAG _FIEL https://github.com/dthaler/gedcom-citations
+1 SOUR GRAMPS Extension Test Suite
+2 VERS 1.0
+2 NAME Combined Extensions Test
+2 CORP Genealogy AI Project
+3 ADDR
+4 ADR1 Testing Lab
+1 DATE 28 JAN 2025
+2 TIME 16:30:00
+1 LANG English
+
+0 COMMENT === TAGS SECTION ===
+
+0 @T1@ _TAG
+1 NAME Census Verified
+1 _COLOR #00FF00
+1 _ATTR source_quality
+2 _VALUE primary
+
+0 @T2@ _TAG
+1 NAME Needs Evidence
+1 _COLOR #FF0000
+
+0 @T3@ _TAG
+1 NAME DNA Confirmed
+1 _COLOR #FF00FF
+1 _ATTR match_confidence
+2 _VALUE high
+
+0 COMMENT === OCCURRENCES SECTION ===
+
+0 @O1@ _OCUR
+1 TYPE Census
+1 DATE 3 JUL 1850
+1 PLAC Worcester, Worcester County, Massachusetts, USA
+2 MAP
+3 LATI N42.2626
+3 LONG W71.8023
+1 NOTE Federal Census enumeration
+1 SOUR @S1@
+2 PAGE Page 312B, Lines 15-20
+2 DATA
+3 TEXT Dwelling 156, Family 42
+1 _ATTR dwelling_number
+2 TYPE Census Dwelling
+2 TEXT 156
+1 _ATTR family_number
+2 TYPE Census Family
+2 TEXT 42
+
+0 @O2@ _OCUR
+1 TYPE Marriage
+1 DATE 12 JUN 1845
+1 PLAC St. Paul Church, Worcester, Massachusetts
+1 RELI Catholic
+1 NOTE Catholic ceremony performed by Rev. Patrick O'Brien
+1 SOUR @S2@
+2 PAGE Register page 47, Entry 23
+
+0 @O3@ _OCUR
+1 TYPE Birth
+1 DATE 15 MAR 1808
+1 PLAC Cincinnati, Hamilton County, Ohio, USA
+1 NOTE Birth reconstruction from multiple sources
+
+0 @O4@ _OCUR
+1 TYPE Death
+1 DATE 8 NOV 1885
+1 PLAC Worcester, Worcester County, Massachusetts, USA
+1 CAUS Heart failure
+1 AGE 77y 7m 24d
+1 SOUR @S3@
+2 PAGE Certificate #1885-2341
+
+0 COMMENT === EVIDENCE SECTION ===
+
+0 @E1@ _EVID
+1 _TYPE Person
+1 _ID John Smith
+1 _ID head of household
+1 _ID age 42
+1 _ID born Ohio
+1 _ID farmer
+1 _ID real estate $1200
+1 SOUR @S1@
+2 PAGE Page 312B, Line 15
+2 QUAY 3
+1 NOTE 1850 census entry for John Smith
+
+0 @E2@ _EVID
+1 _TYPE Event
+1 _ID marriage June 12 1845
+1 _ID John Smith to Mary Jones
+1 _ID St. Paul Church Worcester
+1 _ID witnesses Thomas Brown and Elizabeth Jones
+1 SOUR @S2@
+2 PAGE Register page 47
+1 NOTE Church marriage register
+
+0 @E3@ _EVID
+1 _TYPE Person
+1 _ID Mary Smith
+1 _ID wife
+1 _ID age 38
+1 _ID born Pennsylvania
+1 SOUR @S1@
+2 PAGE Page 312B, Line 16
+
+0 @E4@ _EVID
+1 _TYPE Relationship
+1 _ID William son of John and Mary
+1 _ID age 4
+1 SOUR @S1@
+2 PAGE Page 312B, Line 17
+
+0 COMMENT === RESEARCH DOCUMENTATION ===
+
+0 @R1@ _RDOC
+1 _TITL Identity Correlation: John Smith
+1 _TEXT The John Smith in the 1850 census (age 42) correlates strongly with the John Smith who married Mary Jones in 1845.
+2 CONT Age progression is correct: would have been 37 at marriage.
+2 CONT Location is consistent: both events in Worcester.
+2 CONT Wife's name and age match perfectly.
+1 _SUBJ @I1@
+1 _EVID @E1@
+1 _EVID @E2@
+1 _CONC
+2 _SUBJ @I1@
+2 _TEXT Same person based on age, location, and spouse correlation
+1 AUTH Greg Lamberson
+1 DATE 28 JAN 2025
+
+0 @A1@ _RACT
+1 _TYPE Search
+1 _PURP Locate John Smith birth record
+1 _TARG Ohio vital records 1805-1810
+1 _VENU Ohio State Archives
+1 _RSLT NotFound
+1 DATE 27 JAN 2025
+1 _RSRCH Greg Lamberson
+1 NOTE County records destroyed in 1864 courthouse fire
+
+0 @A2@ _RACT
+1 _TYPE Analysis
+1 _PURP Correlate all John Smith evidence
+1 _RSLT Found
+1 _FIND Strong identity match across sources
+2 _EVID @E1@
+2 _EVID @E2@
+1 DATE 28 JAN 2025
+1 _RSRCH Greg Lamberson
+
+0 COMMENT === INDIVIDUALS WITH ALL EXTENSIONS ===
+
+0 @I1@ INDI
+1 NAME John /Smith/
+2 GIVN John
+2 SURN Smith
+1 SEX M
+1 BIRT
+2 DATE 15 MAR 1808
+2 PLAC Cincinnati, Hamilton County, Ohio, USA
+2 _EVID @E1@
+3 _CONF 3
+3 NOTE Age calculation from census
+1 DEAT
+2 DATE 8 NOV 1885
+2 PLAC Worcester, Worcester County, Massachusetts, USA
+1 _OCREF @O1@
+2 ROLE Head
+2 AGE 42y
+2 _PRESENCE _PRESENT
+2 _ATTR occupation
+3 TEXT Farmer
+1 _OCREF @O2@
+2 ROLE Groom
+2 _PRESENCE _PRESENT
+1 _OCREF @O3@
+2 ROLE Birth
+2 _PRESENCE _PRESENT
+1 _OCREF @O4@
+2 ROLE Deceased
+2 _PRESENCE _PRESENT
+1 _TAG @T1@
+2 DATE 28 JAN 2025
+2 NOTE Census records verified
+1 _TAG @T3@
+2 DATE 25 JAN 2025
+2 NOTE Y-DNA matches Smith surname project
+1 _EVID @E1@
+2 _CONF 5
+2 _RDOC @R1@
+
+0 @I2@ INDI
+1 NAME Mary /Jones/
+2 GIVN Mary
+2 SURN Jones
+1 SEX F
+1 BIRT
+2 DATE ABT 1812
+2 PLAC Pennsylvania, USA
+1 _OCREF @O1@
+2 ROLE Wife
+2 AGE 38y
+2 _PRESENCE _PRESENT
+1 _OCREF @O2@
+2 ROLE Bride
+2 _PRESENCE _PRESENT
+1 _TAG @T2@
+2 DATE 28 JAN 2025
+2 NOTE Parents not yet identified
+1 _EVID @E3@
+2 _CONF 5
+
+0 @I3@ INDI
+1 NAME William /Smith/
+2 GIVN William
+2 SURN Smith
+1 SEX M
+1 BIRT
+2 DATE 14 SEP 1846
+2 PLAC Worcester, Worcester County, Massachusetts, USA
+1 _OCREF @O1@
+2 ROLE Son
+2 AGE 4y
+2 _PRESENCE _PRESENT
+1 _TAG @T1@
+1 _EVID @E4@
+2 _CONF 5
+
+0 @I4@ INDI
+1 NAME Thomas /Brown/
+2 GIVN Thomas
+2 SURN Brown
+1 SEX M
+1 _OCREF @O2@
+2 ROLE Witness
+2 _PRESENCE _PRESENT
+
+0 @I5@ INDI
+1 NAME Elizabeth /Jones/
+2 GIVN Elizabeth
+2 SURN Jones
+1 SEX F
+1 _OCREF @O2@
+2 ROLE Witness
+2 _PRESENCE _PRESENT
+2 NOTE Likely sister of bride
+
+0 @I6@ INDI
+1 NAME Rev. Patrick /O'Brien/
+2 GIVN Patrick
+2 SURN O'Brien
+2 NPFX Rev.
+1 SEX M
+1 OCCU Catholic Priest
+1 _OCREF @O2@
+2 ROLE Officiator
+2 _PRESENCE _PRESENT
+
+0 COMMENT === FAMILIES ===
+
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 CHIL @I3@
+1 MARR
+2 DATE 12 JUN 1845
+2 PLAC St. Paul Church, Worcester, Massachusetts
+1 _TAG @T1@
+2 DATE 28 JAN 2025
+
+0 COMMENT === SOURCES WITH CITATION TEMPLATES ===
+
+0 @S1@ SOUR
+1 TITL 1850 U.S. Federal Census
+1 ABBR 1850 Census
+1 PUBL National Archives and Records Administration
+1 TEXT Worcester County, Massachusetts, Population Schedule
+1 _TMPLT Census
+2 _FIEL Year
+3 TEXT 1850
+2 _FIEL Jurisdiction
+3 TEXT Massachusetts
+2 _FIEL County
+3 TEXT Worcester
+2 _FIEL Township
+3 TEXT Worcester
+2 _FIEL Page
+3 TEXT 312B
+2 _FIEL Dwelling
+3 TEXT 156
+2 _FIEL Family
+3 TEXT 42
+1 REPO @RP1@
+
+0 @S2@ SOUR
+1 TITL St. Paul Catholic Church Marriage Register
+1 ABBR St. Paul Marriages
+1 _TMPLT Church
+2 _FIEL Church
+3 TEXT St. Paul Catholic Church
+2 _FIEL Location
+3 TEXT Worcester, Massachusetts
+2 _FIEL Record Type
+3 TEXT Marriage Register
+2 _FIEL Years
+3 TEXT 1840-1850
+2 _FIEL Page
+3 TEXT 47
+2 _FIEL Entry
+3 TEXT 23
+1 REPO @RP2@
+
+0 @S3@ SOUR
+1 TITL Massachusetts Death Certificates
+1 _TMPLT Vital
+2 _FIEL State
+3 TEXT Massachusetts
+2 _FIEL Certificate Type
+3 TEXT Death
+2 _FIEL Certificate Number
+3 TEXT 1885-2341
+2 _FIEL Year
+3 TEXT 1885
+
+0 COMMENT === REPOSITORIES ===
+
+0 @RP1@ REPO
+1 NAME National Archives
+1 ADDR
+2 ADR1 700 Pennsylvania Avenue NW
+2 CITY Washington
+2 STAE DC
+2 POST 20408
+2 CTRY USA
+1 _TAG @T1@
+
+0 @RP2@ REPO
+1 NAME St. Paul Catholic Church Archives
+1 ADDR
+2 ADR1 123 Church Street
+2 CITY Worcester
+2 STAE MA
+2 POST 01608
+2 CTRY USA
+
+0 COMMENT === NOTES WITH HTML FORMATTING ===
+
+0 @N1@ NOTE This note demonstrates <b>bold text</b>, <i>italic text</i>, and <u>underlined text</u>.
+1 MIME text/html
+1 CONT It also includes a <a href="https://example.com">hyperlink</a>.
+1 CONT <ul>
+1 CONT <li>First bullet point</li>
+1 CONT <li>Second bullet point</li>
+1 CONT </ul>
+1 _TAG @T1@
+
+0 @N2@ SNOTE Research plan with <b>priorities</b>:
+1 MIME text/html
+1 CONT <ol>
+1 CONT <li><b>High Priority:</b> Find birth certificate</li>
+1 CONT <li><i>Medium Priority:</i> Check probate records</li>
+1 CONT <li>Low Priority: Search newspapers</li>
+1 CONT </ol>
+
+0 TRLR

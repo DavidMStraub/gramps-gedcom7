@@ -1,0 +1,187 @@
+0 HEAD
+1 GEDC
+2 VERS 7.0
+1 SCHMA
+2 TAG _OCUR https://github.com/glamberson/gedcom-occurrences
+2 TAG _OCREF https://github.com/glamberson/gedcom-occurrences
+2 TAG _PART https://github.com/glamberson/gedcom-occurrences
+2 TAG _PRESENCE https://github.com/glamberson/gedcom-occurrences
+2 TAG _ATTR https://github.com/glamberson/gedcom-occurrences
+1 SOUR GRAMPS Extension Test Suite
+2 VERS 1.0
+2 NAME Occurrence Extension Test
+2 CORP Genealogy AI Project
+3 ADDR
+4 ADR1 Testing Lab
+1 DATE 28 JAN 2025
+2 TIME 15:30:00
+1 LANG English
+
+0 @O1@ _OCUR
+1 TYPE Census  
+1 DATE 3 JUL 1850
+1 PLAC Worcester, Worcester County, Massachusetts, USA
+2 MAP
+3 LATI N42.2626
+3 LONG W71.8023
+1 NOTE Household #42, Dwelling #156
+1 SOUR @S1@
+2 PAGE Page 312B, Lines 15-20
+1 _ATTR dwelling_number
+2 TYPE Census Dwelling
+2 TEXT 156
+1 _ATTR family_number
+2 TYPE Census Family  
+2 TEXT 42
+
+0 @O2@ _OCUR
+1 TYPE Death
+1 DATE 15 MAR 1880
+1 PLAC Boston, Suffolk County, Massachusetts, USA
+1 CAUS Consumption (Tuberculosis)
+1 NOTE Died at home surrounded by family
+
+0 @O3@ _OCUR
+1 TYPE Marriage
+1 DATE 12 JUN 1845
+1 PLAC St. Paul Church, Worcester, Massachusetts
+1 RELI Catholic
+
+0 @O4@ _OCUR
+1 TYPE Immigration
+1 DATE 23 MAY 1843
+1 PLAC Port of Boston, Massachusetts
+1 NOTE Arrived on ship "Liberty" from Liverpool
+1 _ATTR ship_name
+2 TEXT Liberty
+1 _ATTR departure_port
+2 TEXT Liverpool, England
+
+0 @I1@ INDI
+1 NAME John /Smith/
+2 GIVN John
+2 SURN Smith
+1 SEX M
+1 BIRT
+2 DATE 1808
+2 PLAC Ohio, USA
+1 _OCREF @O1@
+2 ROLE Head
+2 AGE 42y
+2 _PRESENCE _PRESENT
+2 NOTE Listed as farmer
+2 _ATTR occupation
+3 TEXT Farmer
+2 _ATTR real_estate_value
+3 TEXT $1200
+1 _OCREF @O2@
+2 ROLE Deceased
+2 _PRESENCE _PRESENT
+1 _OCREF @O3@
+2 ROLE Groom
+2 _PRESENCE _PRESENT
+1 _OCREF @O4@
+2 ROLE Immigrant
+2 AGE 35y
+2 _PRESENCE _PRESENT
+
+0 @I2@ INDI
+1 NAME Mary /Jones/
+2 GIVN Mary
+2 SURN Jones
+1 SEX F
+1 BIRT
+2 DATE 1812
+2 PLAC Pennsylvania, USA
+1 _OCREF @O1@
+2 ROLE Wife
+2 AGE 38y
+2 _PRESENCE _PRESENT
+1 _OCREF @O2@
+2 ROLE Witness
+2 _PRESENCE _PRESENT
+2 NOTE Present at deathbed
+1 _OCREF @O3@
+2 ROLE Bride
+2 _PRESENCE _PRESENT
+
+0 @I3@ INDI
+1 NAME William /Smith/
+2 GIVN William
+2 SURN Smith
+1 SEX M
+1 BIRT
+2 DATE 1846
+2 PLAC Worcester, Massachusetts
+1 _OCREF @O1@
+2 ROLE Son
+2 AGE 4y
+2 _PRESENCE _PRESENT
+1 _OCREF @O2@
+2 ROLE Witness
+2 _PRESENCE _PRESENT
+2 NOTE Son of deceased
+
+0 @I4@ INDI
+1 NAME Sarah /Smith/
+2 GIVN Sarah
+2 SURN Smith
+1 SEX F
+1 BIRT
+2 DATE 1848
+2 PLAC Worcester, Massachusetts
+1 _OCREF @O1@
+2 ROLE Daughter
+2 AGE 2y
+2 _PRESENCE _ABSENT
+2 NOTE Away visiting grandparents
+
+0 @I5@ INDI
+1 NAME Thomas /Brown/
+2 GIVN Thomas
+2 SURN Brown
+1 SEX M
+1 _OCREF @O3@
+2 ROLE Witness
+2 _PRESENCE _PRESENT
+2 NOTE Friend of groom
+
+0 @I6@ INDI
+1 NAME Rev. Patrick /O'Brien/
+2 GIVN Patrick
+2 SURN O'Brien
+2 NPFX Rev.
+1 SEX M
+1 OCCU Catholic Priest
+1 _OCREF @O3@
+2 ROLE Officiator
+2 _PRESENCE _PRESENT
+
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 CHIL @I3@
+1 CHIL @I4@
+1 MARR
+2 DATE 12 JUN 1845
+2 PLAC Worcester, Massachusetts
+
+0 @S1@ SOUR
+1 TITL 1850 U.S. Federal Census
+1 ABBR 1850 Census
+1 PUBL National Archives and Records Administration
+1 TEXT 1850 Federal Census, Worcester County, Massachusetts
+2 CONT Population Schedule, Worcester Township
+2 CONT Page 312B, Dwelling 156, Family 42
+1 REPO @R1@
+
+0 @R1@ REPO
+1 NAME National Archives
+1 ADDR
+2 ADR1 700 Pennsylvania Avenue NW
+2 CITY Washington
+2 STAE DC
+2 POST 20408
+2 CTRY USA
+
+0 TRLR

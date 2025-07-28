@@ -1,0 +1,387 @@
+0 HEAD
+1 GEDC
+2 VERS 7.0
+1 SCHMA
+2 TAG _TMPLT https://github.com/dthaler/gedcom-citations
+2 TAG _TPLT https://github.com/dthaler/gedcom-citations
+2 TAG _FIEL https://github.com/dthaler/gedcom-citations
+2 TAG _DATE https://github.com/dthaler/gedcom-citations
+2 TAG _SOUR https://github.com/dthaler/gedcom-citations
+1 SOUR GRAMPS Extension Test Suite
+2 VERS 1.0
+2 NAME Citation Template Extension Test
+2 CORP Genealogy AI Project
+3 ADDR
+4 ADR1 Testing Lab
+1 DATE 28 JAN 2025
+2 TIME 16:00:00
+1 LANG English
+
+0 @S1@ SOUR
+1 TITL 1850 U.S. Federal Census
+1 ABBR 1850 Census
+1 PUBL National Archives and Records Administration
+1 _TMPLT Census
+2 _FIEL Year
+3 TEXT 1850
+2 _FIEL Location
+3 TEXT United States
+2 _FIEL State
+3 TEXT Massachusetts
+2 _FIEL County
+3 TEXT Worcester
+2 _FIEL Township
+3 TEXT Worcester Township
+2 _FIEL Enumeration District
+3 TEXT 3
+2 _FIEL Page
+3 TEXT 312B
+2 _FIEL Dwelling
+3 TEXT 156
+2 _FIEL Family
+3 TEXT 42
+2 _FIEL Line
+3 TEXT 15-20
+2 _FIEL Enumeration Date
+3 TEXT 3 July 1850
+2 _FIEL Enumerator
+3 TEXT James Johnson
+1 REPO @R1@
+
+0 @S2@ SOUR
+1 TITL St. Paul Catholic Church Records
+1 ABBR St. Paul Records
+1 _TMPLT Church
+2 _FIEL Church Name
+3 TEXT St. Paul Catholic Church
+2 _FIEL Location
+3 TEXT Worcester, Massachusetts
+2 _FIEL Record Type
+3 TEXT Marriage Register
+2 _FIEL Volume
+3 TEXT 1840-1850
+2 _FIEL Page
+3 TEXT 156
+2 _FIEL Entry Number
+3 TEXT 67
+2 _FIEL Entry Date
+3 TEXT 12 June 1845
+2 _FIEL Priest
+3 TEXT Rev. Patrick O'Brien
+2 _FIEL Language
+3 TEXT Latin
+1 REPO @R2@
+
+0 @S3@ SOUR
+1 TITL Massachusetts Vital Records
+1 ABBR MA Vitals
+1 _TMPLT Vital
+2 _FIEL State
+3 TEXT Massachusetts
+2 _FIEL County
+3 TEXT Suffolk
+2 _FIEL Town
+3 TEXT Boston
+2 _FIEL Certificate Type
+3 TEXT Death
+2 _FIEL Certificate Number
+3 TEXT 1880-1234
+2 _FIEL Year
+3 TEXT 1880
+2 _FIEL Volume
+3 TEXT 125
+2 _FIEL Page
+3 TEXT 456
+2 _FIEL Film Number
+3 TEXT FHL 1234567
+1 REPO @R3@
+
+0 @S4@ SOUR
+1 TITL Find A Grave
+1 ABBR FAG
+1 _TMPLT Cemetery
+2 _FIEL Cemetery Name
+3 TEXT Mount Auburn Cemetery
+2 _FIEL Location
+3 TEXT Cambridge, Massachusetts
+2 _FIEL Memorial ID
+3 TEXT 12345678
+2 _FIEL Plot
+3 TEXT Section B, Lot 123
+2 _FIEL Transcriber
+3 TEXT John Doe
+2 _FIEL Date Added
+3 TEXT 15 March 2010
+2 _FIEL GPS Coordinates
+3 TEXT 42.3708° N, 71.1456° W
+1 WWW https://www.findagrave.com/memorial/12345678
+
+0 @S5@ SOUR
+1 TITL Revolutionary War Pension Files
+1 ABBR Rev War Pension
+1 _TMPLT Military
+2 _FIEL Archive
+3 TEXT National Archives
+2 _FIEL Record Group
+3 TEXT RG 15
+2 _FIEL Series
+3 TEXT M804
+2 _FIEL Roll
+3 TEXT 2345
+2 _FIEL Pension Number
+3 TEXT S.12345
+2 _FIEL Service State
+3 TEXT Massachusetts
+2 _FIEL Application Date
+3 TEXT 15 May 1832
+2 _FIEL Widow Application
+3 TEXT R.12346
+1 REPO @R1@
+
+0 @S6@ SOUR
+1 TITL Ancestry.com Family Trees
+1 ABBR Ancestry Tree
+1 _TMPLT Online Tree
+2 _FIEL Website
+3 TEXT Ancestry.com
+2 _FIEL Tree Name
+3 TEXT Smith Family Tree
+2 _FIEL Tree ID
+3 TEXT 12345678
+2 _FIEL Owner
+3 TEXT jsmith123
+2 _FIEL Last Updated
+3 TEXT 15 January 2025
+2 _FIEL Person ID
+3 TEXT tree12345678/person/98765432
+2 _FIEL Access Type
+3 TEXT Public
+1 WWW https://www.ancestry.com/family-tree/tree/12345678/family
+
+0 @S7@ SOUR
+1 TITL Massachusetts Town and Vital Records
+1 ABBR Holbrook VR
+1 _TMPLT Book
+2 _FIEL Author
+3 TEXT Holbrook Research Institute
+2 _FIEL Title
+3 TEXT Vital Records of Randolph, Massachusetts to 1850
+2 _FIEL Publisher
+3 TEXT New England Historic Genealogical Society
+2 _FIEL Publication Year
+3 TEXT 1909
+2 _FIEL Volume
+3 TEXT 1
+2 _FIEL Page
+3 TEXT 234
+2 _FIEL Entry Type
+3 TEXT Birth
+2 _FIEL Repository Call Number
+3 TEXT F74.R2 H65
+1 REPO @R4@
+
+0 @S8@ SOUR
+1 TITL Ship Passenger List
+1 ABBR Ship List
+1 _TMPLT Immigration
+2 _FIEL Ship Name
+3 TEXT Liberty
+2 _FIEL Departure Port
+3 TEXT Liverpool, England
+2 _FIEL Arrival Port
+3 TEXT Boston, Massachusetts
+2 _FIEL Arrival Date
+3 TEXT 23 May 1843
+2 _FIEL Manifest Page
+3 TEXT 12
+2 _FIEL Line Number
+3 TEXT 45-47
+2 _FIEL NARA Series
+3 TEXT M277
+2 _FIEL Roll
+3 TEXT 23
+2 _FIEL List Number
+3 TEXT 456
+1 REPO @R1@
+
+0 @S9@ SOUR
+1 TITL Massachusetts State Census
+1 ABBR MA State Census
+1 _TMPLT Census
+2 _FIEL Year
+3 TEXT 1855
+2 _FIEL Location
+3 TEXT Massachusetts
+2 _FIEL State
+3 TEXT Massachusetts
+2 _FIEL County
+3 TEXT Worcester
+2 _FIEL City
+3 TEXT Worcester
+2 _FIEL Ward
+3 TEXT 3
+2 _FIEL Page
+3 TEXT 45
+2 _FIEL Dwelling
+3 TEXT 234
+2 _FIEL Family
+3 TEXT 256
+2 _FIEL Line
+3 TEXT 12
+1 REPO @R3@
+
+0 @S10@ SOUR
+1 TITL Family Bible Record
+1 ABBR Smith Bible
+1 _TMPLT Bible
+2 _FIEL Bible Owner
+3 TEXT John Smith
+2 _FIEL Bible Publisher
+3 TEXT American Bible Society
+2 _FIEL Publication Year
+3 TEXT 1825
+2 _FIEL Current Owner
+3 TEXT Mary Smith Johnson
+2 _FIEL Pages Photographed
+3 TEXT Family Record Pages
+2 _FIEL Transcription Date
+3 TEXT 15 March 2020
+2 _FIEL Repository
+3 TEXT Private Collection
+1 NOTE Handwritten entries in various hands from 1825-1890
+
+0 @I1@ INDI
+1 NAME John /Smith/
+2 GIVN John
+2 SURN Smith
+1 SEX M
+1 BIRT
+2 DATE 12 MAR 1808
+2 PLAC Franklin County, Ohio
+2 SOUR @S10@
+3 PAGE Family Record Page
+3 DATA
+4 TEXT Birth: John Smith, March 12, 1808
+3 _FIEL Entry Hand
+4 TEXT Original hand (1825)
+1 DEAT
+2 DATE 15 MAR 1880
+2 PLAC Boston, Massachusetts
+2 SOUR @S3@
+3 PAGE Certificate 1880-1234
+3 DATA
+4 DATE 15 MAR 1880
+3 _FIEL Informant
+4 TEXT William Smith (son)
+3 _FIEL Cause
+4 TEXT Consumption
+1 BURI
+2 DATE 18 MAR 1880
+2 PLAC Mount Auburn Cemetery, Cambridge, Massachusetts
+2 SOUR @S4@
+3 DATA
+4 TEXT John Smith, 1808-1880
+1 CENS
+2 DATE 3 JUL 1850
+2 PLAC Worcester, Massachusetts
+2 SOUR @S1@
+3 PAGE Page 312B, Line 15
+3 DATA
+4 TEXT John Smith, 42, Farmer, Ohio
+3 _FIEL Occupation
+4 TEXT Farmer
+3 _FIEL Real Estate Value
+4 TEXT 1200
+1 CENS
+2 DATE 15 JUN 1855
+2 PLAC Worcester, Massachusetts  
+2 SOUR @S9@
+3 PAGE Page 45, Line 12
+3 DATA
+4 TEXT John Smith, 47, Farmer
+1 IMMI
+2 DATE 23 MAY 1843
+2 PLAC Boston, Massachusetts
+2 SOUR @S8@
+3 PAGE Manifest page 12, line 45
+3 DATA
+4 TEXT John Smith, 35, Farmer
+3 _FIEL Traveling With
+4 TEXT Wife and infant
+1 _TMPLT
+2 _SOUR @S6@
+3 _DATE 15 JAN 2025
+3 NOTE Ancestry tree has additional children not documented elsewhere
+
+0 @I2@ INDI
+1 NAME Mary /Jones/
+2 GIVN Mary
+2 SURN Jones
+1 SEX F
+1 BIRT
+2 DATE 1812
+2 PLAC Pennsylvania
+2 SOUR @S10@
+3 PAGE Family Record Page
+3 DATA
+4 TEXT Birth: Mary Jones, 1812, Pennsylvania
+1 CENS
+2 DATE 3 JUL 1850
+2 PLAC Worcester, Massachusetts
+2 SOUR @S1@
+3 PAGE Page 312B, Line 16
+3 DATA
+4 TEXT Mary Smith, 38, Pennsylvania
+
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 MARR
+2 DATE 12 JUN 1845
+2 PLAC St. Paul Catholic Church, Worcester, Massachusetts
+2 SOUR @S2@
+3 PAGE Register page 156, Entry 67
+3 DATA
+4 TEXT John Smith to Mary Jones
+3 _FIEL Witnesses
+4 TEXT Thomas Brown, Margaret Jones
+3 _FIEL Groom Age
+4 TEXT 37
+3 _FIEL Bride Age
+4 TEXT 33
+
+0 @R1@ REPO
+1 NAME National Archives
+1 ADDR
+2 ADR1 700 Pennsylvania Avenue NW
+2 CITY Washington
+2 STAE DC
+2 POST 20408
+2 CTRY USA
+1 WWW https://www.archives.gov
+
+0 @R2@ REPO
+1 NAME St. Paul Catholic Church Archives
+1 ADDR
+2 ADR1 123 Church Street
+2 CITY Worcester
+2 STAE MA
+2 POST 01608
+
+0 @R3@ REPO
+1 NAME Massachusetts State Archives
+1 ADDR
+2 ADR1 220 Morrissey Blvd
+2 CITY Boston
+2 STAE MA
+2 POST 02125
+
+0 @R4@ REPO
+1 NAME New England Historic Genealogical Society
+1 ADDR
+2 ADR1 99-101 Newbury Street
+2 CITY Boston
+2 STAE MA
+2 POST 02116
+
+0 TRLR
