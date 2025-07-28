@@ -160,7 +160,9 @@ def handle_structure(
         A list of created objects or None.
     """
     # Check if this is an extension tag
-    if structure.tag.startswith("_"):
+    # Use original_tag if available (from our patch), otherwise check tag URI
+    tag_to_check = getattr(structure, 'original_tag', structure.tag)
+    if tag_to_check.startswith("_") or structure.tag.startswith("http"):
         return handle_extension_structure(
             structure, xref_handle_map=xref_handle_map, settings=settings
         )
@@ -220,8 +222,11 @@ def handle_extension_structure(
     Returns:
         A list of created objects or None.
     """
+    # Get the original tag name if available (from our patch)
+    tag_name = getattr(structure, 'original_tag', structure.tag)
+    
     # Check if we have a handler for this extension tag
-    handler = EXTENSION_TAGS.get(structure.tag)
+    handler = EXTENSION_TAGS.get(tag_name)
     if handler:
         # Check if extension is registered (if strict mode)
         if hasattr(settings, 'strict_extensions') and settings.strict_extensions:

@@ -10,6 +10,7 @@ from typing import TextIO, BinaryIO
 
 from . import process_enhanced
 from .settings import ImportSettings
+from .gedcom7_patch import loads_patched
 
 
 def import_gedcom(
@@ -37,5 +38,6 @@ def import_gedcom(
             "input_file must be a string, Path object, or file-like object."
         )
 
-    gedcom_structures = list(gedcom7.loads(gedcom_data))
+    # Use patched loader to preserve extension tags
+    gedcom_structures = list(loads_patched(gedcom_data))
     process_enhanced.process_gedcom_structures(gedcom_structures, db, settings=settings)
