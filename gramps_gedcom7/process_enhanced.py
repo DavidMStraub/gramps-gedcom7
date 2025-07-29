@@ -192,9 +192,10 @@ def handle_structure(
         # Check if source uses citation templates
         has_template = any(child.tag == "_TMPLT" for child in structure.children)
         if has_template:
-            return handle_source_with_template(
+            source, other_objects = handle_source_with_template(
                 structure, xref_handle_map=xref_handle_map, settings=settings
             )
+            return [source] + other_objects
         else:
             return handle_source(
                 structure, xref_handle_map=xref_handle_map, settings=settings

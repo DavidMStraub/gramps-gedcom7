@@ -124,7 +124,7 @@ def convert_html_to_styled_text(html_text: str) -> StyledText:
     tag_pattern = re.compile(r'<(/?)(\w+)(?:\s+href="([^"]+)")?>|([^<]+)')
     
     # Stack for nested tags
-    tag_stack = []
+    tag_stack: list[tuple[str, int, str]] = []
     
     for match in tag_pattern.finditer(html_text):
         closing, tag_name, href, text = match.groups()
@@ -139,7 +139,7 @@ def convert_html_to_styled_text(html_text: str) -> StyledText:
             if closing:
                 # Closing tag - pop from stack and create StyledTextTag
                 if tag_stack and tag_stack[-1][0] == tag_name:
-                    start_tag, start_pos = tag_stack.pop()
+                    start_tag, start_pos, _ = tag_stack.pop()
                     
                     # Map HTML tags to GRAMPS style tags
                     if tag_name == 'b':
@@ -189,7 +189,7 @@ def convert_html_to_styled_text(html_text: str) -> StyledText:
                 if tag_name == 'a' and href:
                     tag_stack.append((tag_name, pos, href))
                 else:
-                    tag_stack.append((tag_name, pos))
+                    tag_stack.append((tag_name, pos, ''))
     
     # Set the plain text and tags
     styled.set_text(''.join(plain_text))

@@ -11,6 +11,7 @@ from gedcom7 import grammar as g7grammar
 from gedcom7 import types as g7types
 from gramps.gen.lib import (
     EventRef,
+    EventRoleType,
     EventType,
     Name,
     NameType,
@@ -31,7 +32,6 @@ from .individual import (
     EVENT_TYPE_MAP,
     GENDER_MAP,
     NAME_TYPE_MAP,
-    handle_fam_link,
     handle_name,
 )
 
@@ -65,7 +65,8 @@ def handle_individual_enhanced(
             util.set_privacy_on_object(resn_structure=child, obj=person)
         
         elif child.tag == g7const.NAME:
-            name = handle_name(child, xref_handle_map=xref_handle_map, settings=settings)
+            name, name_objects = handle_name(child, xref_handle_map=xref_handle_map)
+            objects.extend(name_objects)
             if name.get_type() == NameType.BIRTH:
                 person.set_primary_name(name)
             else:
@@ -91,14 +92,16 @@ def handle_individual_enhanced(
             person.add_event_ref(event_ref)
             objects.append(event)
         
-        elif child.tag == g7const.FAMC:
-            family_handle = handle_fam_link(
-                child, xref_handle_map=xref_handle_map, handle_adoption=True
-            )
+        elif child.tag == g7const.FAMC and child.pointer != g7grammar.voidptr:
+            family_handle = xref_handle_map.get(child.pointer)
+            if not family_handle:
+                raise ValueError(f"Family {child.pointer} not found")
             person.add_parent_family_handle(family_handle)
         
-        elif child.tag == g7const.FAMS:
-            family_handle = handle_fam_link(child, xref_handle_map=xref_handle_map)
+        elif child.tag == g7const.FAMS and child.pointer != g7grammar.voidptr:
+            family_handle = xref_handle_map.get(child.pointer)
+            if not family_handle:
+                raise ValueError(f"Family {child.pointer} not found")
             person.add_family_handle(family_handle)
         
         # Extension support

@@ -17,6 +17,7 @@ from gramps.gen.lib.primaryobj import BasicPrimaryObject
 
 from . import util
 from .citation import handle_citation
+from .event import handle_place
 from .settings import ImportSettings
 
 if TYPE_CHECKING:
@@ -87,7 +88,7 @@ def handle_occurrence(
         
         elif child.tag == "PLAC":
             # Handle place information
-            place, other_objects = util.handle_place(child, xref_handle_map)
+            place, other_objects = handle_place(child, xref_handle_map)
             event.set_place_handle(place.handle)
             objects.append(place)
             objects.extend(other_objects)
