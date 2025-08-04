@@ -16,6 +16,7 @@ from .settings import ImportSettings
 from .source import handle_source
 from .submitter import handle_submitter
 from .util import make_handle
+from gramps.gen.lib import Note
 
 
 def process_gedcom_structures(
@@ -102,6 +103,15 @@ def handle_structure(
         return handle_submitter(
             structure, xref_handle_map=xref_handle_map, settings=settings
         )
+    elif structure.tag.startswith("_"):
+        # Preserve extension structures as notes to prevent data loss
+        note = Note()
+        note.set(f"Extension: {structure.tag}")
+        if structure.xref and structure.xref in xref_handle_map:
+            note.handle = xref_handle_map[structure.xref]
+        else:
+            note.handle = make_handle()
+        return [note]
     return None
 
 
