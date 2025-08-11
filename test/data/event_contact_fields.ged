@@ -1,0 +1,56 @@
+0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 NAME John /Smith/
+1 SEX M
+1 BIRT
+2 DATE 1 JAN 1950
+2 PLAC Birth Hospital
+2 PHON +1-555-0100
+2 EMAIL birth.registry@hospital.org
+2 FAX +1-555-0101
+2 WWW http://hospital.org/birth-records
+1 DEAT
+2 DATE 31 DEC 2020
+2 PLAC City Hospital
+2 PHON +1-555-0200
+2 PHON +1-555-0201
+2 EMAIL coroner@county.gov
+2 EMAIL admin@hospital.org
+2 FAX +1-555-0202
+2 FAX +1-555-0203
+2 WWW http://county.gov/deaths
+2 WWW http://hospital.org/records
+0 @I2@ INDI
+1 NAME Jane /Doe/
+1 SEX F
+1 BAPM
+2 DATE 15 MAR 1955
+2 PLAC First Baptist Church
+2 PHON +1-555-0300
+2 EMAIL church@firstbaptist.org
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 MARR
+2 DATE 1 JUN 1975
+2 PLAC City Hall
+2 PHON +1-555-0400
+2 EMAIL clerk@city.gov
+2 FAX +1-555-0401
+2 WWW http://city.gov/marriages
+1 DIV
+2 DATE 1 JAN 2000
+2 PHON +1-555-0500
+2 EMAIL court@district.gov
+0 @I3@ INDI
+1 NAME Test /Person/
+1 EVEN
+2 TYPE Graduation
+2 DATE 15 MAY 2000
+2 PHON +1-555-0600
+2 EMAIL registrar@university.edu
+2 FAX +1-555-0601
+2 WWW http://university.edu/graduation
+0 TRLR

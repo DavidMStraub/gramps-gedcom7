@@ -111,16 +111,19 @@ def test_importer_maximal70():
     assert marriage_media1.gramps_id == "O1"
     assert marriage_media2.gramps_id == "O2"
 
-    # event UID
-    assert len(marriage.attribute_list) == 2
-    assert marriage.attribute_list[0].get_type() == "UID"
-    assert (
-        marriage.attribute_list[0].get_value() == "bbcc0025-34cb-4542-8cfb-45ba201c9c2c"
-    )
-    assert marriage.attribute_list[1].get_type() == "UID"
-    assert (
-        marriage.attribute_list[1].get_value() == "9ead4205-5bad-4c05-91c1-0aecd3f5127d"
-    )
+    # event attributes (contact fields + UID)
+    assert len(marriage.attribute_list) == 10  # 8 contact fields + 2 UID
+    # Check contact fields (2 PHON, 2 EMAIL, 2 FAX, 2 WWW)
+    contact_attrs = [a for a in marriage.attribute_list if any(
+        prefix in a.get_value() for prefix in ["Phone:", "Email:", "Fax:", "Website:"]
+    )]
+    assert len(contact_attrs) == 8
+    # Check UID attributes
+    uid_attrs = [a for a in marriage.attribute_list if a.get_type() == "UID"]
+    assert len(uid_attrs) == 2
+    uid_values = [a.get_value() for a in uid_attrs]
+    assert "bbcc0025-34cb-4542-8cfb-45ba201c9c2c" in uid_values
+    assert "9ead4205-5bad-4c05-91c1-0aecd3f5127d" in uid_values
 
     # custom event (line 123)
     event = db.get_event_from_handle(family.event_ref_list[10].ref)
@@ -344,12 +347,19 @@ def test_importer_maximal70():
     assert event_media1.gramps_id == "O1"
     assert event_media2.gramps_id == "O2"
 
-    # person event UID
-    assert len(event.attribute_list) == 2
-    assert event.attribute_list[0].get_type() == "UID"
-    assert event.attribute_list[0].get_value() == "bbcc0025-34cb-4542-8cfb-45ba201c9c2c"
-    assert event.attribute_list[1].get_type() == "UID"
-    assert event.attribute_list[1].get_value() == "9ead4205-5bad-4c05-91c1-0aecd3f5127d"
+    # person event attributes (contact fields + UID)
+    assert len(event.attribute_list) == 10  # 8 contact fields + 2 UID
+    # Check contact fields
+    contact_attrs = [a for a in event.attribute_list if any(
+        prefix in a.get_value() for prefix in ["Phone:", "Email:", "Fax:", "Website:"]
+    )]
+    assert len(contact_attrs) == 8
+    # Check UID attributes
+    uid_attrs = [a for a in event.attribute_list if a.get_type() == "UID"]
+    assert len(uid_attrs) == 2
+    uid_values = [a.get_value() for a in uid_attrs]
+    assert "bbcc0025-34cb-4542-8cfb-45ba201c9c2c" in uid_values
+    assert "9ead4205-5bad-4c05-91c1-0aecd3f5127d" in uid_values
 
     # EMIG - Emigration
     event = db.get_event_from_handle(person.event_ref_list[11].ref)
