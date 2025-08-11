@@ -6,12 +6,15 @@ from gedcom7 import const as g7const
 from gedcom7 import grammar as g7grammar
 from gedcom7 import types as g7types
 from gramps.gen.lib import (
+    Address,
     EventRef,
     EventType,
     Name,
     NameType,
     Person,
     Surname,
+    Url,
+    UrlType,
 )
 from gramps.gen.lib.primaryobj import BasicPrimaryObject
 
@@ -94,6 +97,30 @@ def handle_individual(
                 person.set_primary_name(name)
             else:
                 person.add_alternate_name(name)
+        elif child.tag == g7const.PHON:
+            assert isinstance(child.value, str), "Expected value to be a string"
+            # Create address with phone
+            address = Address()
+            address.set_phone(child.value)
+            person.add_address(address)
+        elif child.tag == g7const.EMAIL:
+            assert isinstance(child.value, str), "Expected value to be a string"
+            url = Url()
+            url.set_path(child.value)
+            url.set_type(UrlType(UrlType.EMAIL))
+            person.add_url(url)
+        elif child.tag == g7const.FAX:
+            assert isinstance(child.value, str), "Expected value to be a string"
+            # Store FAX in address (no dedicated FAX field)
+            address = Address()
+            address.set_phone(f"FAX: {child.value}")
+            person.add_address(address)
+        elif child.tag == g7const.WWW:
+            assert isinstance(child.value, str), "Expected value to be a string"
+            url = Url()
+            url.set_path(child.value)
+            url.set_type(UrlType(UrlType.WEB_HOME))
+            person.add_url(url)
         # TODO handle attributes
         # TODO handle SUBM
         # TODO handle associations

@@ -111,15 +111,25 @@ def test_importer_maximal70():
     assert marriage_media1.gramps_id == "O1"
     assert marriage_media2.gramps_id == "O2"
 
-    # event UID
-    assert len(marriage.attribute_list) == 2
-    assert marriage.attribute_list[0].get_type() == "UID"
+    # event UID + contact fields (8 contact fields: 2 PHON, 2 EMAIL, 2 FAX, 2 WWW)
+    assert len(marriage.attribute_list) == 10  # 8 contact fields + 2 UID
+    # Contact fields are added first (indexes 0-7)
+    assert "Phone:" in marriage.attribute_list[0].get_value()
+    assert "Phone:" in marriage.attribute_list[1].get_value()
+    assert "Email:" in marriage.attribute_list[2].get_value()
+    assert "Email:" in marriage.attribute_list[3].get_value()
+    assert "Fax:" in marriage.attribute_list[4].get_value()
+    assert "Fax:" in marriage.attribute_list[5].get_value()
+    assert "Website:" in marriage.attribute_list[6].get_value()
+    assert "Website:" in marriage.attribute_list[7].get_value()
+    # UIDs are at the end (indexes 8-9)
+    assert marriage.attribute_list[8].get_type() == "UID"
     assert (
-        marriage.attribute_list[0].get_value() == "bbcc0025-34cb-4542-8cfb-45ba201c9c2c"
+        marriage.attribute_list[8].get_value() == "bbcc0025-34cb-4542-8cfb-45ba201c9c2c"
     )
-    assert marriage.attribute_list[1].get_type() == "UID"
+    assert marriage.attribute_list[9].get_type() == "UID"
     assert (
-        marriage.attribute_list[1].get_value() == "9ead4205-5bad-4c05-91c1-0aecd3f5127d"
+        marriage.attribute_list[9].get_value() == "9ead4205-5bad-4c05-91c1-0aecd3f5127d"
     )
 
     # custom event (line 123)
@@ -344,12 +354,13 @@ def test_importer_maximal70():
     assert event_media1.gramps_id == "O1"
     assert event_media2.gramps_id == "O2"
 
-    # person event UID
-    assert len(event.attribute_list) == 2
-    assert event.attribute_list[0].get_type() == "UID"
-    assert event.attribute_list[0].get_value() == "bbcc0025-34cb-4542-8cfb-45ba201c9c2c"
-    assert event.attribute_list[1].get_type() == "UID"
-    assert event.attribute_list[1].get_value() == "9ead4205-5bad-4c05-91c1-0aecd3f5127d"
+    # person event UID + contact fields (DEAT event has contact fields too)
+    assert len(event.attribute_list) == 10  # 8 contact fields + 2 UID
+    # Contact fields are first (same as marriage event)
+    assert event.attribute_list[8].get_type() == "UID"
+    assert event.attribute_list[8].get_value() == "bbcc0025-34cb-4542-8cfb-45ba201c9c2c"
+    assert event.attribute_list[9].get_type() == "UID"
+    assert event.attribute_list[9].get_value() == "9ead4205-5bad-4c05-91c1-0aecd3f5127d"
 
     # EMIG - Emigration
     event = db.get_event_from_handle(person.event_ref_list[11].ref)

@@ -4,7 +4,7 @@ from gedcom7 import const as g7const
 from gedcom7 import grammar as g7grammar
 from gedcom7 import types as g7types
 from gedcom7 import util as g7util
-from gramps.gen.lib import Event, EventType, Place, PlaceName
+from gramps.gen.lib import Attribute, AttributeType, Event, EventType, Place, PlaceName
 from gramps.gen.lib.primaryobj import BasicPrimaryObject
 
 from . import util
@@ -42,9 +42,33 @@ def handle_event(
                 event.set_type(EventType(child.value))
         elif child.tag == g7const.RESN:
             util.set_privacy_on_object(resn_structure=child, obj=event)
+        elif child.tag == g7const.PHON:
+            assert isinstance(child.value, str), "Expected value to be a string"
+            attr = Attribute()
+            attr.set_type(AttributeType.CUSTOM)
+            attr.set_value(f"Phone: {child.value}")
+            event.add_attribute(attr)
+        elif child.tag == g7const.EMAIL:
+            assert isinstance(child.value, str), "Expected value to be a string"
+            attr = Attribute()
+            attr.set_type(AttributeType.CUSTOM)
+            attr.set_value(f"Email: {child.value}")
+            event.add_attribute(attr)
+        elif child.tag == g7const.FAX:
+            assert isinstance(child.value, str), "Expected value to be a string"
+            attr = Attribute()
+            attr.set_type(AttributeType.CUSTOM)
+            attr.set_value(f"Fax: {child.value}")
+            event.add_attribute(attr)
+        elif child.tag == g7const.WWW:
+            assert isinstance(child.value, str), "Expected value to be a string"
+            attr = Attribute()
+            attr.set_type(AttributeType.CUSTOM)
+            attr.set_value(f"Website: {child.value}")
+            event.add_attribute(attr)
         # TODO handle association
         # TODO handle address
-        # TODO handle PHON, EMAIL, FAX, WWW, AGNC, RELI, CAUS
+        # TODO handle AGNC, RELI, CAUS
         elif child.tag == g7const.SNOTE and child.pointer != g7grammar.voidptr:
             try:
                 note_handle = xref_handle_map[child.pointer]
