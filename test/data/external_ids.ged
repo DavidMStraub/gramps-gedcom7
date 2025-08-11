@@ -1,0 +1,41 @@
+﻿0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 NAME John /Smith/
+1 REFN 12345
+2 TYPE Employee ID
+1 REFN ABC-789
+2 TYPE Customer Number
+1 EXID EXT-001
+2 TYPE http://example.com/person
+1 EXID SYS-9876
+2 TYPE http://other-system.org
+0 @F1@ FAM
+1 HUSB @I1@
+1 REFN FAM-001
+2 TYPE Family Registry
+1 EXID FAM-EXT-123
+2 TYPE http://family-db.com
+0 @S1@ SOUR
+1 TITL Birth Certificate
+1 REFN DOC-001
+2 TYPE Document Number
+1 EXID SOURCE-EXT-456
+2 TYPE http://archives.gov
+0 @O1@ OBJE
+1 FILE photo.jpg
+2 FORM image/jpeg
+1 REFN IMG-001
+2 TYPE Photo Archive ID
+1 EXID MEDIA-789
+2 TYPE http://media-library.org
+0 @I2@ INDI
+1 NAME Jane /Doe/
+1 REFN USER-999
+1 EXID SIMPLE-ID
+1 BIRT
+2 DATE 1 JAN 1970
+2 PLAC Test City
+3 EXID PLACE-123
+0 TRLR

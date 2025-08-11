@@ -4,7 +4,7 @@ from gedcom7 import const as g7const
 from gedcom7 import grammar as g7grammar
 from gedcom7 import types as g7types
 from gedcom7 import util as g7util
-from gramps.gen.lib import Event, EventType, Place, PlaceName
+from gramps.gen.lib import Attribute, AttributeType, Event, EventType, Place, PlaceName, Url, UrlType
 from gramps.gen.lib.primaryobj import BasicPrimaryObject
 
 from . import util
@@ -152,5 +152,24 @@ def handle_place(
             place, note = util.add_note_to_object(child, place)
             # Add the note to the list of objects to be returned
             objects.append(note)
-        # TODO handle EXID
+        elif child.tag == g7const.EXID:
+            assert isinstance(child.value, str), "Expected EXID value to be a string"
+            url = Url()
+            url.set_type(UrlType.CUSTOM)
+            # Check for TYPE substructure
+            type_child = next((c for c in child.children if c.tag == g7const.TYPE), None)
+            if type_child and type_child.value:
+                # If TYPE contains a URL, use it as the path
+                if isinstance(type_child.value, str) and type_child.value.startswith("http"):
+                    url.set_path(type_child.value)
+                    url.set_description(f"External ID: {child.value}")
+                else:
+                    # TYPE is present but not a URL, store both in description
+                    url.set_path(child.value)
+                    url.set_description(f"EXID:{child.value} (Type: {type_child.value})")
+            else:
+                # No TYPE substructure, just store the EXID value
+                url.set_path(child.value)
+                url.set_description(f"External ID: {child.value}")
+            place.add_url(url)
     return place, objects

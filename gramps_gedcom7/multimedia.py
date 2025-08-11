@@ -5,7 +5,7 @@ from typing import List
 from gedcom7 import const as g7const
 from gedcom7 import types as g7types
 from gedcom7 import util as g7util
-from gramps.gen.lib import Media
+from gramps.gen.lib import Attribute, AttributeType, Media
 from gramps.gen.lib.primaryobj import BasicPrimaryObject
 
 from . import util
@@ -50,7 +50,28 @@ def handle_multimedia(
             objects.extend(other_objects)
             media.add_citation(citation.handle)
             objects.append(citation)
-        # TODO EXID & REFN
+        elif child.tag == g7const.EXID:
+            assert isinstance(child.value, str), "Expected EXID value to be a string"
+            attr = Attribute()
+            attr.set_type(AttributeType.CUSTOM)
+            # Check for TYPE substructure
+            type_child = next((c for c in child.children if c.tag == g7const.TYPE), None)
+            if type_child and type_child.value:
+                attr.set_value(f"EXID:{child.value} (Type: {type_child.value})")
+            else:
+                attr.set_value(f"EXID:{child.value}")
+            media.add_attribute(attr)
+        elif child.tag == g7const.REFN:
+            assert isinstance(child.value, str), "Expected REFN value to be a string"
+            attr = Attribute()
+            attr.set_type(AttributeType.CUSTOM)
+            # Check for TYPE substructure
+            type_child = next((c for c in child.children if c.tag == g7const.TYPE), None)
+            if type_child and type_child.value:
+                attr.set_value(f"REFN:{child.value} (Type: {type_child.value})")
+            else:
+                attr.set_value(f"REFN:{child.value}")
+            media.add_attribute(attr)
         elif child.tag == g7const.UID:
             util.add_uid_to_object(child, media)
     # TODO handle multiple files
