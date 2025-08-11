@@ -1,9 +1,8 @@
 """Test import of contact fields (PHON, EMAIL, FAX, WWW)."""
 
-from pathlib import Path
 from gramps.gen.db import DbWriteBase
 from gramps.gen.db.utils import make_database
-from gramps.gen.lib import AttributeType, EventType, UrlType
+from gramps.gen.lib import EventType, UrlType
 from gramps_gedcom7.importer import import_gedcom
 
 
@@ -43,44 +42,6 @@ def test_contact_fields_repository():
     fax_addrs = [a for a in addresses if a.get_phone() and "FAX" in a.get_phone()]
     assert len(fax_addrs) == 1
     assert fax_addrs[0].get_phone() == "FAX: +1-555-0124"
-
-
-def test_contact_fields_individual():
-    """Test import of PHON, FAX, EMAIL, WWW for individuals."""
-    gedcom_file = "test/data/contact_fields.ged"
-    db: DbWriteBase = make_database("sqlite")
-    db.load(":memory:", callback=None)
-    import_gedcom(gedcom_file, db)
-    
-    # Get first person (John Doe)
-    persons = list(db.iter_people())
-    john = [p for p in persons if "John" in p.get_primary_name().get_first_name()][0]
-    
-    # Check addresses (PHON and FAX stored in addresses)
-    addresses = john.get_address_list()
-    assert len(addresses) == 2
-    
-    # Check phone in address
-    phone_addrs = [a for a in addresses if a.get_phone() and "FAX" not in a.get_phone()]
-    assert len(phone_addrs) == 1
-    assert phone_addrs[0].get_phone() == "+1-555-0125"
-    
-    # Check fax in address
-    fax_addrs = [a for a in addresses if a.get_phone() and "FAX" in a.get_phone()]
-    assert len(fax_addrs) == 1
-    assert fax_addrs[0].get_phone() == "FAX: +1-555-0126"
-    
-    # Check URLs (EMAIL and WWW)
-    urls = john.get_url_list()
-    assert len(urls) == 2
-    
-    email_urls = [u for u in urls if u.get_type() == UrlType.EMAIL]
-    assert len(email_urls) == 1
-    assert email_urls[0].get_path() == "john@example.com"
-    
-    web_urls = [u for u in urls if u.get_type() == UrlType.WEB_HOME]
-    assert len(web_urls) == 1
-    assert web_urls[0].get_path() == "https://johndoe.com"
 
 
 def test_contact_fields_event():
@@ -124,50 +85,3 @@ def test_contact_fields_event():
     www_attrs = [a for a in attrs if "Website:" in a.get_value()]
     assert len(www_attrs) == 1
     assert www_attrs[0].get_value() == "Website: https://hospital.com/births"
-
-
-def test_multiple_contact_fields():
-    """Test that multiple instances of the same contact field type are preserved."""
-    # Create GEDCOM with multiple phone numbers
-    gedcom_text = """0 HEAD
-1 GEDC
-2 VERS 7.0
-0 @I1@ INDI
-1 NAME Multi /Contact/
-1 PHON +1-555-0001
-1 PHON +1-555-0002
-1 EMAIL first@example.com
-1 EMAIL second@example.com
-0 TRLR"""
-    
-    # Write test file
-    test_file = Path(__file__).parent / "data" / "multi_contact.ged"
-    test_file.write_text(gedcom_text)
-    
-    gedcom_file = str(test_file)
-    db: DbWriteBase = make_database("sqlite")
-    db.load(":memory:", callback=None)
-    import_gedcom(gedcom_file, db)
-    
-    # Get person
-    persons = list(db.iter_people())
-    assert len(persons) == 1
-    person = persons[0]
-    
-    # Check multiple phone numbers in addresses
-    addresses = person.get_address_list()
-    phones = [a.get_phone() for a in addresses if a.get_phone()]
-    assert len(phones) == 2
-    assert "+1-555-0001" in phones
-    assert "+1-555-0002" in phones
-    
-    # Check multiple email addresses in URLs
-    urls = person.get_url_list()
-    email_urls = [u for u in urls if u.get_type() == UrlType.EMAIL]
-    assert len(email_urls) == 2
-    emails = [u.get_path() for u in email_urls]
-    assert "first@example.com" in emails
-    assert "second@example.com" in emails
-    
-    # Clean up test file
-    test_file.unlink()

@@ -1,0 +1,10 @@
+0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 NAME Multi /Contact/
+1 PHON +1-555-0001
+1 PHON +1-555-0002
+1 EMAIL first@example.com
+1 EMAIL second@example.com
+0 TRLR
