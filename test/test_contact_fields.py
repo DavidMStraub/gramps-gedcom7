@@ -67,21 +67,21 @@ def test_contact_fields_event():
     assert len(attrs) == 4  # PHON, EMAIL, FAX, WWW
     
     # Check phone attribute
-    phone_attrs = [a for a in attrs if "Phone:" in a.get_value()]
+    phone_attrs = [a for a in attrs if a.get_type().string == "Phone"]
     assert len(phone_attrs) == 1
-    assert phone_attrs[0].get_value() == "Phone: +1-555-0127"
+    assert phone_attrs[0].get_value() == "+1-555-0127"
     
     # Check email attribute
-    email_attrs = [a for a in attrs if "Email:" in a.get_value()]
+    email_attrs = [a for a in attrs if a.get_type().string == "Email"]
     assert len(email_attrs) == 1
-    assert email_attrs[0].get_value() == "Email: birth@hospital.com"
+    assert email_attrs[0].get_value() == "birth@hospital.com"
     
     # Check fax attribute
-    fax_attrs = [a for a in attrs if "Fax:" in a.get_value()]
+    fax_attrs = [a for a in attrs if a.get_type().string == "Fax"]
     assert len(fax_attrs) == 1
-    assert fax_attrs[0].get_value() == "Fax: +1-555-0128"
+    assert fax_attrs[0].get_value() == "+1-555-0128"
     
     # Check website attribute
-    www_attrs = [a for a in attrs if "Website:" in a.get_value()]
+    www_attrs = [a for a in attrs if a.get_type().string == "Website"]
     assert len(www_attrs) == 1
-    assert www_attrs[0].get_value() == "Website: https://hospital.com/births"
+    assert www_attrs[0].get_value() == "https://hospital.com/births"

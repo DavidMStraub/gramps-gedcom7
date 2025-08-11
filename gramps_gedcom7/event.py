@@ -46,25 +46,29 @@ def handle_event(
             assert isinstance(child.value, str), "Expected value to be a string"
             attr = Attribute()
             attr.set_type(AttributeType.CUSTOM)
-            attr.set_value(f"Phone: {child.value}")
+            attr.get_type().string = "Phone"
+            attr.set_value(child.value)
             event.add_attribute(attr)
         elif child.tag == g7const.EMAIL:
             assert isinstance(child.value, str), "Expected value to be a string"
             attr = Attribute()
             attr.set_type(AttributeType.CUSTOM)
-            attr.set_value(f"Email: {child.value}")
+            attr.get_type().string = "Email"
+            attr.set_value(child.value)
             event.add_attribute(attr)
         elif child.tag == g7const.FAX:
             assert isinstance(child.value, str), "Expected value to be a string"
             attr = Attribute()
             attr.set_type(AttributeType.CUSTOM)
-            attr.set_value(f"Fax: {child.value}")
+            attr.get_type().string = "Fax"
+            attr.set_value(child.value)
             event.add_attribute(attr)
         elif child.tag == g7const.WWW:
             assert isinstance(child.value, str), "Expected value to be a string"
             attr = Attribute()
             attr.set_type(AttributeType.CUSTOM)
-            attr.set_value(f"Website: {child.value}")
+            attr.get_type().string = "Website"
+            attr.set_value(child.value)
             event.add_attribute(attr)
         # TODO handle association
         # TODO handle address
