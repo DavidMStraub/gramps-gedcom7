@@ -1,0 +1,20 @@
+0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @R1@ REPO
+1 NAME Test Repository
+1 PHON +1-555-0123
+1 FAX +1-555-0124
+1 EMAIL repo@example.com
+1 WWW https://example.com
+0 @I1@ INDI
+1 NAME John /Doe/
+0 @I2@ INDI
+1 NAME Jane /Doe/
+1 BIRT
+2 DATE 1 JAN 1970
+2 PHON +1-555-0127
+2 EMAIL birth@hospital.com
+2 FAX +1-555-0128
+2 WWW https://hospital.com/births
+0 TRLR

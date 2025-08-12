@@ -42,9 +42,33 @@ def handle_event(
                 event.set_type(EventType(child.value))
         elif child.tag == g7const.RESN:
             util.set_privacy_on_object(resn_structure=child, obj=event)
+        elif child.tag == g7const.PHON:
+            assert isinstance(child.value, str), "Expected value to be a string"
+            attr = Attribute()
+            attr.set_type(AttributeType("Phone"))
+            attr.set_value(child.value)
+            event.add_attribute(attr)
+        elif child.tag == g7const.EMAIL:
+            assert isinstance(child.value, str), "Expected value to be a string"
+            attr = Attribute()
+            attr.set_type(AttributeType("Email"))
+            attr.set_value(child.value)
+            event.add_attribute(attr)
+        elif child.tag == g7const.FAX:
+            assert isinstance(child.value, str), "Expected value to be a string"
+            attr = Attribute()
+            attr.set_type(AttributeType("Fax"))
+            attr.set_value(child.value)
+            event.add_attribute(attr)
+        elif child.tag == g7const.WWW:
+            assert isinstance(child.value, str), "Expected value to be a string"
+            attr = Attribute()
+            attr.set_type(AttributeType("Website"))
+            attr.set_value(child.value)
+            event.add_attribute(attr)
         # TODO handle association
         # TODO handle address
-        # TODO handle PHON, EMAIL, FAX, WWW, AGNC, RELI, CAUS
+        # TODO handle AGNC, RELI, CAUS
         elif child.tag == g7const.SNOTE and child.pointer != g7grammar.voidptr:
             try:
                 note_handle = xref_handle_map[child.pointer]
