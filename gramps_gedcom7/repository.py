@@ -1,7 +1,7 @@
 """Handle GEDCOM repository records and import them into the Gramps database."""
 
 from typing import List
-from gramps.gen.lib import Repository, NoteType, Url, UrlType
+from gramps.gen.lib import Address, Repository, NoteType, Url, UrlType
 from gramps.gen.lib.primaryobj import BasicPrimaryObject
 from gedcom7 import types as g7types, const as g7const, util as g7util
 from . import util
@@ -51,7 +51,18 @@ def handle_repository(
         elif child.tag == g7const.NOTE:
             repository, note = util.add_note_to_object(child, repository)
             objects.append(note)
-        # TODO handle PHON
+        elif child.tag == g7const.PHON:
+            assert isinstance(child.value, str), "Expected value to be a string"
+            # Repository supports addresses with phone
+            address = Address()
+            address.set_phone(child.value)
+            repository.add_address(address)
+        elif child.tag == g7const.FAX:
+            assert isinstance(child.value, str), "Expected value to be a string"
+            # Store FAX in address with prefix
+            address = Address()
+            address.set_phone(f"FAX: {child.value}")
+            repository.add_address(address)
         # TODO handle address
         # TODO handle identifier
     repository = util.add_ids(
