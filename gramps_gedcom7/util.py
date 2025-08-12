@@ -334,3 +334,51 @@ def add_uid_to_object(
         raise TypeError(
             f"Object must be an AttributeBase or SrcAttributeBase, got {type(obj)}"
         )
+
+
+def handle_external_id(
+    structure: g7types.GedcomStructure,
+    obj: AttributeBase | SrcAttributeBase,
+) -> None:
+    """Add an external ID (EXID or REFN) to a Gramps object.
+
+    Args:
+        structure: The GEDCOM structure containing EXID or REFN tag.
+        obj: The Gramps object to add the attribute to.
+    """
+    assert structure.tag in (g7const.EXID, g7const.REFN), (
+        f"Expected EXID or REFN tag, got {structure.tag}"
+    )
+    assert isinstance(
+        structure.value, str
+    ), f"Expected {structure.tag} value to be a string"
+
+    # Determine the prefix based on tag type
+    prefix = "EXID:" if structure.tag == g7const.EXID else "REFN:"
+
+    # Check for TYPE substructure
+    type_child = next(
+        (c for c in structure.children if c.tag == g7const.TYPE), None
+    )
+
+    # Build the attribute value
+    if type_child and type_child.value:
+        value = f"{prefix}{structure.value} (Type: {type_child.value})"
+    else:
+        value = f"{prefix}{structure.value}"
+
+    # Create and add the attribute
+    if isinstance(obj, SrcAttributeBase):
+        attribute = SrcAttribute()
+        attribute.set_type(SrcAttributeType.CUSTOM)
+        attribute.set_value(value)
+        obj.add_attribute(attribute)
+    elif isinstance(obj, AttributeBase):
+        attribute = Attribute()
+        attribute.set_type(AttributeType.CUSTOM)
+        attribute.set_value(value)
+        obj.add_attribute(attribute)
+    else:
+        raise TypeError(
+            f"Object must be an AttributeBase or SrcAttributeBase, got {type(obj)}"
+        )

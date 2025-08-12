@@ -103,27 +103,9 @@ def handle_individual(
         # TODO handle ANCI
         # TODO handle DESI
         elif child.tag == g7const.EXID:
-            assert isinstance(child.value, str), "Expected EXID value to be a string"
-            attr = Attribute()
-            attr.set_type(AttributeType.CUSTOM)
-            # Check for TYPE substructure
-            type_child = next((c for c in child.children if c.tag == g7const.TYPE), None)
-            if type_child and type_child.value:
-                attr.set_value(f"EXID:{child.value} (Type: {type_child.value})")
-            else:
-                attr.set_value(f"EXID:{child.value}")
-            person.add_attribute(attr)
+            util.handle_external_id(child, person)
         elif child.tag == g7const.REFN:
-            assert isinstance(child.value, str), "Expected REFN value to be a string"
-            attr = Attribute()
-            attr.set_type(AttributeType.CUSTOM)
-            # Check for TYPE substructure
-            type_child = next((c for c in child.children if c.tag == g7const.TYPE), None)
-            if type_child and type_child.value:
-                attr.set_value(f"REFN:{child.value} (Type: {type_child.value})")
-            else:
-                attr.set_value(f"REFN:{child.value}")
-            person.add_attribute(attr)
+            util.handle_external_id(child, person)
         elif child.tag == g7const.UID:
             util.add_uid_to_object(child, person)
         elif child.tag == g7const.FAMC and child.pointer != g7grammar.voidptr:
