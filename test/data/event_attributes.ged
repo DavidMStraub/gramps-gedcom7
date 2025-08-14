@@ -1,0 +1,47 @@
+0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 NAME John /Smith/
+1 SEX M
+1 BIRT
+2 DATE 1 JAN 1950
+2 PLAC Birth Hospital
+2 AGNC State Registry Office
+2 RELI Catholic
+2 CAUS Natural birth
+1 DEAT
+2 DATE 31 DEC 2020
+2 PLAC City Hospital
+2 AGNC County Coroner
+2 RELI Baptist
+2 CAUS Heart failure
+0 @I2@ INDI
+1 NAME Jane /Doe/
+1 SEX F
+1 BAPM
+2 DATE 15 MAR 1955
+2 PLAC First Baptist Church
+2 AGNC First Baptist Church
+2 RELI Baptist
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 MARR
+2 DATE 1 JUN 1975
+2 PLAC City Hall
+2 AGNC City Clerk Office
+2 RELI Civil Ceremony
+2 CAUS Love
+1 DIV
+2 DATE 1 JAN 2000
+2 AGNC District Court
+2 CAUS Irreconcilable differences
+0 @I3@ INDI
+1 NAME Test /Person/
+1 EVEN
+2 TYPE Graduation
+2 DATE 15 MAY 2000
+2 AGNC University of Example
+2 RELI Non-denominational
+0 TRLR

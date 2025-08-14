@@ -68,7 +68,24 @@ def handle_event(
             event.add_attribute(attr)
         # TODO handle association
         # TODO handle address
-        # TODO handle AGNC, RELI, CAUS
+        elif child.tag == g7const.AGNC:
+            assert isinstance(child.value, str), "Expected AGNC value to be a string"
+            attr = Attribute()
+            attr.set_type(AttributeType.AGENCY)
+            attr.set_value(child.value)
+            event.add_attribute(attr)
+        elif child.tag == g7const.RELI:
+            assert isinstance(child.value, str), "Expected RELI value to be a string"
+            attr = Attribute()
+            attr.set_type(AttributeType("Religion"))
+            attr.set_value(child.value)
+            event.add_attribute(attr)
+        elif child.tag == g7const.CAUS:
+            assert isinstance(child.value, str), "Expected CAUS value to be a string"
+            attr = Attribute()
+            attr.set_type(AttributeType.CAUSE)
+            attr.set_value(child.value)
+            event.add_attribute(attr)
         elif child.tag == g7const.SNOTE and child.pointer != g7grammar.voidptr:
             try:
                 note_handle = xref_handle_map[child.pointer]

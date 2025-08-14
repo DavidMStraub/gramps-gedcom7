@@ -111,8 +111,8 @@ def test_importer_maximal70():
     assert marriage_media1.gramps_id == "O1"
     assert marriage_media2.gramps_id == "O2"
 
-    # event UID + contact fields (8 contact fields: 2 PHON, 2 EMAIL, 2 FAX, 2 WWW)
-    assert len(marriage.attribute_list) == 10  # 8 contact fields + 2 UID
+    # event UID + contact fields (8 contact fields: 2 PHON, 2 EMAIL, 2 FAX, 2 WWW) + AGNC, RELI, CAUS
+    assert len(marriage.attribute_list) == 13  # 8 contact fields + 3 event attrs + 2 UID
     # Check contact fields by type string
     phone_attrs = [a for a in marriage.attribute_list if a.get_type().string == "Phone"]
     assert len(phone_attrs) == 2
@@ -128,6 +128,13 @@ def test_importer_maximal70():
     uid_values = [a.get_value() for a in uid_attrs]
     assert "bbcc0025-34cb-4542-8cfb-45ba201c9c2c" in uid_values
     assert "9ead4205-5bad-4c05-91c1-0aecd3f5127d" in uid_values
+    # Check AGNC, RELI, CAUS attributes
+    agency_attrs = [a for a in marriage.attribute_list if a.get_type() == "Agency"]
+    assert len(agency_attrs) == 1
+    reli_attrs = [a for a in marriage.attribute_list if a.get_type().string == "Religion"]
+    assert len(reli_attrs) == 1
+    cause_attrs = [a for a in marriage.attribute_list if a.get_type() == "Cause"]
+    assert len(cause_attrs) == 1
 
     # custom event (line 123)
     event = db.get_event_from_handle(family.event_ref_list[10].ref)
@@ -355,8 +362,8 @@ def test_importer_maximal70():
     assert event_media1.gramps_id == "O1"
     assert event_media2.gramps_id == "O2"
 
-    # person event UID + contact fields (DEAT event has contact fields too)
-    assert len(event.attribute_list) == 10  # 8 contact fields + 2 UID
+    # person event UID + contact fields (DEAT event has contact fields too) + AGNC, RELI, CAUS
+    assert len(event.attribute_list) == 13  # 8 contact fields + 3 event attrs + 2 UID
     # Check contact fields and UIDs
     phone_attrs = [a for a in event.attribute_list if a.get_type().string == "Phone"]
     assert len(phone_attrs) == 2
@@ -365,6 +372,13 @@ def test_importer_maximal70():
     uid_values = [a.get_value() for a in uid_attrs]
     assert "bbcc0025-34cb-4542-8cfb-45ba201c9c2c" in uid_values
     assert "9ead4205-5bad-4c05-91c1-0aecd3f5127d" in uid_values
+    # Check AGNC, RELI, CAUS attributes
+    agency_attrs = [a for a in event.attribute_list if a.get_type() == "Agency"]
+    assert len(agency_attrs) == 1
+    reli_attrs = [a for a in event.attribute_list if a.get_type().string == "Religion"]
+    assert len(reli_attrs) == 1
+    cause_attrs = [a for a in event.attribute_list if a.get_type() == "Cause"]
+    assert len(cause_attrs) == 1
 
     # EMIG - Emigration
     event = db.get_event_from_handle(person.event_ref_list[11].ref)
