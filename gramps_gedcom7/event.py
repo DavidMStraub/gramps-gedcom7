@@ -77,8 +77,7 @@ def handle_event(
         elif child.tag == g7const.RELI:
             assert isinstance(child.value, str), "Expected RELI value to be a string"
             attr = Attribute()
-            attr.set_type(AttributeType.CUSTOM)
-            attr.get_type().string = "Religion"
+            attr.set_type(AttributeType("Religion"))
             attr.set_value(child.value)
             event.add_attribute(attr)
         elif child.tag == g7const.CAUS:
