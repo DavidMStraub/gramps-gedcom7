@@ -5,7 +5,7 @@ from typing import List
 from gedcom7 import const as g7const
 from gedcom7 import types as g7types
 from gedcom7 import util as g7util
-from gramps.gen.lib import MediaRef, Note, NoteType, RepoRef, Source, SourceMediaType
+from gramps.gen.lib import Attribute, AttributeType, MediaRef, Note, NoteType, RepoRef, Source, SourceMediaType
 from gramps.gen.lib.primaryobj import BasicPrimaryObject
 
 from . import util
@@ -111,7 +111,10 @@ def handle_source(
             objects.append(note)
         elif child.tag == g7const.OBJE:
             source = util.add_media_ref_to_object(child, source, xref_handle_map)
-        # TODO EXID & REFN
+        elif child.tag == g7const.EXID:
+            util.handle_external_id(child, source)
+        elif child.tag == g7const.REFN:
+            util.handle_external_id(child, source)
         elif child.tag == g7const.UID:
             util.add_uid_to_object(child, source)
     source = util.add_ids(source, structure=structure, xref_handle_map=xref_handle_map)

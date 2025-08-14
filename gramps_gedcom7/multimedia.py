@@ -5,7 +5,7 @@ from typing import List
 from gedcom7 import const as g7const
 from gedcom7 import types as g7types
 from gedcom7 import util as g7util
-from gramps.gen.lib import Media
+from gramps.gen.lib import Attribute, AttributeType, Media
 from gramps.gen.lib.primaryobj import BasicPrimaryObject
 
 from . import util
@@ -50,7 +50,10 @@ def handle_multimedia(
             objects.extend(other_objects)
             media.add_citation(citation.handle)
             objects.append(citation)
-        # TODO EXID & REFN
+        elif child.tag == g7const.EXID:
+            util.handle_external_id(child, media)
+        elif child.tag == g7const.REFN:
+            util.handle_external_id(child, media)
         elif child.tag == g7const.UID:
             util.add_uid_to_object(child, media)
     # TODO handle multiple files

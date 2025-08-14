@@ -6,6 +6,8 @@ from gedcom7 import const as g7const
 from gedcom7 import grammar as g7grammar
 from gedcom7 import types as g7types
 from gramps.gen.lib import (
+    Attribute,
+    AttributeType,
     EventRef,
     EventType,
     Name,
@@ -100,7 +102,10 @@ def handle_individual(
         # TODO handle ALIA
         # TODO handle ANCI
         # TODO handle DESI
-        # TODO EXID & REFN
+        elif child.tag == g7const.EXID:
+            util.handle_external_id(child, person)
+        elif child.tag == g7const.REFN:
+            util.handle_external_id(child, person)
         elif child.tag == g7const.UID:
             util.add_uid_to_object(child, person)
         elif child.tag == g7const.FAMC and child.pointer != g7grammar.voidptr:

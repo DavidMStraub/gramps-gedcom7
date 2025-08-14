@@ -5,7 +5,7 @@ from typing import List
 from gedcom7 import const as g7const
 from gedcom7 import grammar as g7grammar
 from gedcom7 import types as g7types
-from gramps.gen.lib import ChildRef, ChildRefType, Family, MediaRef, EventRef, EventType
+from gramps.gen.lib import Attribute, AttributeType, ChildRef, ChildRefType, Family, MediaRef, EventRef, EventType
 from gramps.gen.lib.primaryobj import BasicPrimaryObject
 
 from . import util
@@ -87,7 +87,10 @@ def handle_family(
             objects.extend(other_objects)
             family.add_citation(citation.handle)
             objects.append(citation)
-        # TODO EXID & REFN
+        elif child.tag == g7const.EXID:
+            util.handle_external_id(child, family)
+        elif child.tag == g7const.REFN:
+            util.handle_external_id(child, family)
         elif child.tag == g7const.UID:
             util.add_uid_to_object(child, family)
         elif child.tag == g7const.OBJE:

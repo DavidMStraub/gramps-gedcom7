@@ -151,16 +151,20 @@ def test_importer_maximal70():
     assert isinstance(child1, Person)
     assert child1.gramps_id == "I4"
 
-    # family UID
-    assert len(family.attribute_list) == 2
-    assert family.attribute_list[0].get_type() == "UID"
-    assert (
-        family.attribute_list[0].get_value() == "bbcc0025-34cb-4542-8cfb-45ba201c9c2c"
-    )
-    assert family.attribute_list[1].get_type() == "UID"
-    assert (
-        family.attribute_list[1].get_value() == "9ead4205-5bad-4c05-91c1-0aecd3f5127d"
-    )
+    # family attributes (REFN, UID, EXID)
+    assert len(family.attribute_list) == 6
+    # Check for UID attributes
+    uid_attrs = [a for a in family.attribute_list if a.get_type() == "UID"]
+    assert len(uid_attrs) == 2
+    uid_values = [a.get_value() for a in uid_attrs]
+    assert "bbcc0025-34cb-4542-8cfb-45ba201c9c2c" in uid_values
+    assert "9ead4205-5bad-4c05-91c1-0aecd3f5127d" in uid_values
+    # Check for REFN attributes
+    refn_attrs = [a for a in family.attribute_list if a.get_type().string and a.get_type().string.startswith("REFN")]
+    assert len(refn_attrs) == 2
+    # Check for EXID attributes
+    exid_attrs = [a for a in family.attribute_list if a.get_type().string and a.get_type().string.startswith("EXID")]
+    assert len(exid_attrs) == 2
 
     # family note
     assert len(family.note_list) == 2
@@ -447,16 +451,20 @@ def test_importer_maximal70():
 
     # TODO associations (lines 459-476)
 
-    # person UIDs
-    assert len(person.attribute_list) == 2
-    assert person.attribute_list[0].get_type() == "UID"
-    assert (
-        person.attribute_list[0].get_value() == "bbcc0025-34cb-4542-8cfb-45ba201c9c2c"
-    )
-    assert person.attribute_list[1].get_type() == "UID"
-    assert (
-        person.attribute_list[1].get_value() == "9ead4205-5bad-4c05-91c1-0aecd3f5127d"
-    )
+    # person attributes (REFN, UID, EXID)
+    assert len(person.attribute_list) == 6
+    # Check for UID attributes
+    uid_attrs = [a for a in person.attribute_list if a.get_type() == "UID"]
+    assert len(uid_attrs) == 2
+    uid_values = [a.get_value() for a in uid_attrs]
+    assert "bbcc0025-34cb-4542-8cfb-45ba201c9c2c" in uid_values
+    assert "9ead4205-5bad-4c05-91c1-0aecd3f5127d" in uid_values
+    # Check for REFN attributes
+    refn_attrs = [a for a in person.attribute_list if a.get_type().string and a.get_type().string.startswith("REFN")]
+    assert len(refn_attrs) == 2
+    # Check for EXID attributes
+    exid_attrs = [a for a in person.attribute_list if a.get_type().string and a.get_type().string.startswith("EXID")]
+    assert len(exid_attrs) == 2
 
     # person notes
     assert len(person.note_list) == 2
@@ -543,12 +551,20 @@ def test_importer_maximal70():
     assert media.mime == "text/plain"
     # TODO handle other files
 
-    # media UID
-    assert len(media.attribute_list) == 2
-    assert media.attribute_list[0].get_type() == "UID"
-    assert media.attribute_list[0].get_value() == "bbcc0025-34cb-4542-8cfb-45ba201c9c2c"
-    assert media.attribute_list[1].get_type() == "UID"
-    assert media.attribute_list[1].get_value() == "9ead4205-5bad-4c05-91c1-0aecd3f5127d"
+    # media attributes (REFN, UID, EXID)
+    assert len(media.attribute_list) == 6
+    # Check for UID attributes
+    uid_attrs = [a for a in media.attribute_list if a.get_type() == "UID"]
+    assert len(uid_attrs) == 2
+    uid_values = [a.get_value() for a in uid_attrs]
+    assert "bbcc0025-34cb-4542-8cfb-45ba201c9c2c" in uid_values
+    assert "9ead4205-5bad-4c05-91c1-0aecd3f5127d" in uid_values
+    # Check for REFN attributes
+    refn_attrs = [a for a in media.attribute_list if a.get_type().string and a.get_type().string.startswith("REFN")]
+    assert len(refn_attrs) == 2
+    # Check for EXID attributes
+    exid_attrs = [a for a in media.attribute_list if a.get_type().string and a.get_type().string.startswith("EXID")]
+    assert len(exid_attrs) == 2
 
     # media notes
     assert len(media.note_list) == 2
