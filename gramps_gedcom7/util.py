@@ -353,30 +353,32 @@ def handle_external_id(
         structure.value, str
     ), f"Expected {structure.tag} value to be a string"
 
-    # Determine the prefix based on tag type
-    prefix = "EXID:" if structure.tag == g7const.EXID else "REFN:"
+    # Determine the base type from tag
+    base_type = "EXID" if structure.tag == g7const.EXID else "REFN"
 
     # Check for TYPE substructure
     type_child = next(
         (c for c in structure.children if c.tag == g7const.TYPE), None
     )
 
-    # Build the attribute value
+    # Build the attribute type string
     if type_child and type_child.value:
-        value = f"{prefix}{structure.value} (Type: {type_child.value})"
+        # Include TYPE value in the type string
+        type_string = f"{base_type}:{type_child.value}"
     else:
-        value = f"{prefix}{structure.value}"
+        # Just use the base type
+        type_string = base_type
 
-    # Create and add the attribute
+    # Create and add the attribute with clean value (no prefixes)
     if isinstance(obj, SrcAttributeBase):
         attribute = SrcAttribute()
-        attribute.set_type(SrcAttributeType.CUSTOM)
-        attribute.set_value(value)
+        attribute.set_type(SrcAttributeType(type_string))
+        attribute.set_value(structure.value)
         obj.add_attribute(attribute)
     elif isinstance(obj, AttributeBase):
         attribute = Attribute()
-        attribute.set_type(AttributeType.CUSTOM)
-        attribute.set_value(value)
+        attribute.set_type(AttributeType(type_string))
+        attribute.set_value(structure.value)
         obj.add_attribute(attribute)
     else:
         raise TypeError(

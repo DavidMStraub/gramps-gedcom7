@@ -21,29 +21,32 @@ def test_individual_external_ids():
     attrs = john.get_attribute_list()
     
     # Check REFN attributes
-    refn_attrs = [a for a in attrs if "REFN:" in a.get_value()]
+    refn_attrs = [a for a in attrs if a.get_type().string and a.get_type().string.startswith("REFN")]
     assert len(refn_attrs) == 2
     
     # Check first REFN with TYPE
-    refn1 = [a for a in refn_attrs if "12345" in a.get_value()][0]
-    assert refn1.get_value() == "REFN:12345 (Type: Employee ID)"
-    assert refn1.get_type() == AttributeType.CUSTOM
+    refn1 = [a for a in refn_attrs if a.get_value() == "12345"][0]
+    assert refn1.get_value() == "12345"
+    assert refn1.get_type().string == "REFN:Employee ID"
     
     # Check second REFN with TYPE
-    refn2 = [a for a in refn_attrs if "ABC-789" in a.get_value()][0]
-    assert refn2.get_value() == "REFN:ABC-789 (Type: Customer Number)"
+    refn2 = [a for a in refn_attrs if a.get_value() == "ABC-789"][0]
+    assert refn2.get_value() == "ABC-789"
+    assert refn2.get_type().string == "REFN:Customer Number"
     
     # Check EXID attributes
-    exid_attrs = [a for a in attrs if "EXID:" in a.get_value()]
+    exid_attrs = [a for a in attrs if a.get_type().string and a.get_type().string.startswith("EXID")]
     assert len(exid_attrs) == 2
     
     # Check first EXID with TYPE
-    exid1 = [a for a in exid_attrs if "EXT-001" in a.get_value()][0]
-    assert exid1.get_value() == "EXID:EXT-001 (Type: http://example.com/person)"
+    exid1 = [a for a in exid_attrs if a.get_value() == "EXT-001"][0]
+    assert exid1.get_value() == "EXT-001"
+    assert exid1.get_type().string == "EXID:http://example.com/person"
     
     # Check second EXID with TYPE
-    exid2 = [a for a in exid_attrs if "SYS-9876" in a.get_value()][0]
-    assert exid2.get_value() == "EXID:SYS-9876 (Type: http://other-system.org)"
+    exid2 = [a for a in exid_attrs if a.get_value() == "SYS-9876"][0]
+    assert exid2.get_value() == "SYS-9876"
+    assert exid2.get_type().string == "EXID:http://other-system.org"
 
 
 def test_individual_external_ids_without_type():
@@ -61,14 +64,16 @@ def test_individual_external_ids_without_type():
     attrs = jane.get_attribute_list()
     
     # Check REFN without TYPE
-    refn_attrs = [a for a in attrs if "REFN:" in a.get_value()]
+    refn_attrs = [a for a in attrs if a.get_type().string and a.get_type().string == "REFN"]
     assert len(refn_attrs) == 1
-    assert refn_attrs[0].get_value() == "REFN:USER-999"
+    assert refn_attrs[0].get_value() == "USER-999"
+    assert refn_attrs[0].get_type().string == "REFN"
     
     # Check EXID without TYPE
-    exid_attrs = [a for a in attrs if "EXID:" in a.get_value()]
+    exid_attrs = [a for a in attrs if a.get_type().string and a.get_type().string == "EXID"]
     assert len(exid_attrs) == 1
-    assert exid_attrs[0].get_value() == "EXID:SIMPLE-ID"
+    assert exid_attrs[0].get_value() == "SIMPLE-ID"
+    assert exid_attrs[0].get_type().string == "EXID"
 
 
 def test_family_external_ids():
@@ -87,14 +92,16 @@ def test_family_external_ids():
     attrs = family.get_attribute_list()
     
     # Check REFN
-    refn_attrs = [a for a in attrs if "REFN:" in a.get_value()]
+    refn_attrs = [a for a in attrs if a.get_type().string and a.get_type().string.startswith("REFN")]
     assert len(refn_attrs) == 1
-    assert refn_attrs[0].get_value() == "REFN:FAM-001 (Type: Family Registry)"
+    assert refn_attrs[0].get_value() == "FAM-001"
+    assert refn_attrs[0].get_type().string == "REFN:Family Registry"
     
     # Check EXID
-    exid_attrs = [a for a in attrs if "EXID:" in a.get_value()]
+    exid_attrs = [a for a in attrs if a.get_type().string and a.get_type().string.startswith("EXID")]
     assert len(exid_attrs) == 1
-    assert exid_attrs[0].get_value() == "EXID:FAM-EXT-123 (Type: http://family-db.com)"
+    assert exid_attrs[0].get_value() == "FAM-EXT-123"
+    assert exid_attrs[0].get_type().string == "EXID:http://family-db.com"
 
 
 def test_source_external_ids():
@@ -113,14 +120,16 @@ def test_source_external_ids():
     attrs = source.get_attribute_list()
     
     # Check REFN
-    refn_attrs = [a for a in attrs if "REFN:" in a.get_value()]
+    refn_attrs = [a for a in attrs if a.get_type().string and a.get_type().string.startswith("REFN")]
     assert len(refn_attrs) == 1
-    assert refn_attrs[0].get_value() == "REFN:DOC-001 (Type: Document Number)"
+    assert refn_attrs[0].get_value() == "DOC-001"
+    assert refn_attrs[0].get_type().string == "REFN:Document Number"
     
     # Check EXID
-    exid_attrs = [a for a in attrs if "EXID:" in a.get_value()]
+    exid_attrs = [a for a in attrs if a.get_type().string and a.get_type().string.startswith("EXID")]
     assert len(exid_attrs) == 1
-    assert exid_attrs[0].get_value() == "EXID:SOURCE-EXT-456 (Type: http://archives.gov)"
+    assert exid_attrs[0].get_value() == "SOURCE-EXT-456"
+    assert exid_attrs[0].get_type().string == "EXID:http://archives.gov"
 
 
 def test_media_external_ids():
@@ -139,14 +148,16 @@ def test_media_external_ids():
     attrs = media.get_attribute_list()
     
     # Check REFN
-    refn_attrs = [a for a in attrs if "REFN:" in a.get_value()]
+    refn_attrs = [a for a in attrs if a.get_type().string and a.get_type().string.startswith("REFN")]
     assert len(refn_attrs) == 1
-    assert refn_attrs[0].get_value() == "REFN:IMG-001 (Type: Photo Archive ID)"
+    assert refn_attrs[0].get_value() == "IMG-001"
+    assert refn_attrs[0].get_type().string == "REFN:Photo Archive ID"
     
     # Check EXID
-    exid_attrs = [a for a in attrs if "EXID:" in a.get_value()]
+    exid_attrs = [a for a in attrs if a.get_type().string and a.get_type().string.startswith("EXID")]
     assert len(exid_attrs) == 1
-    assert exid_attrs[0].get_value() == "EXID:MEDIA-789 (Type: http://media-library.org)"
+    assert exid_attrs[0].get_value() == "MEDIA-789"
+    assert exid_attrs[0].get_type().string == "EXID:http://media-library.org"
 
 
 def test_place_external_ids():
@@ -192,8 +203,8 @@ def test_multiple_external_ids():
     john = [p for p in persons if "John" in p.get_primary_name().get_first_name()][0]
     
     attrs = john.get_attribute_list()
-    refn_attrs = [a for a in attrs if "REFN:" in a.get_value()]
-    exid_attrs = [a for a in attrs if "EXID:" in a.get_value()]
+    refn_attrs = [a for a in attrs if a.get_type().string and a.get_type().string.startswith("REFN")]
+    exid_attrs = [a for a in attrs if a.get_type().string and a.get_type().string.startswith("EXID")]
     
     # Verify multiple instances preserved
     assert len(refn_attrs) == 2
@@ -201,9 +212,19 @@ def test_multiple_external_ids():
     
     # Verify each has unique values
     refn_values = [a.get_value() for a in refn_attrs]
-    assert "REFN:12345 (Type: Employee ID)" in refn_values
-    assert "REFN:ABC-789 (Type: Customer Number)" in refn_values
+    assert "12345" in refn_values
+    assert "ABC-789" in refn_values
+    
+    # Verify type strings
+    refn_types = [a.get_type().string for a in refn_attrs]
+    assert "REFN:Employee ID" in refn_types
+    assert "REFN:Customer Number" in refn_types
     
     exid_values = [a.get_value() for a in exid_attrs]
-    assert "EXID:EXT-001 (Type: http://example.com/person)" in exid_values
-    assert "EXID:SYS-9876 (Type: http://other-system.org)" in exid_values
+    assert "EXT-001" in exid_values
+    assert "SYS-9876" in exid_values
+    
+    # Verify type strings
+    exid_types = [a.get_type().string for a in exid_attrs]
+    assert "EXID:http://example.com/person" in exid_types
+    assert "EXID:http://other-system.org" in exid_types

@@ -160,10 +160,10 @@ def test_importer_maximal70():
     assert "bbcc0025-34cb-4542-8cfb-45ba201c9c2c" in uid_values
     assert "9ead4205-5bad-4c05-91c1-0aecd3f5127d" in uid_values
     # Check for REFN attributes
-    refn_attrs = [a for a in family.attribute_list if "REFN:" in str(a.get_value())]
+    refn_attrs = [a for a in family.attribute_list if a.get_type().string and a.get_type().string.startswith("REFN")]
     assert len(refn_attrs) == 2
     # Check for EXID attributes
-    exid_attrs = [a for a in family.attribute_list if "EXID:" in str(a.get_value())]
+    exid_attrs = [a for a in family.attribute_list if a.get_type().string and a.get_type().string.startswith("EXID")]
     assert len(exid_attrs) == 2
 
     # family note
@@ -460,10 +460,10 @@ def test_importer_maximal70():
     assert "bbcc0025-34cb-4542-8cfb-45ba201c9c2c" in uid_values
     assert "9ead4205-5bad-4c05-91c1-0aecd3f5127d" in uid_values
     # Check for REFN attributes
-    refn_attrs = [a for a in person.attribute_list if "REFN:" in str(a.get_value())]
+    refn_attrs = [a for a in person.attribute_list if a.get_type().string and a.get_type().string.startswith("REFN")]
     assert len(refn_attrs) == 2
     # Check for EXID attributes
-    exid_attrs = [a for a in person.attribute_list if "EXID:" in str(a.get_value())]
+    exid_attrs = [a for a in person.attribute_list if a.get_type().string and a.get_type().string.startswith("EXID")]
     assert len(exid_attrs) == 2
 
     # person notes
@@ -560,10 +560,10 @@ def test_importer_maximal70():
     assert "bbcc0025-34cb-4542-8cfb-45ba201c9c2c" in uid_values
     assert "9ead4205-5bad-4c05-91c1-0aecd3f5127d" in uid_values
     # Check for REFN attributes
-    refn_attrs = [a for a in media.attribute_list if "REFN:" in str(a.get_value())]
+    refn_attrs = [a for a in media.attribute_list if a.get_type().string and a.get_type().string.startswith("REFN")]
     assert len(refn_attrs) == 2
     # Check for EXID attributes
-    exid_attrs = [a for a in media.attribute_list if "EXID:" in str(a.get_value())]
+    exid_attrs = [a for a in media.attribute_list if a.get_type().string and a.get_type().string.startswith("EXID")]
     assert len(exid_attrs) == 2
 
     # media notes
