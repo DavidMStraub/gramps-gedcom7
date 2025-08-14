@@ -43,13 +43,13 @@ def test_importer_maximal70():
     db.load(":memory:", callback=None)
     import_gedcom(gedcom_file, db)
     assert db.get_number_of_families() == 2
-    assert db.get_number_of_notes() == 4
+    assert db.get_number_of_notes() == 11
     assert db.get_number_of_people() == 5
     assert db.get_number_of_sources() == 3
     assert db.get_number_of_repositories() == 3
     assert db.get_number_of_media() == 3
-    # 23 defined events + 5 birth and 1 death
-    assert db.get_number_of_events() == 29
+    # Events include contact fields from PR#3
+    assert db.get_number_of_events() == 38
 
     # Families (line 86)
     families = list(db.iter_families())
