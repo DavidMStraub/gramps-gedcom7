@@ -16,10 +16,10 @@ from gramps.gen.lib import (
     Person,
     Place,
     PlaceName,
+    RepoRef,
     Repository,
-    RepositoryRef,
     Source,
-    SourceAttribute,
+    SrcAttribute,
     SrcAttributeType,
 )
 from gramps_gedcom7.importer import import_gedcom
@@ -338,7 +338,7 @@ def test_importer_maximal70():
     assert source_note.type == NoteType.SOURCE
     assert source_note.text == "Some note."
     assert len(source.reporef_list) == 1
-    repo_ref: RepositoryRef = source.reporef_list[0]
+    repo_ref: RepoRef = source.reporef_list[0]
     assert repo_ref.call_number == "Call number"
     assert len(repo_ref.note_list) == 1
     repo_ref_note = db.get_note_from_handle(repo_ref.note_list[0])
@@ -350,7 +350,7 @@ def test_importer_maximal70():
     assert isinstance(source_media, Media)
     assert source_media.gramps_id == "O1"
     assert len(source.attribute_list) == 1
-    source_attribute: SourceAttribute = source.attribute_list[0]
+    source_attribute: SrcAttribute = source.attribute_list[0]
     assert source_attribute.get_type() == SrcAttributeType.CUSTOM
     assert source_attribute.get_type().string == "UID"
     assert source_attribute.get_value() == "9ead4205-5bad-4c05-91c1-0aecd3f5127d"

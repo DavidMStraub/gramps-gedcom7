@@ -34,9 +34,9 @@ def test_birth_event_attributes():
     assert agency_attrs[0].get_value() == "State Registry Office"
     
     # Check RELI (Religion) - stored as custom
-    reli_attrs = [a for a in attrs if "Religion:" in a.get_value()]
+    reli_attrs = [a for a in attrs if a.get_type().string == "Religion"]
     assert len(reli_attrs) == 1
-    assert reli_attrs[0].get_value() == "Religion: Catholic"
+    assert reli_attrs[0].get_value() == "Catholic"
     assert reli_attrs[0].get_type() == AttributeType.CUSTOM
     
     # Check CAUS (Cause)
@@ -73,9 +73,9 @@ def test_death_event_attributes():
     assert agency_attrs[0].get_value() == "County Coroner"
     
     # Check RELI
-    reli_attrs = [a for a in attrs if "Religion:" in a.get_value()]
+    reli_attrs = [a for a in attrs if a.get_type().string == "Religion"]
     assert len(reli_attrs) == 1
-    assert reli_attrs[0].get_value() == "Religion: Baptist"
+    assert reli_attrs[0].get_value() == "Baptist"
     
     # Check CAUS
     cause_attrs = [a for a in attrs if a.get_type() == AttributeType.CAUSE]
@@ -111,9 +111,9 @@ def test_baptism_event_attributes():
     assert agency_attrs[0].get_value() == "First Baptist Church"
     
     # Check RELI
-    reli_attrs = [a for a in attrs if "Religion:" in a.get_value()]
+    reli_attrs = [a for a in attrs if a.get_type().string == "Religion"]
     assert len(reli_attrs) == 1
-    assert reli_attrs[0].get_value() == "Religion: Baptist"
+    assert reli_attrs[0].get_value() == "Baptist"
 
 
 def test_marriage_event_attributes():
@@ -144,9 +144,9 @@ def test_marriage_event_attributes():
     assert agency_attrs[0].get_value() == "City Clerk Office"
     
     # Check RELI
-    reli_attrs = [a for a in attrs if "Religion:" in a.get_value()]
+    reli_attrs = [a for a in attrs if a.get_type().string == "Religion"]
     assert len(reli_attrs) == 1
-    assert reli_attrs[0].get_value() == "Religion: Civil Ceremony"
+    assert reli_attrs[0].get_value() == "Civil Ceremony"
     
     # Check CAUS
     cause_attrs = [a for a in attrs if a.get_type() == AttributeType.CAUSE]
@@ -216,6 +216,6 @@ def test_custom_event_attributes():
     assert agency_attrs[0].get_value() == "University of Example"
     
     # Check RELI
-    reli_attrs = [a for a in attrs if "Religion:" in a.get_value()]
+    reli_attrs = [a for a in attrs if a.get_type().string == "Religion"]
     assert len(reli_attrs) == 1
-    assert reli_attrs[0].get_value() == "Religion: Non-denominational"
+    assert reli_attrs[0].get_value() == "Non-denominational"
