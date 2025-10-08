@@ -1,20 +1,31 @@
 """Streamlit app for GEDCOM 7 to Gramps-XML conversion."""
 
-import streamlit as st
+import gzip
+import sys
 import tempfile
 import traceback
-import gzip
+import types
 from pathlib import Path
-from typing import Optional, Tuple, List
+from typing import List, Optional, Tuple
 
-import gi
-gi.require_version("Gtk", "3.0")
+# Ugly workaround for making XML export work without PyGObject installation
+sys.modules["gramps.gui"] = types.ModuleType("gramps.gui")
+sys.modules["gramps.gui.dbguielement"] = types.ModuleType("gramps.gui.plug")
+sys.modules["gramps.gui.plug.DbGUIElement"] = object
+sys.modules["gramps.gui.dbguielement.DbGUIElement"] = object
+sys.modules["gramps.gui.plug"] = types.ModuleType("gramps.gui.plug")
+sys.modules["gramps.gui.plug.export"] = types.ModuleType("gramps.gui.plug.export")
+sys.modules["gramps.gui.plug.export"].WriterOptionBox = object
+sys.modules["gramps.gui.plug.export"].WriterOptionBoxWithCompression = object
+
+
+import streamlit as st
+from gramps.cli.user import User
+from gramps.gen.db import DbWriteBase
+from gramps.gen.db.utils import make_database
+from gramps.plugins.export.exportxml import export_data
 
 from gramps_gedcom7.importer import import_gedcom
-from gramps.gen.db.utils import make_database
-from gramps.gen.db import DbWriteBase
-from gramps.cli.user import User
-from gramps.plugins.export.exportxml import export_data
 
 
 class StreamlitProgressCallback:
@@ -98,8 +109,8 @@ def convert_gedcom_to_xml(
 
             with open(output_temp_path, "rb") as xml_file:
                 raw_content = xml_file.read()
-            
-            if raw_content.startswith(b'\x1f\x8b'):
+
+            if raw_content.startswith(b"\x1f\x8b"):
                 xml_content = gzip.decompress(raw_content)
             else:
                 xml_content = raw_content

@@ -1,4 +1,0 @@
-gramps
-gedcom7
-click
-streamlit
