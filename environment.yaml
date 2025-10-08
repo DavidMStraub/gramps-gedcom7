@@ -1,0 +1,11 @@
+name: gramps-gedcom7
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python>=3.13
+  - pip
+  - pygobject
+  - gtk3
+  - glib
+  - gobject-introspection
