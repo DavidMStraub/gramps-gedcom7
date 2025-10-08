@@ -48,8 +48,8 @@ def convert_gedcom_to_xml(
     Returns:
         Tuple[Optional[bytes], List[str], List[str]]: (XML data, errors, warnings)
     """
-    errors = []
-    warnings = []
+    errors: list[str] = []
+    warnings: list[str] = []
 
     try:
         if progress_callback:
