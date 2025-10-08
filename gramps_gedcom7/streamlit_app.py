@@ -1,23 +1,14 @@
 """Streamlit app for GEDCOM 7 to Gramps-XML conversion."""
 
 import gzip
-import sys
 import tempfile
 import traceback
-import types
 from pathlib import Path
 from typing import List, Optional, Tuple
 
-# Ugly workaround for making XML export work without PyGObject installation
-sys.modules["gramps.gui"] = types.ModuleType("gramps.gui")
-sys.modules["gramps.gui.dbguielement"] = types.ModuleType("gramps.gui.plug")
-sys.modules["gramps.gui.plug.DbGUIElement"] = object
-sys.modules["gramps.gui.dbguielement.DbGUIElement"] = object
-sys.modules["gramps.gui.plug"] = types.ModuleType("gramps.gui.plug")
-sys.modules["gramps.gui.plug.export"] = types.ModuleType("gramps.gui.plug.export")
-sys.modules["gramps.gui.plug.export"].WriterOptionBox = object
-sys.modules["gramps.gui.plug.export"].WriterOptionBoxWithCompression = object
+import gi
 
+gi.require_version("Gtk", "3.0")
 
 import streamlit as st
 from gramps.cli.user import User
