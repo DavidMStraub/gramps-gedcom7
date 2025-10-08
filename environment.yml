@@ -13,3 +13,4 @@ dependencies:
       - gramps
       - streamlit
       - gedcom7
+      - -e .
