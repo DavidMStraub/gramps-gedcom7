@@ -1,5 +1,4 @@
-gramps
-PyGObject
+gramps[all]
 gedcom7
 click
 streamlit
