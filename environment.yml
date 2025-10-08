@@ -9,3 +9,7 @@ dependencies:
   - gtk3
   - glib
   - gobject-introspection
+  - pip:
+      - gramps
+      - streamlit
+      - gedcom7
