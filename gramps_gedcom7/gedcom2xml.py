@@ -1,11 +1,15 @@
 """Script to convert a GEDCOM file to a file in Gramps XML format."""
 
 import click
+import gi
 from gramps_gedcom7.importer import import_gedcom
 from gramps.gen.db.utils import make_database
 from gramps.gen.db import DbWriteBase
 from gramps.cli.user import User
 from gramps.plugins.export.exportxml import export_data
+
+
+gi.require_version("Gtk", "3.0")
 
 
 @click.command()
