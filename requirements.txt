@@ -1,4 +1,4 @@
-gramps[all]
+gramps
 gedcom7
 click
 streamlit
