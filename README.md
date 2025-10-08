@@ -31,3 +31,13 @@ python -m gramps_gedcom7.gedcom2xml path/to/input.ged path/to/output.gramps
 ```
 
 Instead of an output file name, you can also specify `-` to write the output to standard output.
+
+## Web interface
+
+A [Streamlit](https://streamlit.io/) web interface is available for interactive use:
+
+```bash
+python -m gramps_gedcom7.web
+```
+
+This opens a web browser where you can upload GEDCOM 7 files and download the converted Gramps XML files.

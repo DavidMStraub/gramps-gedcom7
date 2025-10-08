@@ -18,6 +18,9 @@ dependencies = [
     "click",
 ]
 
+[project.optional-dependencies]
+streamlit = ["streamlit"]
+
 [project.urls]
 "Homepage" = "https://github.com/DavidMStraub/gramps-gedcom7"
 
