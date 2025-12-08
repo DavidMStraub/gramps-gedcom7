@@ -283,8 +283,11 @@ def set_privacy_on_object(
     """Set the privacy on a Gramps object based on a RESN structure."""
     assert resn_structure.tag == g7const.RESN, "Not a RESN structure"
     value = resn_structure.value
+    if value is None or value == "":
+        obj.set_privacy(False)
+        return
     assert isinstance(value, list), "Expected RESN value to be a list"
-    if "CONFIDENTIAL" or "PRIVACY" in value:
+    if "CONFIDENTIAL" in value or "PRIVACY" in value:
         obj.set_privacy(True)
     else:
         obj.set_privacy(False)
