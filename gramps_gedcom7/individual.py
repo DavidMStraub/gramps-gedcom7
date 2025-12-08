@@ -84,11 +84,13 @@ def handle_individual(
             util.set_privacy_on_object(resn_structure=child, obj=person)
         elif child.tag == g7const.SEX:
             assert isinstance(child.value, str), "Expected SEX to be a string"
-            try:
+            if child.value in GENDER_MAP:
                 gender = GENDER_MAP[child.value]
                 person.set_gender(gender)
-            except KeyError:
-                raise ValueError(f"SEX value '{child.value}' is not valid")
+            else:
+                # GEDCOM 7.0 allows extension enumeration values (extTag)
+                # Map unknown values to UNKNOWN
+                person.set_gender(Person.UNKNOWN)
         elif child.tag == g7const.NAME:
             name, other_objects = handle_name(child, xref_handle_map=xref_handle_map)
             objects.extend(other_objects)

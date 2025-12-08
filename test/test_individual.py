@@ -79,6 +79,14 @@ def test_individual_resn(text, expected_private):
     ],
 )
 def test_sex(text, gramps_gender):
+    """Test that standard SEX enumeration values are correctly mapped.
+    
+    GEDCOM 7.0 defines four standard values for g7:enumset-SEX:
+    - M: Male
+    - F: Female
+    - X: Does not fit the typical definition of only Male or only Female
+    - U: Cannot be determined from available sources
+    """
     children = [
         g7types.GedcomStructure(tag=g7const.SEX, pointer="", text=text, xref="")
     ]
@@ -87,6 +95,38 @@ def test_sex(text, gramps_gender):
     person = db.get_person_from_gramps_id(GRAMPS_ID)
     assert isinstance(person, Person)
     assert person.gender == gramps_gender
+
+
+@pytest.mark.parametrize(
+    "extension_value",
+    [
+        "_CUSTOM",
+        "_NONBINARY",
+        "_INTERSEX",
+        "OTHER",  # Not in standard set
+        "UNKNOWN",  # Different from standard "U"
+    ],
+)
+def test_sex_extension_values(extension_value):
+    """Test that extension SEX values are handled gracefully.
+    
+    GEDCOM 7.0 allows enumeration values to be extended with extTag values.
+    These should be mapped to Person.UNKNOWN, not raise an error.
+    """
+    children = [
+        g7types.GedcomStructure(
+            tag=g7const.SEX, pointer="", text=extension_value, xref=""
+        )
+    ]
+    individual = get_individual(children)
+    
+    # Should not raise an exception
+    db: DbWriteBase = import_to_memory([individual])
+    person = db.get_person_from_gramps_id(GRAMPS_ID)
+    
+    assert isinstance(person, Person)
+    # Extension values should be mapped to UNKNOWN
+    assert person.gender == Person.UNKNOWN
 
 
 def test_citation_without_source():
@@ -125,14 +165,6 @@ def test_citation_with_source():
     assert citation.gramps_id
     gramps_source: Source = db.get_source_from_gramps_id("S1")
     assert citation.source_handle == gramps_source.handle
-
-
-def test_invalid_sex():
-    """Test that an invalid sex value raises a ValueError."""
-    children = [g7types.GedcomStructure(tag=g7const.SEX, pointer="", text="Z", xref="")]
-    individual = get_individual(children)
-    with pytest.raises(ValueError, match="SEX value 'Z' is not valid"):
-        import_to_memory([individual])
 
 
 def create_name_structure(name_value):
