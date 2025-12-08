@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gramps_gedcom7"
-version = "0.2.0"
+version = "0.3.0"
 description = "A GEDCOM 7 support library for Gramps genealogy software"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [
     {name = "David Straub", email = "straub@protonmail.com"},
