@@ -4,7 +4,8 @@ from typing import List
 from gedcom7 import const as g7const
 from gedcom7 import grammar as g7grammar
 from gedcom7 import types as g7types
-from gramps.gen.lib import Citation
+from gedcom7 import util as g7util
+from gramps.gen.lib import Citation, SrcAttribute
 from gramps.gen.lib.primaryobj import BasicPrimaryObject
 from . import util
 from .settings import ImportSettings
@@ -59,5 +60,23 @@ def handle_citation(
             objects.append(note)
         elif child.tag == g7const.OBJE:
             citation = util.add_media_ref_to_object(child, citation, xref_handle_map)
-        # TODO handle DATA and EVEN
+        elif child.tag == g7const.EVEN:
+            # Store event type that the source recorded
+            if child.value is not None:
+                assert isinstance(child.value, str), "Expected value to be a string"
+                sattr = SrcAttribute()
+                sattr.set_type("EVEN")
+                sattr.set_value(child.value)
+                citation.add_attribute(sattr)
+                
+                # Check for ROLE substructure
+                for even_child in child.children:
+                    if even_child.tag == g7const.ROLE:
+                        if even_child.value is not None:
+                            assert isinstance(even_child.value, str), "Expected value to be a string"
+                            role_attr = SrcAttribute()
+                            role_attr.set_type("EVEN:ROLE")
+                            role_attr.set_value(even_child.value)
+                            citation.add_attribute(role_attr)
+        # TODO handle DATA
     return citation, objects
