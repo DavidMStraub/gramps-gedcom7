@@ -40,16 +40,33 @@ def test_individual_minimal():
     assert not person.private
 
 
-def test_individual_resn():
-    for text in ["CONFIDENTIAL", "PRIVACY", "CONFIDENTIAL, LOCKED"]:
-        children = [
-            g7types.GedcomStructure(tag=g7const.RESN, pointer="", text=text, xref="")
-        ]
-        individual = get_individual(children)
-        db: DbWriteBase = import_to_memory([individual])
-        person = db.get_person_from_gramps_id(GRAMPS_ID)
-        assert isinstance(person, Person)
-        assert person.private
+@pytest.mark.parametrize(
+    ["text", "expected_private"],
+    [
+        ("CONFIDENTIAL", True),
+        ("PRIVACY", True),
+        ("CONFIDENTIAL, LOCKED", True),
+        ("PRIVACY, LOCKED", True),
+        ("LOCKED", False),
+        ("LOCKED, CONFIDENTIAL", True),
+        ("INVALID_VALUE", False),
+        ("", False),
+    ],
+)
+def test_individual_resn(text, expected_private):
+    """Test that RESN values correctly set privacy.
+    
+    According to GEDCOM 7.0, only CONFIDENTIAL and PRIVACY should set privacy to True.
+    LOCKED should not affect privacy status.
+    """
+    children = [
+        g7types.GedcomStructure(tag=g7const.RESN, pointer="", text=text, xref="")
+    ]
+    individual = get_individual(children)
+    db: DbWriteBase = import_to_memory([individual])
+    person = db.get_person_from_gramps_id(GRAMPS_ID)
+    assert isinstance(person, Person)
+    assert person.private == expected_private
 
 
 @pytest.mark.parametrize(
