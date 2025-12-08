@@ -64,19 +64,13 @@ def handle_citation(
             # Store event type that the source recorded
             if child.value is not None:
                 assert isinstance(child.value, str), "Expected value to be a string"
-                sattr = SrcAttribute()
-                sattr.set_type("EVEN")
-                sattr.set_value(child.value)
-                citation.add_attribute(sattr)
+                util.add_attribute_to_object(citation, "EVEN", child.value)
                 
                 # Check for ROLE substructure
                 for even_child in child.children:
                     if even_child.tag == g7const.ROLE:
                         if even_child.value is not None:
                             assert isinstance(even_child.value, str), "Expected value to be a string"
-                            role_attr = SrcAttribute()
-                            role_attr.set_type("EVEN:ROLE")
-                            role_attr.set_value(even_child.value)
-                            citation.add_attribute(role_attr)
+                            util.add_attribute_to_object(citation, "EVEN:ROLE", even_child.value)
         # TODO handle DATA
     return citation, objects

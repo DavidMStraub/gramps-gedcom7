@@ -316,6 +316,43 @@ def add_media_ref_to_object(
     return obj
 
 
+def add_attribute_to_object(
+    obj: AttributeBase | SrcAttributeBase,
+    attr_type: str | int | AttributeType | SrcAttributeType,
+    value: str,
+) -> None:
+    """Add an attribute to a Gramps object.
+    
+    Args:
+        obj: The object to add the attribute to (must support add_attribute).
+        attr_type: The attribute type (string, int enum value, or Type object).
+        value: The attribute value.
+    """
+    if isinstance(obj, SrcAttributeBase):
+        attr = SrcAttribute()
+        if isinstance(attr_type, str):
+            attr.set_type(SrcAttributeType(attr_type))
+        elif isinstance(attr_type, int):
+            attr.set_type(SrcAttributeType(attr_type))
+        else:
+            attr.set_type(attr_type)
+    elif isinstance(obj, AttributeBase):
+        attr = Attribute()
+        if isinstance(attr_type, str):
+            attr.set_type(AttributeType(attr_type))
+        elif isinstance(attr_type, int):
+            attr.set_type(AttributeType(attr_type))
+        else:
+            attr.set_type(attr_type)
+    else:
+        raise TypeError(
+            f"Object must be an AttributeBase or SrcAttributeBase, got {type(obj)}"
+        )
+    
+    attr.set_value(value)
+    obj.add_attribute(attr)
+
+
 def add_uid_to_object(
     structure: g7types.GedcomStructure,
     obj: AttributeBase | SrcAttributeBase,
@@ -323,20 +360,7 @@ def add_uid_to_object(
     """Add a unique ID to a Gramps object."""
     assert structure.tag == g7const.UID, "Not a UID structure"
     assert isinstance(structure.value, str), "Expected UID value to be a string"
-    if isinstance(obj, SrcAttributeBase):
-        attribute = SrcAttribute()
-        attribute.set_type(SrcAttributeType("UID"))
-        attribute.set_value(structure.value)
-        obj.add_attribute(attribute)
-    elif isinstance(obj, AttributeBase):
-        attribute = Attribute()
-        attribute.set_type(AttributeType("UID"))
-        attribute.set_value(structure.value)
-        obj.add_attribute(attribute)
-    else:
-        raise TypeError(
-            f"Object must be an AttributeBase or SrcAttributeBase, got {type(obj)}"
-        )
+    add_attribute_to_object(obj, "UID", structure.value)
 
 
 def handle_external_id(
@@ -373,17 +397,4 @@ def handle_external_id(
         type_string = base_type
 
     # Create and add the attribute with clean value (no prefixes)
-    if isinstance(obj, SrcAttributeBase):
-        attribute = SrcAttribute()
-        attribute.set_type(SrcAttributeType(type_string))
-        attribute.set_value(structure.value)
-        obj.add_attribute(attribute)
-    elif isinstance(obj, AttributeBase):
-        attribute = Attribute()
-        attribute.set_type(AttributeType(type_string))
-        attribute.set_value(structure.value)
-        obj.add_attribute(attribute)
-    else:
-        raise TypeError(
-            f"Object must be an AttributeBase or SrcAttributeBase, got {type(obj)}"
-        )
+    add_attribute_to_object(obj, type_string, structure.value)

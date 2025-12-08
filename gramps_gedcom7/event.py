@@ -44,48 +44,27 @@ def handle_event(
             util.set_privacy_on_object(resn_structure=child, obj=event)
         elif child.tag == g7const.PHON:
             assert isinstance(child.value, str), "Expected value to be a string"
-            attr = Attribute()
-            attr.set_type(AttributeType("Phone"))
-            attr.set_value(child.value)
-            event.add_attribute(attr)
+            util.add_attribute_to_object(event, "Phone", child.value)
         elif child.tag == g7const.EMAIL:
             assert isinstance(child.value, str), "Expected value to be a string"
-            attr = Attribute()
-            attr.set_type(AttributeType("Email"))
-            attr.set_value(child.value)
-            event.add_attribute(attr)
+            util.add_attribute_to_object(event, "Email", child.value)
         elif child.tag == g7const.FAX:
             assert isinstance(child.value, str), "Expected value to be a string"
-            attr = Attribute()
-            attr.set_type(AttributeType("Fax"))
-            attr.set_value(child.value)
-            event.add_attribute(attr)
+            util.add_attribute_to_object(event, "Fax", child.value)
         elif child.tag == g7const.WWW:
             assert isinstance(child.value, str), "Expected value to be a string"
-            attr = Attribute()
-            attr.set_type(AttributeType("Website"))
-            attr.set_value(child.value)
-            event.add_attribute(attr)
+            util.add_attribute_to_object(event, "Website", child.value)
         # TODO handle association
         # TODO handle address
         elif child.tag == g7const.AGNC:
             assert isinstance(child.value, str), "Expected AGNC value to be a string"
-            attr = Attribute()
-            attr.set_type(AttributeType.AGENCY)
-            attr.set_value(child.value)
-            event.add_attribute(attr)
+            util.add_attribute_to_object(event, AttributeType.AGENCY, child.value)
         elif child.tag == g7const.RELI:
             assert isinstance(child.value, str), "Expected RELI value to be a string"
-            attr = Attribute()
-            attr.set_type(AttributeType("Religion"))
-            attr.set_value(child.value)
-            event.add_attribute(attr)
+            util.add_attribute_to_object(event, "Religion", child.value)
         elif child.tag == g7const.CAUS:
             assert isinstance(child.value, str), "Expected CAUS value to be a string"
-            attr = Attribute()
-            attr.set_type(AttributeType.CAUSE)
-            attr.set_value(child.value)
-            event.add_attribute(attr)
+            util.add_attribute_to_object(event, AttributeType.CAUSE, child.value)
         elif child.tag == g7const.SNOTE and child.pointer != g7grammar.voidptr:
             try:
                 note_handle = xref_handle_map[child.pointer]

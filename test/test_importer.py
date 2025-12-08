@@ -1,6 +1,7 @@
 from gramps.gen.db import DbWriteBase
 from gramps.gen.db.utils import make_database
 from gramps.gen.lib import (
+    AttributeType,
     Citation,
     Event,
     EventType,
@@ -129,12 +130,12 @@ def test_importer_maximal70():
     assert "bbcc0025-34cb-4542-8cfb-45ba201c9c2c" in uid_values
     assert "9ead4205-5bad-4c05-91c1-0aecd3f5127d" in uid_values
     # Check AGNC, RELI, CAUS attributes
-    agency_attrs = [a for a in marriage.attribute_list if a.get_type() == "Agency"]
+    agency_attrs = [a for a in marriage.attribute_list if a.get_type().value == AttributeType.AGENCY]
     assert len(agency_attrs) == 1
     reli_attrs = [a for a in marriage.attribute_list if a.get_type().string == "Religion"]
     assert len(reli_attrs) == 1
-    cause_attrs = [a for a in marriage.attribute_list if a.get_type() == "Cause"]
-    assert len(cause_attrs) == 1
+    caus_attrs = [a for a in marriage.attribute_list if a.get_type().value == AttributeType.CAUSE]
+    assert len(caus_attrs) == 1
 
     # custom event (line 123)
     event = db.get_event_from_handle(family.event_ref_list[10].ref)
@@ -373,12 +374,12 @@ def test_importer_maximal70():
     assert "bbcc0025-34cb-4542-8cfb-45ba201c9c2c" in uid_values
     assert "9ead4205-5bad-4c05-91c1-0aecd3f5127d" in uid_values
     # Check AGNC, RELI, CAUS attributes
-    agency_attrs = [a for a in event.attribute_list if a.get_type() == "Agency"]
+    agency_attrs = [a for a in event.attribute_list if a.get_type().value == AttributeType.AGENCY]
     assert len(agency_attrs) == 1
     reli_attrs = [a for a in event.attribute_list if a.get_type().string == "Religion"]
     assert len(reli_attrs) == 1
-    cause_attrs = [a for a in event.attribute_list if a.get_type() == "Cause"]
-    assert len(cause_attrs) == 1
+    caus_attrs = [a for a in event.attribute_list if a.get_type().value == AttributeType.CAUSE]
+    assert len(caus_attrs) == 1
 
     # EMIG - Emigration
     event = db.get_event_from_handle(person.event_ref_list[11].ref)
