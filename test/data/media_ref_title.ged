@@ -1,0 +1,17 @@
+0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 NAME John /Doe/
+1 OBJE @O1@
+2 TITL Custom Title for This Reference
+1 OBJE @O2@
+1 OBJE @O1@
+2 TITL Same Photo, Different Context
+0 @O1@ OBJE
+1 FILE image1.jpg
+2 FORM image/jpeg
+0 @O2@ OBJE
+1 FILE image2.jpg
+2 FORM image/jpeg
+0 TRLR
