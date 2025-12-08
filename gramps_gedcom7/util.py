@@ -308,10 +308,17 @@ def add_media_ref_to_object(
     if not media_handle:
         raise ValueError(f"Multimedia object {pointer} not found")
     media_ref.ref = media_handle
+    
+    # Handle TITL substructure - title that overrides the media object's title
+    title_structure = g7util.get_first_child_with_tag(multimedia_link_structure, g7const.TITL)
+    if title_structure and title_structure.value:
+        assert isinstance(title_structure.value, str), "Expected TITL value to be a string"
+        add_attribute_to_object(media_ref, "OBJE:TITL", title_structure.value)
+    
     # TODO implement CROP
     # one complication is that GEDCOM uses pixels, Gramps uses fractions.
     # Consequently, image dimensions need to be known to convert.
-    # TODO handle TITLE
+    
     obj.add_media_reference(media_ref)
     return obj
 
