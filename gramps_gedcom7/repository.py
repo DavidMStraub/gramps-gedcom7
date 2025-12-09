@@ -6,6 +6,7 @@ from gramps.gen.lib.primaryobj import BasicPrimaryObject
 from gedcom7 import types as g7types, const as g7const, util as g7util
 from . import util
 from .settings import ImportSettings
+from .submitter import _parse_address_structure
 
 
 def handle_repository(
@@ -51,6 +52,16 @@ def handle_repository(
         elif child.tag == g7const.NOTE:
             repository, note = util.add_note_to_object(child, repository)
             objects.append(note)
+        elif child.tag == g7const.ADDR:
+            # Parse full ADDRESS_STRUCTURE
+            addr_data = _parse_address_structure(child)
+            addr = Address()
+            addr.set_street(addr_data["street"])
+            addr.set_city(addr_data["city"])
+            addr.set_state(addr_data["state"])
+            addr.set_postal_code(addr_data["postal_code"])
+            addr.set_country(addr_data["country"])
+            repository.add_address(addr)
         elif child.tag == g7const.PHON:
             assert isinstance(child.value, str), "Expected value to be a string"
             # Repository supports addresses with phone
@@ -63,7 +74,6 @@ def handle_repository(
             address = Address()
             address.set_phone(f"FAX: {child.value}")
             repository.add_address(address)
-        # TODO handle address
         # TODO handle identifier
     repository = util.add_ids(
         repository, structure=structure, xref_handle_map=xref_handle_map

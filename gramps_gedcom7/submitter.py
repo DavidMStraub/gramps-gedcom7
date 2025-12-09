@@ -49,7 +49,7 @@ def _parse_address_structure(addr_structure: g7types.GedcomStructure) -> dict:
             # Only use ADR1 if ADDR.value was empty
             if not result["street"] and child.value:
                 assert isinstance(child.value, str), "Expected value to be a string"
-                result["street"] = child.value
+                street_lines.append(child.value)
         elif child.tag in (g7const.ADR2, g7const.ADR3):
             # Append to street if ADDR.value was empty
             if not addr_structure.value and child.value and isinstance(child.value, str):
@@ -72,7 +72,7 @@ def _parse_address_structure(addr_structure: g7types.GedcomStructure) -> dict:
                 result["country"] = child.value
     
     # Combine street lines with newlines
-    if len(street_lines) > 1:
+    if street_lines:
         result["street"] = "\n".join(street_lines)
     
     return result
