@@ -198,8 +198,7 @@ def handle_submitter(
                     note_handle = xref_handle_map[child.pointer]
                     repo.add_note(note_handle)
                 except KeyError:
-                    # If the note handle is not found, skip adding the note.
-                    pass
+                    raise ValueError(f"Shared note {child.pointer} not found")
         elif child.tag == g7const.NOTE:
             repo, note = util.add_note_to_object(child, repo)
             objects.append(note)
