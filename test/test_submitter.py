@@ -17,6 +17,7 @@ def test_submitter_to_researcher():
     assert researcher.get_name() == "John Doe"
     assert researcher.get_email() == "john@example.com"
     assert researcher.get_phone() == "+1-555-1234"
+    assert researcher.get_street() == "123 Main Street"
     assert researcher.get_city() == "Springfield"
     assert researcher.get_state() == "IL"
     assert researcher.get_postal_code() == "62701"
@@ -43,6 +44,10 @@ def test_submitter_to_repository():
     
     assert subm2_repo is not None
     assert subm2_repo.get_type().string == "GEDCOM data"
+    
+    # Check address
+    addresses = subm2_repo.get_address_list()
+    assert len(addresses) == 0  # SUBM2 has no address in test data
     
     # Check contact info stored as URLs
     urls = subm2_repo.get_url_list()

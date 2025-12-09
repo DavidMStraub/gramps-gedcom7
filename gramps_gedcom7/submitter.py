@@ -13,6 +13,71 @@ from . import util
 from .settings import ImportSettings
 
 
+def _parse_address_structure(addr_structure: g7types.GedcomStructure) -> dict:
+    """Parse a GEDCOM ADDRESS_STRUCTURE into address field components.
+    
+    Per GEDCOM spec: "If the substructures and ADDR payload disagree,
+    the ADDR payload shall be taken as correct."
+    
+    This function prefers ADDR.value for street, only uses ADR1/2/3 if ADDR is empty.
+    
+    Args:
+        addr_structure: The ADDR structure with potential substructures.
+        
+    Returns:
+        Dict with keys: street, city, state, postal_code, country
+        All values are strings (may be empty).
+    """
+    result = {
+        "street": "",
+        "city": "",
+        "state": "",
+        "postal_code": "",
+        "country": ""
+    }
+    
+    # Use ADDR.value if present
+    if addr_structure.value is not None:
+        assert isinstance(addr_structure.value, str), "Expected value to be a string"
+        result["street"] = addr_structure.value
+    
+    # Process substructures
+    street_lines = [result["street"]] if result["street"] else []
+    
+    for child in addr_structure.children:
+        if child.tag == g7const.ADR1:
+            # Only use ADR1 if ADDR.value was empty
+            if not result["street"] and child.value:
+                assert isinstance(child.value, str), "Expected value to be a string"
+                result["street"] = child.value
+        elif child.tag in (g7const.ADR2, g7const.ADR3):
+            # Append to street if ADDR.value was empty
+            if not addr_structure.value and child.value and isinstance(child.value, str):
+                street_lines.append(child.value)
+        elif child.tag == g7const.CITY:
+            if child.value:
+                assert isinstance(child.value, str), "Expected value to be a string"
+                result["city"] = child.value
+        elif child.tag == g7const.STAE:
+            if child.value:
+                assert isinstance(child.value, str), "Expected value to be a string"
+                result["state"] = child.value
+        elif child.tag == g7const.POST:
+            if child.value:
+                assert isinstance(child.value, str), "Expected value to be a string"
+                result["postal_code"] = child.value
+        elif child.tag == g7const.CTRY:
+            if child.value:
+                assert isinstance(child.value, str), "Expected value to be a string"
+                result["country"] = child.value
+    
+    # Combine street lines with newlines
+    if len(street_lines) > 1:
+        result["street"] = "\n".join(street_lines)
+    
+    return result
+
+
 def submitter_to_researcher(structure: g7types.GedcomStructure) -> Researcher:
     """Convert a GEDCOM SUBMITTER_RECORD to a Gramps Researcher.
 
@@ -30,37 +95,13 @@ def submitter_to_researcher(structure: g7types.GedcomStructure) -> Researcher:
                 assert isinstance(child.value, str), "Expected value to be a string"
                 researcher.set_name(child.value)
         elif child.tag == g7const.ADDR:
-            # ADDRESS_STRUCTURE
-            if child.value is not None:
-                assert isinstance(child.value, str), "Expected value to be a string"
-                researcher.set_street(child.value)
-            for addr_child in child.children:
-                if addr_child.tag == g7const.ADR1:
-                    researcher.set_street(addr_child.value or "")
-                elif addr_child.tag == g7const.ADR2:
-                    # Append to street
-                    if addr_child.value and isinstance(addr_child.value, str):
-                        street = researcher.get_street()
-                        if street:
-                            researcher.set_street(street + "\n" + addr_child.value)
-                        else:
-                            researcher.set_street(addr_child.value)
-                elif addr_child.tag == g7const.ADR3:
-                    # Append to street
-                    if addr_child.value and isinstance(addr_child.value, str):
-                        street = researcher.get_street()
-                        if street:
-                            researcher.set_street(street + "\n" + addr_child.value)
-                        else:
-                            researcher.set_street(addr_child.value)
-                elif addr_child.tag == g7const.CITY:
-                    researcher.set_city(addr_child.value or "")
-                elif addr_child.tag == g7const.STAE:
-                    researcher.set_state(addr_child.value or "")
-                elif addr_child.tag == g7const.POST:
-                    researcher.set_postal_code(addr_child.value or "")
-                elif addr_child.tag == g7const.CTRY:
-                    researcher.set_country(addr_child.value or "")
+            # Parse ADDRESS_STRUCTURE using shared helper
+            addr_data = _parse_address_structure(child)
+            researcher.set_street(addr_data["street"])
+            researcher.set_city(addr_data["city"])
+            researcher.set_state(addr_data["state"])
+            researcher.set_postal_code(addr_data["postal_code"])
+            researcher.set_country(addr_data["country"])
         elif child.tag == g7const.PHON:
             if child.value is not None:
                 assert isinstance(child.value, str), "Expected value to be a string"
@@ -112,19 +153,14 @@ def handle_submitter(
     # Handle address and contact information
     for child in structure.children:
         if child.tag == g7const.ADDR:
+            # Parse ADDRESS_STRUCTURE using shared helper
+            addr_data = _parse_address_structure(child)
             addr = Address()
-            if child.value is not None:
-                assert isinstance(child.value, str), "Expected value to be a string"
-                addr.set_street(child.value)
-            for addr_child in child.children:
-                if addr_child.tag == g7const.CITY:
-                    addr.set_city(addr_child.value or "")
-                elif addr_child.tag == g7const.STAE:
-                    addr.set_state(addr_child.value or "")
-                elif addr_child.tag == g7const.POST:
-                    addr.set_postal_code(addr_child.value or "")
-                elif addr_child.tag == g7const.CTRY:
-                    addr.set_country(addr_child.value or "")
+            addr.set_street(addr_data["street"])
+            addr.set_city(addr_data["city"])
+            addr.set_state(addr_data["state"])
+            addr.set_postal_code(addr_data["postal_code"])
+            addr.set_country(addr_data["country"])
             repo.add_address(addr)
         elif child.tag == g7const.PHON:
             if child.value is not None:
