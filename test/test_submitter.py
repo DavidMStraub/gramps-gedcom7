@@ -2,6 +2,7 @@
 
 from gramps.gen.db import DbWriteBase
 from gramps.gen.db.utils import make_database
+from gramps.gen.lib import UrlType
 from gramps_gedcom7.importer import import_gedcom
 
 
@@ -51,10 +52,10 @@ def test_submitter_to_repository():
     
     # Check contact info stored as URLs
     urls = subm2_repo.get_url_list()
-    email_urls = [u for u in urls if u.get_type().value == 1]  # EMAIL
+    email_urls = [u for u in urls if u.get_type() == UrlType.EMAIL]
     assert len(email_urls) == 1
     assert email_urls[0].get_path() == "jane@example.com"
     
-    www_urls = [u for u in urls if u.get_type().value == 2]  # WEB_HOME
+    www_urls = [u for u in urls if u.get_type() == UrlType.WEB_HOME]
     assert len(www_urls) == 1
     assert www_urls[0].get_path() == "https://janesmith.example.com"
