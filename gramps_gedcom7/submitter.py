@@ -165,11 +165,10 @@ def handle_submitter(
         elif child.tag == g7const.PHON:
             if child.value is not None:
                 assert isinstance(child.value, str), "Expected value to be a string"
-                url = Url()
-                url.set_path(child.value)
-                url.set_type(UrlType.CUSTOM)
-                url.set_description("Phone")
-                repo.add_url(url)
+                # Store phone in address for consistency with repository.py
+                addr = Address()
+                addr.set_phone(child.value)
+                repo.add_address(addr)
         elif child.tag == g7const.EMAIL:
             if child.value is not None:
                 assert isinstance(child.value, str), "Expected value to be a string"
@@ -180,11 +179,10 @@ def handle_submitter(
         elif child.tag == g7const.FAX:
             if child.value is not None:
                 assert isinstance(child.value, str), "Expected value to be a string"
-                url = Url()
-                url.set_path(child.value)
-                url.set_type(UrlType.CUSTOM)
-                url.set_description("Fax")
-                repo.add_url(url)
+                # Store fax in address with prefix, matching repository.py pattern
+                addr = Address()
+                addr.set_phone(f"FAX: {child.value}")
+                repo.add_address(addr)
         elif child.tag == g7const.WWW:
             if child.value is not None:
                 assert isinstance(child.value, str), "Expected value to be a string"
