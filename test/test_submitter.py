@@ -2,7 +2,6 @@
 
 from gramps.gen.db import DbWriteBase
 from gramps.gen.db.utils import make_database
-from gramps.gen.lib import Repository
 from gramps_gedcom7.importer import import_gedcom
 
 
