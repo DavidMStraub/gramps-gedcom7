@@ -14,7 +14,7 @@ from .note import handle_shared_note
 from .repository import handle_repository
 from .settings import ImportSettings
 from .source import handle_source
-from .submitter import handle_submitter
+from .submitter import handle_submitter, submitter_to_researcher
 from .util import make_handle
 
 
@@ -42,7 +42,8 @@ def process_gedcom_structures(
             f"Last structure must be a TRLR structure, but got {last_structure.tag}"
         )
 
-    handle_header(first_structure, db, settings=settings)
+    # Extract HEAD.SUBM reference
+    head_subm_xref = handle_header(first_structure, db, settings=settings)
 
     # Create a map of handles to XREFs
     xref_handle_map = {}
@@ -59,6 +60,13 @@ def process_gedcom_structures(
             )
             or []
         )
+
+    if head_subm_xref:
+        for structure in gedcom_structures[1:-1]:
+            if structure.tag == g7const.SUBM and structure.xref == head_subm_xref:
+                researcher = submitter_to_researcher(structure)
+                db.set_researcher(researcher)
+                break
 
     add_objects_to_database(objects, db)
 
