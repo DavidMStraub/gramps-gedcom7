@@ -404,9 +404,9 @@ def handle_attribute_structure(
     attr_type = GEDCOM_ATTRIBUTE_MAP[structure.tag]
     value = structure.value or ""
     
-    # Handle TYPE substructure for FACT and IDNO (required) and others (optional)
-    # For FACT and IDNO, TYPE specifies what kind of fact/ID it is
-    # For others, TYPE provides additional context but we keep the standard type
+    # Handle TYPE substructure: for FACT and IDNO, when TYPE is present, it defines the attribute type;
+    # for other tags, TYPE provides additional context but we keep the standard type.
+    # Note: The code does not enforce the presence of TYPE for FACT and IDNO, but uses it if available.
     type_structure = g7util.get_first_child_with_tag(structure, g7const.TYPE)
     if type_structure and type_structure.value and structure.tag in (g7const.FACT, g7const.IDNO):
         # For FACT and IDNO, use TYPE value as the custom attribute name
