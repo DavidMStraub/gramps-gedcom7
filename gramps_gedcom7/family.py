@@ -5,7 +5,12 @@ from typing import List
 from gedcom7 import const as g7const
 from gedcom7 import grammar as g7grammar
 from gedcom7 import types as g7types
-from gramps.gen.lib import Attribute, AttributeType, ChildRef, ChildRefType, Family, MediaRef, EventRef, EventType
+from gramps.gen.lib import (
+    ChildRef,
+    Family,
+    EventRef,
+    EventType,
+)
 from gramps.gen.lib.primaryobj import BasicPrimaryObject
 
 from . import util

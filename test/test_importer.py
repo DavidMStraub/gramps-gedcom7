@@ -113,7 +113,9 @@ def test_importer_maximal70():
     assert marriage_media2.gramps_id == "O2"
 
     # event UID + contact fields (8 contact fields: 2 PHON, 2 EMAIL, 2 FAX, 2 WWW) + AGNC, RELI, CAUS
-    assert len(marriage.attribute_list) == 13  # 8 contact fields + 3 event attrs + 2 UID
+    assert (
+        len(marriage.attribute_list) == 13
+    )  # 8 contact fields + 3 event attrs + 2 UID
     # Check contact fields by type string
     phone_attrs = [a for a in marriage.attribute_list if a.get_type().string == "Phone"]
     assert len(phone_attrs) == 2
@@ -130,11 +132,17 @@ def test_importer_maximal70():
     assert "bbcc0025-34cb-4542-8cfb-45ba201c9c2c" in uid_values
     assert "9ead4205-5bad-4c05-91c1-0aecd3f5127d" in uid_values
     # Check AGNC, RELI, CAUS attributes
-    agency_attrs = [a for a in marriage.attribute_list if a.get_type().value == AttributeType.AGENCY]
+    agency_attrs = [
+        a for a in marriage.attribute_list if a.get_type().value == AttributeType.AGENCY
+    ]
     assert len(agency_attrs) == 1
-    reli_attrs = [a for a in marriage.attribute_list if a.get_type().string == "Religion"]
+    reli_attrs = [
+        a for a in marriage.attribute_list if a.get_type().string == "Religion"
+    ]
     assert len(reli_attrs) == 1
-    caus_attrs = [a for a in marriage.attribute_list if a.get_type().value == AttributeType.CAUSE]
+    caus_attrs = [
+        a for a in marriage.attribute_list if a.get_type().value == AttributeType.CAUSE
+    ]
     assert len(caus_attrs) == 1
 
     # custom event (line 123)
@@ -162,11 +170,20 @@ def test_importer_maximal70():
     # family attributes (NCHI, FACT, REFN, UID, EXID)
     assert len(family.attribute_list) == 8
     # Check for NCHI attribute
-    nchi_attrs = [a for a in family.attribute_list if a.get_type().value == AttributeType.NUM_CHILD]
+    nchi_attrs = [
+        a
+        for a in family.attribute_list
+        if a.get_type().value == AttributeType.NUM_CHILD
+    ]
     assert len(nchi_attrs) == 1
     assert nchi_attrs[0].get_value() == "2"
     # Check for FACT attribute (custom with TYPE "Type of fact")
-    fact_attrs = [a for a in family.attribute_list if a.get_type().value == AttributeType.CUSTOM and "Type of fact" in a.get_type().xml_str()]
+    fact_attrs = [
+        a
+        for a in family.attribute_list
+        if a.get_type().value == AttributeType.CUSTOM
+        and "Type of fact" in a.get_type().xml_str()
+    ]
     assert len(fact_attrs) == 1
     # Check for UID attributes
     uid_attrs = [a for a in family.attribute_list if a.get_type() == "UID"]
@@ -175,10 +192,18 @@ def test_importer_maximal70():
     assert "bbcc0025-34cb-4542-8cfb-45ba201c9c2c" in uid_values
     assert "9ead4205-5bad-4c05-91c1-0aecd3f5127d" in uid_values
     # Check for REFN attributes
-    refn_attrs = [a for a in family.attribute_list if a.get_type().string and a.get_type().string.startswith("REFN")]
+    refn_attrs = [
+        a
+        for a in family.attribute_list
+        if a.get_type().string and a.get_type().string.startswith("REFN")
+    ]
     assert len(refn_attrs) == 2
     # Check for EXID attributes
-    exid_attrs = [a for a in family.attribute_list if a.get_type().string and a.get_type().string.startswith("EXID")]
+    exid_attrs = [
+        a
+        for a in family.attribute_list
+        if a.get_type().string and a.get_type().string.startswith("EXID")
+    ]
     assert len(exid_attrs) == 2
 
     # family note
@@ -381,11 +406,15 @@ def test_importer_maximal70():
     assert "bbcc0025-34cb-4542-8cfb-45ba201c9c2c" in uid_values
     assert "9ead4205-5bad-4c05-91c1-0aecd3f5127d" in uid_values
     # Check AGNC, RELI, CAUS attributes
-    agency_attrs = [a for a in event.attribute_list if a.get_type().value == AttributeType.AGENCY]
+    agency_attrs = [
+        a for a in event.attribute_list if a.get_type().value == AttributeType.AGENCY
+    ]
     assert len(agency_attrs) == 1
     reli_attrs = [a for a in event.attribute_list if a.get_type().string == "Religion"]
     assert len(reli_attrs) == 1
-    caus_attrs = [a for a in event.attribute_list if a.get_type().value == AttributeType.CAUSE]
+    caus_attrs = [
+        a for a in event.attribute_list if a.get_type().value == AttributeType.CAUSE
+    ]
     assert len(caus_attrs) == 1
 
     # EMIG - Emigration
@@ -482,21 +511,43 @@ def test_importer_maximal70():
     assert "bbcc0025-34cb-4542-8cfb-45ba201c9c2c" in uid_values
     assert "9ead4205-5bad-4c05-91c1-0aecd3f5127d" in uid_values
     # Check for REFN attributes
-    refn_attrs = [a for a in person.attribute_list if a.get_type().string and a.get_type().string.startswith("REFN")]
+    refn_attrs = [
+        a
+        for a in person.attribute_list
+        if a.get_type().string and a.get_type().string.startswith("REFN")
+    ]
     assert len(refn_attrs) == 2
     # Check for EXID attributes
-    exid_attrs = [a for a in person.attribute_list if a.get_type().string and a.get_type().string.startswith("EXID")]
+    exid_attrs = [
+        a
+        for a in person.attribute_list
+        if a.get_type().string and a.get_type().string.startswith("EXID")
+    ]
     assert len(exid_attrs) == 2
     # Check for some standard GEDCOM 7 attributes
-    cast_attrs = [a for a in person.attribute_list if a.get_type().value == AttributeType.CASTE]
+    cast_attrs = [
+        a for a in person.attribute_list if a.get_type().value == AttributeType.CASTE
+    ]
     assert len(cast_attrs) == 1
-    occu_attrs = [a for a in person.attribute_list if a.get_type().value == AttributeType.OCCUPATION]
+    occu_attrs = [
+        a
+        for a in person.attribute_list
+        if a.get_type().value == AttributeType.OCCUPATION
+    ]
     assert len(occu_attrs) == 1
-    nchi_attrs = [a for a in person.attribute_list if a.get_type().value == AttributeType.NUM_CHILD]
+    nchi_attrs = [
+        a
+        for a in person.attribute_list
+        if a.get_type().value == AttributeType.NUM_CHILD
+    ]
     assert len(nchi_attrs) == 1
     # Check for custom attributes (Education, Religion, etc.)
-    custom_attrs = [a for a in person.attribute_list if a.get_type().value == AttributeType.CUSTOM]
-    assert len(custom_attrs) >= 4  # Education, Religion, Property, Number of Marriages, plus IDNO with TYPE
+    custom_attrs = [
+        a for a in person.attribute_list if a.get_type().value == AttributeType.CUSTOM
+    ]
+    assert (
+        len(custom_attrs) >= 4
+    )  # Education, Religion, Property, Number of Marriages, plus IDNO with TYPE
 
     # person notes
     assert len(person.note_list) == 2
@@ -592,10 +643,18 @@ def test_importer_maximal70():
     assert "bbcc0025-34cb-4542-8cfb-45ba201c9c2c" in uid_values
     assert "9ead4205-5bad-4c05-91c1-0aecd3f5127d" in uid_values
     # Check for REFN attributes
-    refn_attrs = [a for a in media.attribute_list if a.get_type().string and a.get_type().string.startswith("REFN")]
+    refn_attrs = [
+        a
+        for a in media.attribute_list
+        if a.get_type().string and a.get_type().string.startswith("REFN")
+    ]
     assert len(refn_attrs) == 2
     # Check for EXID attributes
-    exid_attrs = [a for a in media.attribute_list if a.get_type().string and a.get_type().string.startswith("EXID")]
+    exid_attrs = [
+        a
+        for a in media.attribute_list
+        if a.get_type().string and a.get_type().string.startswith("EXID")
+    ]
     assert len(exid_attrs) == 2
 
     # media notes

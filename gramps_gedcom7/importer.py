@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from gramps.gen.db import DbWriteBase
-from gramps.gen.user import UserBase
 import gedcom7
 from pathlib import Path
 from typing import TextIO, BinaryIO

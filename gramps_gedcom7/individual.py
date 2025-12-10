@@ -6,8 +6,6 @@ from gedcom7 import const as g7const
 from gedcom7 import grammar as g7grammar
 from gedcom7 import types as g7types
 from gramps.gen.lib import (
-    Attribute,
-    AttributeType,
     EventRef,
     EventType,
     Name,
