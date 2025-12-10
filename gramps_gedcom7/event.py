@@ -74,7 +74,6 @@ def handle_event(
         elif child.tag == g7const.NOTE:
             event, note = util.add_note_to_object(child, event)
             objects.append(note)
-        # TODO handle media
         elif child.tag == g7const.SOUR:
             citation, other_objects = handle_citation(
                 child,

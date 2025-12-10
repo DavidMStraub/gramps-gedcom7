@@ -159,8 +159,15 @@ def test_importer_maximal70():
     assert isinstance(child1, Person)
     assert child1.gramps_id == "I4"
 
-    # family attributes (REFN, UID, EXID)
-    assert len(family.attribute_list) == 6
+    # family attributes (NCHI, FACT, REFN, UID, EXID)
+    assert len(family.attribute_list) == 8
+    # Check for NCHI attribute
+    nchi_attrs = [a for a in family.attribute_list if a.get_type().value == AttributeType.NUM_CHILD]
+    assert len(nchi_attrs) == 1
+    assert nchi_attrs[0].get_value() == "2"
+    # Check for FACT attribute (custom with TYPE "Type of fact")
+    fact_attrs = [a for a in family.attribute_list if a.get_type().value == AttributeType.CUSTOM and "Type of fact" in a.get_type().xml_str()]
+    assert len(fact_attrs) == 1
     # Check for UID attributes
     uid_attrs = [a for a in family.attribute_list if a.get_type() == "UID"]
     assert len(uid_attrs) == 2
@@ -466,8 +473,8 @@ def test_importer_maximal70():
 
     # TODO associations (lines 459-476)
 
-    # person attributes (REFN, UID, EXID)
-    assert len(person.attribute_list) == 6
+    # person attributes (14 GEDCOM individual attributes + REFN, UID, EXID)
+    assert len(person.attribute_list) == 20
     # Check for UID attributes
     uid_attrs = [a for a in person.attribute_list if a.get_type() == "UID"]
     assert len(uid_attrs) == 2
@@ -480,6 +487,16 @@ def test_importer_maximal70():
     # Check for EXID attributes
     exid_attrs = [a for a in person.attribute_list if a.get_type().string and a.get_type().string.startswith("EXID")]
     assert len(exid_attrs) == 2
+    # Check for some standard GEDCOM 7 attributes
+    cast_attrs = [a for a in person.attribute_list if a.get_type().value == AttributeType.CASTE]
+    assert len(cast_attrs) == 1
+    occu_attrs = [a for a in person.attribute_list if a.get_type().value == AttributeType.OCCUPATION]
+    assert len(occu_attrs) == 1
+    nchi_attrs = [a for a in person.attribute_list if a.get_type().value == AttributeType.NUM_CHILD]
+    assert len(nchi_attrs) == 1
+    # Check for custom attributes (Education, Religion, etc.)
+    custom_attrs = [a for a in person.attribute_list if a.get_type().value == AttributeType.CUSTOM]
+    assert len(custom_attrs) >= 4  # Education, Religion, Property, Number of Marriages, plus IDNO with TYPE
 
     # person notes
     assert len(person.note_list) == 2

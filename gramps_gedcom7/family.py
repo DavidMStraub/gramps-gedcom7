@@ -45,9 +45,11 @@ def handle_family(
     family = Family()
     objects = []
     for child in structure.children:
-        # TODO handle family attributes
         if child.tag == g7const.RESN:
             util.set_privacy_on_object(resn_structure=child, obj=family)
+        elif child.tag in (g7const.NCHI, g7const.FACT):
+            # Family attributes
+            util.handle_attribute_structure(child, family)
         elif child.tag == g7const.HUSB and child.pointer != g7grammar.voidptr:
             person_handle = xref_handle_map.get(child.pointer)
             if not person_handle:
