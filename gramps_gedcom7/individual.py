@@ -6,8 +6,6 @@ from gedcom7 import const as g7const
 from gedcom7 import grammar as g7grammar
 from gedcom7 import types as g7types
 from gramps.gen.lib import (
-    Attribute,
-    AttributeType,
     EventRef,
     EventType,
     Name,
@@ -98,7 +96,24 @@ def handle_individual(
                 person.set_primary_name(name)
             else:
                 person.add_alternate_name(name)
-        # TODO handle attributes
+        elif child.tag in (
+            g7const.CAST,
+            g7const.DSCR,
+            g7const.EDUC,
+            g7const.IDNO,
+            g7const.NATI,
+            g7const.NCHI,
+            g7const.NMR,
+            g7const.OCCU,
+            g7const.PROP,
+            g7const.RELI,
+            g7const.RESI,
+            g7const.SSN,
+            g7const.TITL,
+            g7const.FACT,
+        ):
+            # Individual attributes
+            util.handle_attribute_structure(child, person)
         # TODO handle SUBM
         # TODO handle associations
         # TODO handle ALIA

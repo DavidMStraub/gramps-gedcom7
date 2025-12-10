@@ -5,7 +5,12 @@ from typing import List
 from gedcom7 import const as g7const
 from gedcom7 import grammar as g7grammar
 from gedcom7 import types as g7types
-from gramps.gen.lib import Attribute, AttributeType, ChildRef, ChildRefType, Family, MediaRef, EventRef, EventType
+from gramps.gen.lib import (
+    ChildRef,
+    Family,
+    EventRef,
+    EventType,
+)
 from gramps.gen.lib.primaryobj import BasicPrimaryObject
 
 from . import util
@@ -45,9 +50,11 @@ def handle_family(
     family = Family()
     objects = []
     for child in structure.children:
-        # TODO handle family attributes
         if child.tag == g7const.RESN:
             util.set_privacy_on_object(resn_structure=child, obj=family)
+        elif child.tag in (g7const.NCHI, g7const.FACT):
+            # Family attributes
+            util.handle_attribute_structure(child, family)
         elif child.tag == g7const.HUSB and child.pointer != g7grammar.voidptr:
             person_handle = xref_handle_map.get(child.pointer)
             if not person_handle:

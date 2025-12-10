@@ -29,6 +29,28 @@ from .types import (
 )
 
 
+# Mapping of GEDCOM 7 attribute tags to Gramps AttributeType
+# For standard attributes, we use the predefined AttributeType constants
+# For attributes not in Gramps (EDUC, PROP, RELI, TITL, NMR), we use CUSTOM with the tag name
+GEDCOM_ATTRIBUTE_MAP = {
+    g7const.CAST: AttributeType.CASTE,
+    g7const.DSCR: AttributeType.DESCRIPTION,
+    g7const.IDNO: AttributeType.ID,
+    g7const.NATI: AttributeType.NATIONAL,
+    g7const.NCHI: AttributeType.NUM_CHILD,
+    g7const.SSN: AttributeType.SSN,
+    g7const.OCCU: AttributeType.OCCUPATION,
+    # These don't have direct Gramps equivalents, use CUSTOM
+    g7const.EDUC: (AttributeType.CUSTOM, "Education"),
+    g7const.PROP: (AttributeType.CUSTOM, "Property"),
+    g7const.RELI: (AttributeType.CUSTOM, "Religion"),
+    g7const.TITL: (AttributeType.CUSTOM, "Title"),
+    g7const.NMR: (AttributeType.CUSTOM, "Number of Marriages"),
+    g7const.RESI: (AttributeType.CUSTOM, "Residence"),
+    g7const.FACT: (AttributeType.CUSTOM, "Fact"),
+}
+
+
 def make_handle() -> str:
     """Generate a unique handle for a new object."""
     return uuid.uuid4().hex
@@ -325,14 +347,14 @@ def add_media_ref_to_object(
 
 def add_attribute_to_object(
     obj: AttributeBase | SrcAttributeBase,
-    attr_type: str | int | AttributeType | SrcAttributeType,
+    attr_type: str | int | tuple[int, str] | AttributeType | SrcAttributeType,
     value: str,
 ) -> None:
     """Add an attribute to a Gramps object.
     
     Args:
         obj: The object to add the attribute to (must support add_attribute).
-        attr_type: The attribute type (string, int enum value, or Type object).
+        attr_type: The attribute type (string, int enum value, tuple for custom types, or Type object).
         value: The attribute value.
     """
     if isinstance(obj, SrcAttributeBase):
@@ -341,6 +363,8 @@ def add_attribute_to_object(
             attr.set_type(SrcAttributeType(attr_type))
         elif isinstance(attr_type, int):
             attr.set_type(SrcAttributeType(attr_type))
+        elif isinstance(attr_type, tuple):
+            attr.set_type(attr_type)
         else:
             attr.set_type(attr_type)
     elif isinstance(obj, AttributeBase):
@@ -349,6 +373,8 @@ def add_attribute_to_object(
             attr.set_type(AttributeType(attr_type))
         elif isinstance(attr_type, int):
             attr.set_type(AttributeType(attr_type))
+        elif isinstance(attr_type, tuple):
+            attr.set_type(attr_type)
         else:
             attr.set_type(attr_type)
     else:
@@ -358,6 +384,36 @@ def add_attribute_to_object(
     
     attr.set_value(value)
     obj.add_attribute(attr)
+
+
+def handle_attribute_structure(
+    structure: g7types.GedcomStructure,
+    obj: AttributeBase,
+) -> None:
+    """Handle a GEDCOM 7 attribute structure and add it to a Gramps object.
+    
+    Args:
+        structure: The GEDCOM attribute structure (CAST, DSCR, EDUC, etc.)
+        obj: The Gramps object to add the attribute to.
+    """
+    if structure.tag not in GEDCOM_ATTRIBUTE_MAP:
+        # Unknown attribute, add as custom
+        add_attribute_to_object(obj, (AttributeType.CUSTOM, structure.tag), str(structure.value or ""))
+        return
+    
+    attr_type = GEDCOM_ATTRIBUTE_MAP[structure.tag]
+    value = structure.value or ""
+    
+    # Handle TYPE substructure: for FACT and IDNO, when TYPE is present, it defines the attribute type;
+    # for other tags, TYPE provides additional context but we keep the standard type.
+    # Note: The code does not enforce the presence of TYPE for FACT and IDNO, but uses it if available.
+    type_structure = g7util.get_first_child_with_tag(structure, g7const.TYPE)
+    if type_structure and type_structure.value and structure.tag in (g7const.FACT, g7const.IDNO):
+        # For FACT and IDNO, use TYPE value as the custom attribute name
+        type_value = type_structure.value
+        attr_type = (AttributeType.CUSTOM, str(type_value))
+    
+    add_attribute_to_object(obj, attr_type, str(value))
 
 
 def add_uid_to_object(
