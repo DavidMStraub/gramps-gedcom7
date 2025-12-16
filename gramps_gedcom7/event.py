@@ -115,7 +115,11 @@ def handle_event(
                 ), "Expected TIME value to be a Time object"
                 time_obj = time_structure.value
                 # Format time as HH:MM:SS[.fraction][Z]
-                time_str = f"{time_obj.hour:02d}:{time_obj.minute:02d}:{time_obj.second:02d}"
+                # Handle None values by using 0 as default
+                hour = time_obj.hour if time_obj.hour is not None else 0
+                minute = time_obj.minute if time_obj.minute is not None else 0
+                second = time_obj.second if time_obj.second is not None else 0
+                time_str = f"{hour:02d}:{minute:02d}:{second:02d}"
                 if time_obj.fraction is not None:
                     time_str += f".{time_obj.fraction}"
                 if time_obj.tz:

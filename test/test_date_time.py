@@ -1,6 +1,11 @@
 """Test TIME substructure import."""
 
 import os
+
+# Set language BEFORE importing anything else
+os.environ['LANGUAGE'] = 'en'
+
+import pytest
 from gramps.gen.db import DbWriteBase
 from gramps.gen.db.utils import make_database
 from gramps.gen.lib import EventType
@@ -9,8 +14,6 @@ from gramps_gedcom7.importer import import_gedcom
 
 def test_date_time_on_birth():
     """Test that TIME is imported as an Event Attribute."""
-    # Set language to English for consistent event type names
-    os.environ['LANGUAGE'] = 'en'
     gedcom_file = "test/data/date_time.ged"
     db: DbWriteBase = make_database("sqlite")
     db.load(":memory:", callback=None)
@@ -27,8 +30,8 @@ def test_date_time_on_birth():
     
     # Get birth event
     event_refs = person.get_event_ref_list()
-    # Person has Birth, Death, and Burial events
-    assert len(event_refs) == 3
+    # Person has Birth, Death, Burial, and Christening events
+    assert len(event_refs) == 4
     birth = None
     for ref in event_refs:
         event = db.get_event_from_handle(ref.ref)
@@ -53,7 +56,6 @@ def test_date_time_on_birth():
 
 def test_date_time_utc():
     """Test that TIME with UTC indicator (Z) is imported correctly."""
-    os.environ['LANGUAGE'] = 'en'
     gedcom_file = "test/data/date_time.ged"
     db: DbWriteBase = make_database("sqlite")
     db.load(":memory:", callback=None)
@@ -84,7 +86,6 @@ def test_date_time_utc():
 
 def test_date_without_time():
     """Test that dates without TIME don't get a Time attribute."""
-    os.environ['LANGUAGE'] = 'en'
     gedcom_file = "test/data/date_time.ged"
     db: DbWriteBase = make_database("sqlite")
     db.load(":memory:", callback=None)
@@ -108,7 +109,6 @@ def test_date_without_time():
 
 def test_time_with_phrase():
     """Test that both TIME and PHRASE can coexist on the same date."""
-    os.environ['LANGUAGE'] = 'en'
     gedcom_file = "test/data/date_time.ged"
     db: DbWriteBase = make_database("sqlite")
     db.load(":memory:", callback=None)
@@ -134,3 +134,29 @@ def test_time_with_phrase():
     time_attr = attributes[0]
     assert str(time_attr.get_type()) == "Time"
     assert time_attr.get_value() == "18:45:00"
+
+
+def test_time_without_seconds():
+    """Test that TIME with only hours and minutes (no seconds) is handled correctly."""
+    gedcom_file = "test/data/date_time.ged"
+    db: DbWriteBase = make_database("sqlite")
+    db.load(":memory:", callback=None)
+    import_gedcom(gedcom_file, db)
+    
+    # Find the christening event (has TIME 10:15 without seconds)
+    christening = None
+    for handle in db.get_event_handles():
+        event = db.get_event_from_handle(handle)
+        if str(event.get_type()) == "Christening":
+            christening = event
+            break
+    
+    assert christening is not None, "Christening event not found"
+    
+    # Check TIME attribute - should default seconds to 00
+    attributes = christening.get_attribute_list()
+    assert len(attributes) == 1
+    time_attr = attributes[0]
+    assert str(time_attr.get_type()) == "Time"
+    assert time_attr.get_value() == "10:15:00"
+
