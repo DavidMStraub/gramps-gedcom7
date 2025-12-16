@@ -1,0 +1,21 @@
+0 HEAD
+1 GEDC
+2 VERS 7.0
+1 SCHMA
+2 TAG _LOC http://example.com/location
+0 @I1@ INDI
+1 NAME John /Smith/
+1 BIRT
+2 DATE 30 JAN 1649
+3 PHRASE 30th of January, 1648/9
+0 @I2@ INDI
+1 NAME Jane /Doe/
+1 DEAT
+2 DATE 15 MAR 1720
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 MARR
+2 DATE FROM 6 APR 1917 TO 11 NOV 1918
+3 PHRASE During America's involvement in the Great War
+0 TRLR
