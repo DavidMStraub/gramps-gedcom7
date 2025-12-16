@@ -34,7 +34,9 @@ Instead of an output file name, you can also specify `-` to write the output to 
 
 ## Web interface
 
-A [Streamlit](https://streamlit.io/) web interface is available for interactive use:
+A [Streamlit](https://streamlit.io/) web interface is available for interactive use at [gramps-gedcom7.streamlit.app](https://gramps-gedcom7.streamlit.app/).
+
+You can also run it locally:
 
 ```bash
 python -m gramps_gedcom7.web
