@@ -112,10 +112,10 @@ def test_importer_maximal70():
     assert marriage_media1.gramps_id == "O1"
     assert marriage_media2.gramps_id == "O2"
 
-    # event UID + contact fields (8 contact fields: 2 PHON, 2 EMAIL, 2 FAX, 2 WWW) + AGNC, RELI, CAUS
+    # event UID + contact fields (8 contact fields: 2 PHON, 2 EMAIL, 2 FAX, 2 WWW) + AGNC, RELI, CAUS, TIME
     assert (
-        len(marriage.attribute_list) == 13
-    )  # 8 contact fields + 3 event attrs + 2 UID
+        len(marriage.attribute_list) == 14
+    )  # 8 contact fields + 3 event attrs + 2 UID + 1 TIME
     # Check contact fields by type string
     phone_attrs = [a for a in marriage.attribute_list if a.get_type().string == "Phone"]
     assert len(phone_attrs) == 2
