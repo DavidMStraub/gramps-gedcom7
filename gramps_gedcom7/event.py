@@ -107,7 +107,20 @@ def handle_event(
                 ), "Expected PHRASE value to be a string"
                 date.set_text_value(phrase_structure.value)
             event.set_date_object(date)
-            # TODO handle time
+            # Handle TIME substructure
+            time_structure = g7util.get_first_child_with_tag(child, g7const.TIME)
+            if time_structure and time_structure.value:
+                assert isinstance(
+                    time_structure.value, g7types.Time
+                ), "Expected TIME value to be a Time object"
+                time_obj = time_structure.value
+                # Format time as HH:MM:SS[.fraction][Z]
+                time_str = f"{time_obj.hour:02d}:{time_obj.minute:02d}:{time_obj.second:02d}"
+                if time_obj.fraction is not None:
+                    time_str += f".{time_obj.fraction}"
+                if time_obj.tz:
+                    time_str += time_obj.tz
+                util.add_attribute_to_object(event, "Time", time_str)
         elif child.tag == g7const.OBJE:
             event = util.add_media_ref_to_object(child, event, xref_handle_map)
         elif child.tag == g7const.UID:
