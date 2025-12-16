@@ -1,0 +1,30 @@
+0 HEAD
+1 GEDC
+2 VERS 7.0
+1 SCHMA
+2 TAG _LOC http://example.com/location
+0 @I1@ INDI
+1 NAME John /Doe/
+1 FAMC @F1@
+2 PHRASE adopted informally by the family
+1 FAMS @F2@
+2 PHRASE common-law marriage, never legally formalized
+0 @I2@ INDI
+1 NAME Jane /Smith/
+1 FAMS @F1@
+0 @I3@ INDI
+1 NAME Jack /Doe/
+1 FAMS @F1@
+0 @I4@ INDI
+1 NAME Jill /Doe-Smith/
+0 @F1@ FAM
+1 HUSB @I3@
+2 PHRASE biological father, not legal guardian
+1 WIFE @I2@
+2 PHRASE stepmother, raised child from age 5
+1 CHIL @I1@
+2 PHRASE youngest of three children
+0 @F2@ FAM
+1 HUSB @I1@
+1 WIFE @I4@
+0 TRLR

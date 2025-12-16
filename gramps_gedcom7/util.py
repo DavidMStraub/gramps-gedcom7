@@ -162,9 +162,36 @@ def add_note_to_object(
     structure: g7types.GedcomStructure,
     obj: NoteBaseT,
 ) -> tuple[NoteBaseT, Note]:
-    """Add a note to a Gramps object."""
+    """Add a note to a Gramps object.
+    
+    Automatically selects the appropriate NoteType based on the object type.
+    
+    Args:
+        structure: The GEDCOM structure containing note text.
+        obj: The object to add the note to.
+    
+    Returns:
+        Tuple of (modified object, created note).
+    """
     note = structure_to_note(structure)
-    note.type = NoteType(NoteType.SOURCE)
+    
+    # Select appropriate note type based on object class name
+    obj_class = obj.__class__.__name__
+    note_type_map = {
+        'ChildRef': NoteType.CHILDREF,
+        'Family': NoteType.FAMILY,
+        'Person': NoteType.PERSON,
+        'Event': NoteType.EVENT,
+        'Place': NoteType.PLACE,
+        'Source': NoteType.SOURCE,
+        'Citation': NoteType.CITATION,
+        'Media': NoteType.MEDIA,
+        'Repository': NoteType.REPO,
+        'Name': NoteType.PERSONNAME,
+    }
+    
+    note_type = note_type_map.get(obj_class, NoteType.GENERAL)
+    note.type = NoteType(note_type)
     note.handle = make_handle()
     # set note change date to parent change date
     set_change_date(structure=structure, obj=note)
