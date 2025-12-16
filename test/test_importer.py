@@ -206,14 +206,24 @@ def test_importer_maximal70():
     ]
     assert len(exid_attrs) == 2
 
-    # family note
-    assert len(family.note_list) == 2
-    family_note1 = db.get_note_from_handle(family.note_list[0])
-    assert isinstance(family_note1, Note)
-    assert family_note1.text.string == "Note text"
-    family_note2 = db.get_note_from_handle(family.note_list[1])
-    assert isinstance(family_note2, Note)
-    assert family_note2.gramps_id == "N1"
+    # family note (2 original + HUSB PHRASE + WIFE PHRASE = 4)
+    assert len(family.note_list) == 4
+    # Get all notes
+    all_notes = [db.get_note_from_handle(nh) for nh in family.note_list]
+    
+    # Check for original notes
+    note_text_notes = [n for n in all_notes if n.text.string == "Note text"]
+    assert len(note_text_notes) == 1
+    
+    n1_notes = [n for n in all_notes if n.gramps_id == "N1"]
+    assert len(n1_notes) == 1
+    
+    # Check for HUSB and WIFE PHRASE notes
+    husb_notes = [n for n in all_notes if "Husband phrase" in n.get()]
+    assert len(husb_notes) == 1
+    
+    wife_notes = [n for n in all_notes if "Wife phrase" in n.get()]
+    assert len(wife_notes) == 1
 
     # family source citations (line 209ff)
     assert len(family.citation_list) == 2
