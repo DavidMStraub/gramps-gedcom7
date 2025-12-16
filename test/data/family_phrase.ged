@@ -1,0 +1,38 @@
+0 HEAD
+1 GEDC
+2 VERS 7.0
+1 SCHMA
+2 TAG _LOC http://example.com/location
+0 @I1@ INDI
+1 NAME John /Smith/
+1 SEX M
+1 FAMC @F1@
+1 FAMS @F2@
+0 @I2@ INDI
+1 NAME Mary /Jones/
+1 SEX F
+1 FAMS @F1@
+0 @I3@ INDI
+1 NAME Joseph /Smith/
+1 SEX M
+1 FAMS @F1@
+0 @I4@ INDI
+1 NAME Jane /Doe/
+1 SEX F
+1 FAMS @F2@
+0 @F1@ FAM
+1 HUSB @I3@
+2 PHRASE "Stepfather who raised John"
+1 WIFE @I2@
+2 PHRASE "Biological mother, remarried"
+1 CHIL @I1@
+2 PHRASE "Child from previous relationship"
+0 @F2@ FAM
+1 HUSB @I1@
+1 WIFE @I4@
+1 CHIL @I5@
+0 @I5@ INDI
+1 NAME Baby /Smith/
+1 SEX M
+1 FAMC @F2@
+0 TRLR

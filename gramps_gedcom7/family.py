@@ -5,11 +5,14 @@ from typing import List
 from gedcom7 import const as g7const
 from gedcom7 import grammar as g7grammar
 from gedcom7 import types as g7types
+from gedcom7 import util as g7util
 from gramps.gen.lib import (
     ChildRef,
     Family,
     EventRef,
     EventType,
+    Note,
+    NoteType,
 )
 from gramps.gen.lib.primaryobj import BasicPrimaryObject
 
@@ -60,13 +63,21 @@ def handle_family(
             if not person_handle:
                 raise ValueError(f"Person {child.pointer} not found")
             family.set_father_handle(person_handle)
-            # TODO handle HUSB PHRASE
+            # Handle HUSB PHRASE - add to Family
+            phrase_structure = g7util.get_first_child_with_tag(child, g7const.PHRASE)
+            if phrase_structure and phrase_structure.value:
+                family, note = util.add_note_to_object(phrase_structure, family)
+                objects.append(note)
         elif child.tag == g7const.WIFE and child.pointer != g7grammar.voidptr:
             person_handle = xref_handle_map.get(child.pointer)
             if not person_handle:
                 raise ValueError(f"Person {child.pointer} not found")
             family.set_mother_handle(person_handle)
-            # TODO handle WIFE PHRASE
+            # Handle WIFE PHRASE - add to Family
+            phrase_structure = g7util.get_first_child_with_tag(child, g7const.PHRASE)
+            if phrase_structure and phrase_structure.value:
+                family, note = util.add_note_to_object(phrase_structure, family)
+                objects.append(note)
         elif child.tag == g7const.CHIL and child.pointer != g7grammar.voidptr:
             person_handle = xref_handle_map.get(child.pointer)
             if not person_handle:
@@ -74,7 +85,14 @@ def handle_family(
             child_ref = ChildRef()
             child_ref.ref = person_handle
             family.add_child_ref(child_ref)
-            # TODO handle CHIL PHRASE
+            # Handle CHIL PHRASE - add to ChildRef
+            phrase_structure = g7util.get_first_child_with_tag(child, g7const.PHRASE)
+            if phrase_structure and phrase_structure.value:
+                assert isinstance(
+                    phrase_structure.value, str
+                ), "Expected PHRASE value to be a string"
+                child_ref, note = util.add_note_to_object(phrase_structure, child_ref)
+                objects.append(note)
         # TODO handle associations
         elif child.tag == g7const.SNOTE and child.pointer != g7grammar.voidptr:
             try:
