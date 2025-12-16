@@ -99,8 +99,15 @@ def handle_event(
                 ),
             ), "Expected value to be a date-related object"
             date = util.gedcom_date_value_to_gramps_date(child.value)
+            # Handle PHRASE substructure
+            phrase_structure = g7util.get_first_child_with_tag(child, g7const.PHRASE)
+            if phrase_structure and phrase_structure.value:
+                assert isinstance(
+                    phrase_structure.value, str
+                ), "Expected PHRASE value to be a string"
+                date.set_text_value(phrase_structure.value)
             event.set_date_object(date)
-            # TODO handle date PHRASE, time
+            # TODO handle time
         elif child.tag == g7const.OBJE:
             event = util.add_media_ref_to_object(child, event, xref_handle_map)
         elif child.tag == g7const.UID:
