@@ -11,6 +11,7 @@ from gramps.gen.lib import (
     Name,
     NameType,
     Person,
+    PersonRef,
     Surname,
 )
 from gramps.gen.lib.primaryobj import BasicPrimaryObject
@@ -115,10 +116,20 @@ def handle_individual(
             # Individual attributes
             util.handle_attribute_structure(child, person)
         # TODO handle SUBM
-        # TODO handle associations
-        # TODO handle ALIA
         # TODO handle ANCI
         # TODO handle DESI
+        elif child.tag == g7const.ASSO:
+            person_ref, asso_objects = handle_association_structure(
+                child, xref_handle_map, settings
+            )
+            if person_ref:
+                person.add_person_ref(person_ref)
+                objects.extend(asso_objects)
+        elif child.tag == g7const.ALIA:
+            person_ref, alias_objects = handle_alias_structure(child, xref_handle_map)
+            if person_ref:
+                person.add_person_ref(person_ref)
+                objects.extend(alias_objects)
         elif child.tag == g7const.EXID:
             util.handle_external_id(child, person)
         elif child.tag == g7const.REFN:
@@ -174,6 +185,107 @@ def handle_individual(
     util.set_change_date(structure=structure, obj=person)
     objects.append(person)
     return objects
+
+
+def handle_association_structure(
+    structure: g7types.GedcomStructure,
+    xref_handle_map: dict[str, str],
+    settings: ImportSettings,
+) -> tuple[PersonRef | None, list[BasicPrimaryObject]]:
+    """Handle ASSO (association) structure and create PersonRef.
+
+    Args:
+        structure: The GEDCOM ASSO structure.
+        xref_handle_map: Map of GEDCOM XREFs to Gramps handles.
+        settings: Import settings.
+
+    Returns:
+        A tuple containing the PersonRef (or None if void pointer) and
+        a list of additional objects (notes, citations) to add to database.
+    """
+    assert structure.tag == g7const.ASSO, "Expected ASSO structure"
+    
+    # Skip void pointers
+    if structure.pointer == g7grammar.voidptr:
+        return None, []
+    
+    assoc_handle = xref_handle_map.get(structure.pointer)
+    if not assoc_handle:
+        return None, []
+    
+    person_ref = PersonRef()
+    person_ref.set_reference_handle(assoc_handle)
+    objects = []
+    
+    # Process ASSO substructures
+    for child in structure.children:
+        if child.tag == g7const.ROLE:
+            # Store ROLE as the relation type
+            assert isinstance(child.value, str), "Expected ROLE to be a string"
+            person_ref.set_relation(child.value)
+            # TODO: Handle ROLE PHRASE substructure?
+        elif child.tag == g7const.PHRASE:
+            # ASSO PHRASE - add as note to PersonRef
+            person_ref, note = util.add_note_to_object(child, person_ref)
+            objects.append(note)
+        elif child.tag == g7const.NOTE:
+            person_ref, note = util.add_note_to_object(child, person_ref)
+            objects.append(note)
+        elif child.tag == g7const.SNOTE and child.pointer != g7grammar.voidptr:
+            try:
+                note_handle = xref_handle_map[child.pointer]
+            except KeyError:
+                raise ValueError(f"Shared note {child.pointer} not found")
+            person_ref.add_note(note_handle)
+        elif child.tag == g7const.SOUR:
+            citation, citation_objects = handle_citation(
+                child,
+                xref_handle_map=xref_handle_map,
+                settings=settings,
+            )
+            objects.extend(citation_objects)
+            person_ref.add_citation(citation.handle)
+            objects.append(citation)
+    
+    return person_ref, objects
+
+
+def handle_alias_structure(
+    structure: g7types.GedcomStructure,
+    xref_handle_map: dict[str, str],
+) -> tuple[PersonRef | None, list[BasicPrimaryObject]]:
+    """Handle ALIA (alias) structure and create PersonRef.
+
+    Args:
+        structure: The GEDCOM ALIA structure.
+        xref_handle_map: Map of GEDCOM XREFs to Gramps handles.
+
+    Returns:
+        A tuple containing the PersonRef (or None if void pointer) and
+        a list of additional objects (notes) to add to database.
+    """
+    assert structure.tag == g7const.ALIA, "Expected ALIA structure"
+    
+    # Skip void pointers
+    if structure.pointer == g7grammar.voidptr:
+        return None, []
+    
+    alias_handle = xref_handle_map.get(structure.pointer)
+    if not alias_handle:
+        return None, []
+    
+    person_ref = PersonRef()
+    person_ref.set_reference_handle(alias_handle)
+    person_ref.set_relation("ALIA")
+    objects = []
+    
+    # Handle ALIA PHRASE substructure
+    for child in structure.children:
+        if child.tag == g7const.PHRASE:
+            person_ref, note = util.add_note_to_object(child, person_ref)
+            objects.append(note)
+    
+    return person_ref, objects
 
 
 def handle_name(

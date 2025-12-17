@@ -1,0 +1,39 @@
+0 HEAD
+1 GEDC
+2 VERS 7.0
+1 SCHMA
+2 TAG _MYOWN http://example.com/myown
+0 @I1@ INDI
+1 NAME John /Smith/
+1 SEX M
+1 ASSO @I2@
+2 ROLE FRIEND
+1 ASSO @I3@
+2 ROLE GODP
+2 PHRASE Godfather at baptism
+1 ASSO @I4@
+2 ROLE SPOU
+2 NOTE Witnessed marriage
+1 ASSO @VOID@
+2 ROLE WITN
+2 PHRASE Should be ignored - void pointer
+1 ALIA @I5@
+1 ALIA @I6@
+2 PHRASE Also known as
+1 ALIA @VOID@
+0 @I2@ INDI
+1 NAME Jane /Doe/
+1 SEX F
+0 @I3@ INDI
+1 NAME Robert /Brown/
+1 SEX M
+0 @I4@ INDI
+1 NAME Mary /Johnson/
+1 SEX F
+0 @I5@ INDI
+1 NAME Jonathan /Smith/
+1 SEX M
+0 @I6@ INDI
+1 NAME Jack /Smythe/
+1 SEX M
+0 TRLR
