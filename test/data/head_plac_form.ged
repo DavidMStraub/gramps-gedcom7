@@ -1,0 +1,11 @@
+0 HEAD
+1 GEDC
+2 VERS 7.0
+1 PLAC
+2 FORM City, County, State, Country
+0 @I1@ INDI
+1 NAME John /Smith/
+1 SEX M
+1 BIRT
+2 PLAC New York, Kings, New York, USA
+0 TRLR

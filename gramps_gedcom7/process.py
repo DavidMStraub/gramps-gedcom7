@@ -52,8 +52,8 @@ def process_gedcom_structures(
             xref_handle_map[structure.xref] = make_handle()
 
     # Create a place cache for deduplication
-    # Maps (jurisdiction_tuple, parent_handle) -> place_handle
-    # parent_handle is None until hierarchy is implemented
+    # Maps (jurisdiction_name, parent_handle) -> place_handle
+    # parent_handle is None for top-level places, otherwise the handle of the parent place
     place_cache: dict[tuple[tuple[str, ...], str | None], str] = {}
 
     # Handle the remaining structures (excluding header and trailer)
@@ -61,7 +61,10 @@ def process_gedcom_structures(
     for structure in gedcom_structures[1:-1]:
         objects += (
             handle_structure(
-                structure, xref_handle_map=xref_handle_map, settings=settings, place_cache=place_cache
+                structure,
+                xref_handle_map=xref_handle_map,
+                settings=settings,
+                place_cache=place_cache,
             )
             or []
         )
@@ -92,11 +95,17 @@ def handle_structure(
     """
     if structure.tag == g7const.FAM:
         return handle_family(
-            structure, xref_handle_map=xref_handle_map, settings=settings, place_cache=place_cache
+            structure,
+            xref_handle_map=xref_handle_map,
+            settings=settings,
+            place_cache=place_cache,
         )
     elif structure.tag == g7const.INDI:
         return handle_individual(
-            structure, xref_handle_map=xref_handle_map, settings=settings, place_cache=place_cache
+            structure,
+            xref_handle_map=xref_handle_map,
+            settings=settings,
+            place_cache=place_cache,
         )
     elif structure.tag == g7const.OBJE:
         return handle_multimedia(

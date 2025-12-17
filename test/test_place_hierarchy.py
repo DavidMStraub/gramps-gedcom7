@@ -211,3 +211,72 @@ def test_empty_places_not_deduplicated():
     assert place2.get_latitude() == "N51.5074"
     assert place2.get_longitude() == "W0.1278"
 
+
+def test_head_plac_form_fallback():
+    """Test that HEAD.PLAC.FORM is used when PLAC doesn't have its own FORM.
+    
+    HEAD.PLAC.FORM specifies: City, County, State, Country
+    PLAC: "New York, Kings, New York, USA" (without its own FORM)
+    
+    Place types should be set from HEAD.PLAC.FORM:
+    - New York (lowest) -> CITY
+    - Kings -> COUNTY
+    - New York (state) -> STATE
+    - USA -> COUNTRY
+    """
+    gedcom_file = "test/data/head_plac_form.ged"
+    db: DbWriteBase = make_database("sqlite")
+    db.load(":memory:", callback=None)
+    import_gedcom(gedcom_file, db)
+    
+    # Get person and their birth event
+    p1 = db.get_person_from_gramps_id("I1")
+    birth_ref = p1.get_event_ref_list()[0]
+    event = db.get_event_from_handle(birth_ref.ref)
+    
+    # Get the place hierarchy starting from the lowest level
+    place_handle = event.get_place_handle()
+    new_york_city = db.get_place_from_handle(place_handle)
+    
+    # Verify the city name and type
+    assert new_york_city.get_name().get_value() == "New York"
+    assert new_york_city.get_type() == PlaceType.CITY, (
+        f"Expected PlaceType.CITY, got {new_york_city.get_type()}"
+    )
+    
+    # Get parent (Kings County)
+    placeref_list = new_york_city.get_placeref_list()
+    assert len(placeref_list) == 1
+    kings_county_handle = placeref_list[0].get_reference_handle()
+    kings_county = db.get_place_from_handle(kings_county_handle)
+    
+    assert kings_county.get_name().get_value() == "Kings"
+    assert kings_county.get_type() == PlaceType.COUNTY, (
+        f"Expected PlaceType.COUNTY, got {kings_county.get_type()}"
+    )
+    
+    # Get parent (New York State)
+    placeref_list = kings_county.get_placeref_list()
+    assert len(placeref_list) == 1
+    new_york_state_handle = placeref_list[0].get_reference_handle()
+    new_york_state = db.get_place_from_handle(new_york_state_handle)
+    
+    assert new_york_state.get_name().get_value() == "New York"
+    assert new_york_state.get_type() == PlaceType.STATE, (
+        f"Expected PlaceType.STATE, got {new_york_state.get_type()}"
+    )
+    
+    # Get parent (USA)
+    placeref_list = new_york_state.get_placeref_list()
+    assert len(placeref_list) == 1
+    usa_handle = placeref_list[0].get_reference_handle()
+    usa = db.get_place_from_handle(usa_handle)
+    
+    assert usa.get_name().get_value() == "USA"
+    assert usa.get_type() == PlaceType.COUNTRY, (
+        f"Expected PlaceType.COUNTRY, got {usa.get_type()}"
+    )
+    
+    # USA should have no parent (top level)
+    assert len(usa.get_placeref_list()) == 0
+
