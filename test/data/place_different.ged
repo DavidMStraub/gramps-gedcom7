@@ -1,0 +1,14 @@
+0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 NAME John /Smith/
+1 SEX M
+1 BIRT
+2 PLAC Baltimore, , Maryland, USA
+0 @I2@ INDI
+1 NAME Patrick /O'Brien/
+1 SEX M
+1 BIRT
+2 PLAC Baltimore, , Cork, Ireland
+0 TRLR

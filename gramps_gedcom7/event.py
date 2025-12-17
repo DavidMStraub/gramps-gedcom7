@@ -17,6 +17,7 @@ def handle_event(
     xref_handle_map: dict[str, str],
     event_type_map: dict[str, int],
     settings: ImportSettings,
+    place_cache: dict[tuple[tuple[str, ...], str | None], str],
 ) -> tuple[Event, list[BasicPrimaryObject]]:
     """Convert a GEDCOM event structure to a Gramps Event object.
 
@@ -24,6 +25,8 @@ def handle_event(
         structure: The GEDCOM structure containing the event data.
         xref_handle_map: A map of XREFs to Gramps handles.
         event_type_map: A mapping of GEDCOM event tags to Gramps EventType values.
+        settings: Import settings.
+        place_cache: Cache mapping place jurisdictions to handles for deduplication.
 
     Returns:
         A tuple containing the Gramps Event object and a list of additional objects created.
@@ -84,10 +87,9 @@ def handle_event(
             event.add_citation(citation.handle)
             objects.append(citation)
         elif child.tag == g7const.PLAC:
-            place, other_objects = handle_place(child, xref_handle_map)
-            event.set_place_handle(place.handle)
-            objects.append(place)
-            objects.extend(other_objects)
+            place_handle, other_objects = handle_place(child, xref_handle_map, place_cache, settings)
+            event.set_place_handle(place_handle)
+            objects.extend(other_objects)  # other_objects contains place only if it's new
         elif child.tag == g7const.DATE:
             assert isinstance(
                 child.value,
@@ -135,19 +137,45 @@ def handle_event(
 def handle_place(
     structure: g7types.GedcomStructure,
     xref_handle_map: dict[str, str],
-) -> tuple[Place, list[BasicPrimaryObject]]:
+    place_cache: dict[tuple[tuple[str, ...], str | None], str],
+    settings: ImportSettings,
+) -> tuple[str, list[BasicPrimaryObject]]:
     """Convert a GEDCOM place structure to a Gramps Place object.
 
     Args:
         structure: The GEDCOM structure containing the place data.
         xref_handle_map: A map of XREFs to Gramps handles.
+        place_cache: Cache mapping place jurisdictions to handles for deduplication.
+        settings: Import settings.
 
     Returns:
-        A Gramps Place object created from the GEDCOM structure.
+        A tuple of the place handle and a list of additional objects created.
     """
+    # Build cache key from jurisdiction list
+    # Use full jurisdiction list for proper deduplication
+    jurisdiction_tuple = tuple(structure.value) if structure.value else ()
+    parent_handle = None  # Will be used for hierarchy later
+    cache_key = (jurisdiction_tuple, parent_handle)
+    
+    # Check if this place already exists in cache
+    if cache_key in place_cache:
+        # Reuse existing place - just return the handle
+        # The actual Place object is already in the database with all its properties
+        existing_handle = place_cache[cache_key]
+        # Return empty objects list to avoid re-adding to database
+        return existing_handle, []
+    
+    # Create new place
     place = Place()
     objects = []
     place.handle = util.make_handle()
+    
+    # Add to cache
+    place_cache[cache_key] = place.handle
+    
+    # Add the new place to objects list so it gets added to database
+    objects.append(place)
+    
     if structure.value:
         name = PlaceName()
         assert isinstance(
@@ -215,4 +243,5 @@ def handle_place(
                 url.set_path(child.value)
                 url.set_description(f"External ID: {child.value}")
             place.add_url(url)
-    return place, objects
+    
+    return place.handle, objects
