@@ -52,7 +52,7 @@ def process_gedcom_structures(
             xref_handle_map[structure.xref] = make_handle()
 
     # Create a place cache for deduplication
-    # Maps (jurisdiction_name, parent_handle) -> place_handle
+    # Maps ((jurisdiction_name,), parent_handle) -> place_handle
     # parent_handle is None for top-level places, otherwise the handle of the parent place
     place_cache: dict[tuple[tuple[str, ...], str | None], str] = {}
 
