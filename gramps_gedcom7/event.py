@@ -251,10 +251,9 @@ def _create_hierarchy_place(
     place_objects[place.handle] = place
 
     # Set the place name
-    if jurisdiction_name:  # Only set name if not empty
-        name = PlaceName()
-        name.set_value(jurisdiction_name)
-        place.set_name(name)
+    name = PlaceName()
+    name.set_value(jurisdiction_name)
+    place.set_name(name)
 
     # Set place type from FORM if available
     if form_type:
@@ -378,6 +377,9 @@ def handle_place(
         # but no jurisdiction list - these should remain separate places
         place = Place()
         place.handle = util.make_handle()
+        name = PlaceName()
+        name.set_value("")
+        place.set_name(name)
         place_objects_list = [place]
         _apply_place_properties(place, structure, xref_handle_map, place_objects_list)
         return place.handle, place_objects_list

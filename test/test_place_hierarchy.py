@@ -280,3 +280,30 @@ def test_head_plac_form_fallback():
     # USA should have no parent (top level)
     assert len(usa.get_placeref_list()) == 0
 
+
+def test_empty_place_with_lang():
+    """Test that empty place jurisdictions with LANG don't crash.
+    
+    Regression test: A PLAC with no jurisdiction list (empty place) but with
+    LANG property should not crash. The place.name must exist even for empty
+    places to allow LANG to be set.
+    """
+    gedcom_file = "test/data/place_empty_lang.ged"
+    db: DbWriteBase = make_database("sqlite")
+    db.load(":memory:", callback=None)
+    import_gedcom(gedcom_file, db)
+    
+    # Get person and their birth event
+    p1 = db.get_person_from_gramps_id("I1")
+    birth_ref = p1.get_event_ref_list()[0]
+    event = db.get_event_from_handle(birth_ref.ref)
+    
+    # Get the place - should not crash even with LANG on empty place
+    place_handle = event.get_place_handle()
+    place = db.get_place_from_handle(place_handle)
+    
+    # Place should have LANG set to "en" and coordinates
+    assert place.get_name().get_language() == "en"
+    assert place.get_latitude() == "N39.2904"
+    assert place.get_longitude() == "W76.6122"
+
