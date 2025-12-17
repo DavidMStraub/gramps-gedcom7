@@ -152,11 +152,13 @@ def test_place_note_type():
     try:
         import_gedcom(temp_path, db)
         
+        # With hierarchy, "London, England" creates 2 places: London and England
         places = list(db.iter_places())
-        assert len(places) == 1
+        assert len(places) == 2, "Should have 2 places in hierarchy: London and England"
         
-        place = places[0]
-        note_handles = place.get_note_list()
+        # Find London (the place with the note)
+        london = [p for p in places if p.get_name().get_value() == "London"][0]
+        note_handles = london.get_note_list()
         assert len(note_handles) == 1
         
         note = db.get_note_from_handle(note_handles[0])
