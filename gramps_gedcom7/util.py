@@ -181,6 +181,7 @@ def add_note_to_object(
         'ChildRef': NoteType.CHILDREF,
         'Family': NoteType.FAMILY,
         'Person': NoteType.PERSON,
+        'PersonRef': NoteType.ASSOCIATION,
         'Event': NoteType.EVENT,
         'Place': NoteType.PLACE,
         'Source': NoteType.SOURCE,

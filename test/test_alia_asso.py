@@ -27,6 +27,12 @@ def test_alia_valid_pointer(db):
     # Should have 2 ALIA references (I5 and I6) - void is skipped
     alia_refs = [ref for ref in person_refs if ref.get_relation() == "ALIA"]
     assert len(alia_refs) == 2
+    
+    # Verify the references point to actual persons
+    alia_handles = [ref.get_reference_handle() for ref in alia_refs]
+    for handle in alia_handles:
+        alia_person = db.get_person_from_handle(handle)
+        assert alia_person is not None
 
 
 def test_alia_void_skipped(db):
@@ -35,10 +41,16 @@ def test_alia_void_skipped(db):
     assert person is not None
     
     person_refs = person.get_person_ref_list()
-    # Only the valid ALIA @I5@ and @I6@ should create PersonRefs
     alia_refs = [ref for ref in person_refs if ref.get_relation() == "ALIA"]
-    # Should be exactly 2, not 3 (void should be skipped)
-    assert len(alia_refs) == 2
+    
+    # Verify that none of the PersonRef objects have empty handles
+    # (which would indicate a void pointer was processed)
+    for ref in alia_refs:
+        handle = ref.get_reference_handle()
+        assert handle  # Should not be empty/None
+        # Should be able to retrieve the person
+        person = db.get_person_from_handle(handle)
+        assert person is not None
 
 
 def test_alia_phrase(db):
@@ -72,13 +84,15 @@ def test_asso_with_role(db):
     asso_refs = [ref for ref in person_refs if ref.get_relation() != "ALIA"]
     roles = [ref.get_relation() for ref in asso_refs]
     
-    # Should have associations with these roles (3 valid, 1 void skipped)
+    # Should have associations with these roles (6 valid, 1 void skipped)
     assert "FRIEND" in roles
     assert "GODP" in roles
     assert "SPOU" in roles
-    # WITN with @VOID@ should NOT be in the list
-    assert "WITN" not in roles
-    assert len(asso_refs) == 3
+    assert "CLERGY" in roles
+    assert "WITN" in roles
+    assert "Teacher" in roles  # ROLE OTHER with PHRASE "Teacher"
+    # WITN with @VOID@ should NOT be in the list (only the valid one with @I8@)
+    assert len(asso_refs) == 6
 
 
 def test_asso_void_skipped(db):
@@ -89,13 +103,13 @@ def test_asso_void_skipped(db):
     person_refs = person.get_person_ref_list()
     asso_refs = [ref for ref in person_refs if ref.get_relation() != "ALIA"]
     
-    # Should have exactly 3 valid associations
-    # The WITN with @VOID@ should be skipped
-    assert len(asso_refs) == 3
+    # Should have exactly 6 valid associations
+    # The WITN with @VOID@ should be skipped (but WITN with @I8@ should be present)
+    assert len(asso_refs) == 6
     
-    # Verify WITN role is not present
-    roles = [ref.get_relation() for ref in asso_refs]
-    assert "WITN" not in roles
+    # Count WITN roles - should be exactly 1 (the valid one)
+    witn_roles = [ref for ref in asso_refs if ref.get_relation() == "WITN"]
+    assert len(witn_roles) == 1
 
 
 def test_asso_phrase(db):
@@ -173,3 +187,118 @@ def test_alia_references_actual_person(db):
     # Should reference I5 and I6
     assert "I5" in alia_ids
     assert "I6" in alia_ids
+
+
+def test_asso_note_has_association_type(db):
+    """Test that notes on PersonRef (ASSO) have NoteType.ASSOCIATION."""
+    from gramps.gen.lib import NoteType
+    
+    person = db.get_person_from_gramps_id("I1")
+    assert person is not None
+    
+    person_refs = person.get_person_ref_list()
+    # Get ASSO with PHRASE (GODP)
+    godp_refs = [ref for ref in person_refs if ref.get_relation() == "GODP"]
+    assert len(godp_refs) == 1
+    
+    godp_ref = godp_refs[0]
+    notes = godp_ref.get_note_list()
+    assert len(notes) == 1
+    
+    note = db.get_note_from_handle(notes[0])
+    # Note should have type ASSOCIATION, not GENERAL
+    assert note.get_type() == NoteType.ASSOCIATION
+
+
+def test_alia_note_has_association_type(db):
+    """Test that notes on PersonRef (ALIA) have NoteType.ASSOCIATION."""
+    from gramps.gen.lib import NoteType
+    
+    person = db.get_person_from_gramps_id("I1")
+    assert person is not None
+    
+    person_refs = person.get_person_ref_list()
+    alia_refs = [ref for ref in person_refs if ref.get_relation() == "ALIA"]
+    
+    # Find the ALIA with PHRASE
+    alia_with_phrase = None
+    for ref in alia_refs:
+        notes = ref.get_note_list()
+        if notes:
+            note = db.get_note_from_handle(notes[0])
+            if note.get() == "Also known as":
+                alia_with_phrase = note
+                break
+    
+    assert alia_with_phrase is not None
+    # Note should have type ASSOCIATION, not GENERAL
+    assert alia_with_phrase.get_type() == NoteType.ASSOCIATION
+
+
+def test_asso_with_shared_note(db):
+    """Test that ASSO with shared note (SNOTE) references it correctly."""
+    person = db.get_person_from_gramps_id("I1")
+    assert person is not None
+    
+    person_refs = person.get_person_ref_list()
+    
+    # Find the CLERGY association which has a shared note
+    clergy_refs = [ref for ref in person_refs if ref.get_relation() == "CLERGY"]
+    assert len(clergy_refs) == 1
+    
+    clergy_ref = clergy_refs[0]
+    notes = clergy_ref.get_note_list()
+    assert len(notes) == 1
+    
+    # Verify the shared note content
+    note = db.get_note_from_handle(notes[0])
+    assert note.get() == "Officiated at the wedding ceremony"
+
+
+def test_asso_with_citation(db):
+    """Test that ASSO with citation (SOUR) references it correctly."""
+    person = db.get_person_from_gramps_id("I1")
+    assert person is not None
+    
+    person_refs = person.get_person_ref_list()
+    
+    # Find the WITN association which has a citation
+    witn_refs = [ref for ref in person_refs if ref.get_relation() == "WITN"]
+    assert len(witn_refs) == 1
+    
+    witn_ref = witn_refs[0]
+    citations = witn_ref.get_citation_list()
+    assert len(citations) == 1
+    
+    # Verify the citation exists and references a source
+    citation = db.get_citation_from_handle(citations[0])
+    assert citation is not None
+    
+    source_handle = citation.get_reference_handle()
+    source = db.get_source_from_handle(source_handle)
+    assert source is not None
+    assert source.get_title() == "Church Records"
+
+
+def test_asso_role_with_phrase(db):
+    """Test that ASSO ROLE with PHRASE uses the phrase as the relation."""
+    person = db.get_person_from_gramps_id("I1")
+    assert person is not None
+    
+    person_refs = person.get_person_ref_list()
+    
+    # Find the association with ROLE OTHER and PHRASE "Teacher"
+    # The relation should be "Teacher", not "OTHER"
+    teacher_refs = [ref for ref in person_refs if ref.get_relation() == "Teacher"]
+    assert len(teacher_refs) == 1
+    
+    # Verify it references the correct person (I9)
+    teacher_ref = teacher_refs[0]
+    teacher_handle = teacher_ref.get_reference_handle()
+    teacher_person = db.get_person_from_handle(teacher_handle)
+    assert teacher_person is not None
+    assert teacher_person.get_gramps_id() == "I9"
+    
+    # Verify that "OTHER" is NOT used as the relation
+    other_refs = [ref for ref in person_refs if ref.get_relation() == "OTHER"]
+    assert len(other_refs) == 0

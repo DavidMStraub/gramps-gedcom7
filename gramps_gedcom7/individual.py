@@ -222,8 +222,22 @@ def handle_association_structure(
         if child.tag == g7const.ROLE:
             # Store ROLE as the relation type
             assert isinstance(child.value, str), "Expected ROLE to be a string"
-            person_ref.set_relation(child.value)
-            # TODO: Handle ROLE PHRASE substructure?
+            role_value = child.value
+            
+            # Check for ROLE PHRASE substructure - use it if present as it's more descriptive
+            phrase_structure = None
+            for role_child in child.children:
+                if role_child.tag == g7const.PHRASE:
+                    phrase_structure = role_child
+                    break
+            
+            if phrase_structure and phrase_structure.value:
+                # Use PHRASE as relation (e.g., "Teacher" instead of "OTHER")
+                assert isinstance(phrase_structure.value, str), "Expected PHRASE to be a string"
+                person_ref.set_relation(phrase_structure.value)
+            else:
+                # Use enumerated ROLE value
+                person_ref.set_relation(role_value)
         elif child.tag == g7const.PHRASE:
             # ASSO PHRASE - add as note to PersonRef
             person_ref, note = util.add_note_to_object(child, person_ref)

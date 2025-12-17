@@ -14,6 +14,15 @@
 1 ASSO @I4@
 2 ROLE SPOU
 2 NOTE Witnessed marriage
+1 ASSO @I7@
+2 ROLE CLERGY
+2 SNOTE @N1@
+1 ASSO @I8@
+2 ROLE WITN
+2 SOUR @S1@
+1 ASSO @I9@
+2 ROLE OTHER
+3 PHRASE Teacher
 1 ASSO @VOID@
 2 ROLE WITN
 2 PHRASE Should be ignored - void pointer
@@ -36,4 +45,16 @@
 0 @I6@ INDI
 1 NAME Jack /Smythe/
 1 SEX M
+0 @I7@ INDI
+1 NAME Father /OReilly/
+1 SEX M
+0 @I8@ INDI
+1 NAME Thomas /Wilson/
+1 SEX M
+0 @I9@ INDI
+1 NAME Sarah /Johnson/
+1 SEX F
+0 @N1@ SNOTE Officiated at the wedding ceremony
+0 @S1@ SOUR
+1 TITL Church Records
 0 TRLR
