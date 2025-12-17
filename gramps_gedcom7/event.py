@@ -160,9 +160,9 @@ def handle_place(
     # Check if this place already exists in cache
     if cache_key in place_cache:
         # Reuse existing place - just return the handle
-        # The actual Place object is already in the database with all its properties
+        # The corresponding Place object was already created earlier and scheduled for database insertion
         existing_handle = place_cache[cache_key]
-        # Return empty objects list to avoid re-adding to database
+        # Return empty objects list to avoid adding a duplicate Place to the pending objects list
         return existing_handle, []
     
     # Create new place
