@@ -4,7 +4,17 @@ from gedcom7 import const as g7const
 from gedcom7 import grammar as g7grammar
 from gedcom7 import types as g7types
 from gedcom7 import util as g7util
-from gramps.gen.lib import Attribute, AttributeType, Event, EventType, Place, PlaceName, Url, UrlType
+from gramps.gen.lib import (
+    AttributeType,
+    Event,
+    EventType,
+    Place,
+    PlaceName,
+    PlaceRef,
+    PlaceType,
+    Url,
+    UrlType,
+)
 from gramps.gen.lib.primaryobj import BasicPrimaryObject
 
 from . import util
@@ -12,11 +22,62 @@ from .citation import handle_citation
 from .settings import ImportSettings
 
 
+def _map_place_type(form_type: str) -> int:
+    """Map a GEDCOM FORM type string to a Gramps PlaceType.
+
+    Args:
+        form_type: The jurisdiction type from PLAC.FORM (e.g., "City", "County", "State")
+
+    Returns:
+        A Gramps PlaceType constant.
+    """
+    form_type_upper = form_type.upper()
+
+    # Direct mappings
+    if form_type_upper in ("CITY", "TOWN"):
+        return PlaceType.CITY
+    elif form_type_upper in ("COUNTY", "PARISH"):
+        return PlaceType.COUNTY
+    elif form_type_upper in ("STATE", "PROVINCE"):
+        return PlaceType.STATE
+    elif form_type_upper == "COUNTRY":
+        return PlaceType.COUNTRY
+    elif form_type_upper == "LOCALITY":
+        return PlaceType.LOCALITY
+    elif form_type_upper == "REGION":
+        return PlaceType.REGION
+    elif form_type_upper == "MUNICIPALITY":
+        return PlaceType.MUNICIPALITY
+    elif form_type_upper == "DISTRICT":
+        return PlaceType.DISTRICT
+    elif form_type_upper == "DEPARTMENT":
+        return PlaceType.DEPARTMENT
+    elif form_type_upper == "BOROUGH":
+        return PlaceType.BOROUGH
+    elif form_type_upper == "VILLAGE":
+        return PlaceType.VILLAGE
+    elif form_type_upper == "HAMLET":
+        return PlaceType.HAMLET
+    elif form_type_upper == "FARM":
+        return PlaceType.FARM
+    elif form_type_upper == "BUILDING":
+        return PlaceType.BUILDING
+    elif form_type_upper == "NEIGHBORHOOD":
+        return PlaceType.NEIGHBORHOOD
+    elif form_type_upper == "STREET":
+        return PlaceType.STREET
+    elif form_type_upper == "NUMBER":
+        return PlaceType.NUMBER
+    else:
+        return PlaceType.UNKNOWN
+
+
 def handle_event(
     structure: g7types.GedcomStructure,
     xref_handle_map: dict[str, str],
     event_type_map: dict[str, int],
     settings: ImportSettings,
+    place_cache: dict[tuple[tuple[str, ...], str | None], str],
 ) -> tuple[Event, list[BasicPrimaryObject]]:
     """Convert a GEDCOM event structure to a Gramps Event object.
 
@@ -24,6 +85,8 @@ def handle_event(
         structure: The GEDCOM structure containing the event data.
         xref_handle_map: A map of XREFs to Gramps handles.
         event_type_map: A mapping of GEDCOM event tags to Gramps EventType values.
+        settings: Import settings.
+        place_cache: Cache mapping place jurisdictions to handles for deduplication.
 
     Returns:
         A tuple containing the Gramps Event object and a list of additional objects created.
@@ -84,10 +147,13 @@ def handle_event(
             event.add_citation(citation.handle)
             objects.append(citation)
         elif child.tag == g7const.PLAC:
-            place, other_objects = handle_place(child, xref_handle_map)
-            event.set_place_handle(place.handle)
-            objects.append(place)
-            objects.extend(other_objects)
+            place_handle, other_objects = handle_place(
+                child, xref_handle_map, settings, place_cache
+            )
+            event.set_place_handle(place_handle)
+            objects.extend(
+                other_objects
+            )  # other_objects contains place only if it's new
         elif child.tag == g7const.DATE:
             assert isinstance(
                 child.value,
@@ -132,35 +198,87 @@ def handle_event(
     return event, objects
 
 
-def handle_place(
-    structure: g7types.GedcomStructure,
-    xref_handle_map: dict[str, str],
-) -> tuple[Place, list[BasicPrimaryObject]]:
-    """Convert a GEDCOM place structure to a Gramps Place object.
+def _get_place_form(
+    structure: g7types.GedcomStructure, settings: ImportSettings
+) -> list[str] | None:
+    """Get the FORM list for a place structure.
+
+    Returns PLAC.FORM if present, otherwise HEAD.PLAC.FORM from settings.
+    """
+    form_struct = g7util.get_first_child_with_tag(structure, g7const.FORM)
+    if form_struct and form_struct.value:
+        assert isinstance(form_struct.value, list), "Expected FORM value to be a list"
+        return form_struct.value
+    return settings.head_plac_form
+
+
+def _create_hierarchy_place(
+    jurisdiction_name: str,
+    parent_handle: str | None,
+    form_type: str | None,
+    place_cache: dict[tuple[tuple[str, ...], str | None], str],
+    place_objects: dict[str, Place],
+) -> tuple[Place | None, str]:
+    """Create or retrieve a single place in the hierarchy.
 
     Args:
-        structure: The GEDCOM structure containing the place data.
-        xref_handle_map: A map of XREFs to Gramps handles.
+        jurisdiction_name: Name of this jurisdiction level.
+        parent_handle: Handle of parent place (None for top level).
+        form_type: Type of this jurisdiction from FORM (e.g., "City", "State").
+        place_cache: Cache for deduplication (maps cache_key to handle).
+        place_objects: Dict mapping handles to Place objects (for newly created places only).
 
     Returns:
-        A Gramps Place object created from the GEDCOM structure.
+        Tuple of (Place object if newly created else None, handle of this place).
+
+    Note:
+        When a cached place is returned, the Place object is None because it was
+        created by a previous event and already added to the database. Properties
+        are only applied to newly created places (first-event-wins for deduplication).
     """
+    cache_key = ((jurisdiction_name,), parent_handle)
+
+    # Check if this place already exists (created by a previous event)
+    if cache_key in place_cache:
+        # Return None for the Place object - it's already in the database
+        # from the first event that created it
+        return None, place_cache[cache_key]
+
+    # Create new place
     place = Place()
-    objects = []
     place.handle = util.make_handle()
-    if structure.value:
-        name = PlaceName()
-        assert isinstance(
-            structure.value, list
-        ), "Expected place name value to be a list"
-        assert (
-            len(structure.value) >= 1
-        ), "Expected place name value list to be non-empty"
-        # The first element is the main place name
-        name.set_value(structure.value[0])
-        place.set_name(name)
-    # TODO handle FORM
-    # TODO handle entire place list
+    place_cache[cache_key] = place.handle
+    place_objects[place.handle] = place
+
+    # Set the place name
+    name = PlaceName()
+    name.set_value(jurisdiction_name)
+    place.set_name(name)
+
+    # Set place type from FORM if available
+    if form_type:
+        place_type = _map_place_type(form_type)
+        place.set_type(PlaceType(place_type))
+
+    # Link to parent place if this is not the top level
+    if parent_handle is not None:
+        placeref = PlaceRef()
+        placeref.set_reference_handle(parent_handle)
+        place.add_placeref(placeref)
+
+    return place, place.handle
+
+
+def _apply_place_properties(
+    place: Place,
+    structure: g7types.GedcomStructure,
+    xref_handle_map: dict[str, str],
+    objects: list[BasicPrimaryObject],
+) -> None:
+    """Apply additional properties to a place from GEDCOM structure.
+
+    Handles MAP, LANG, TRAN, NOTE, SNOTE, EXID substructures.
+    """
     for child in structure.children:
         if child.tag == g7const.MAP:
             lat = g7util.get_first_child_with_tag(child, g7const.LATI)
@@ -181,7 +299,6 @@ def handle_place(
             ), "Expected place name value list to be non-empty"
             alt_name = PlaceName()
             alt_name.set_value(child.value[0])
-            # TODO handle entire place list
             if lang := g7util.get_first_child_with_tag(child, g7const.LANG):
                 alt_name.set_language(lang.value)
             place.add_alternative_name(alt_name)
@@ -192,27 +309,114 @@ def handle_place(
                 raise ValueError(f"Shared note {child.pointer} not found")
             place.add_note(note_handle)
         elif child.tag == g7const.NOTE:
-            place, note = util.add_note_to_object(child, place)
-            # Add the note to the list of objects to be returned
+            modified_place, note = util.add_note_to_object(child, place)
             objects.append(note)
         elif child.tag == g7const.EXID:
             assert isinstance(child.value, str), "Expected EXID value to be a string"
             url = Url()
             url.set_type(UrlType.CUSTOM)
-            # Check for TYPE substructure
-            type_child = next((c for c in child.children if c.tag == g7const.TYPE), None)
+            type_child = next(
+                (c for c in child.children if c.tag == g7const.TYPE), None
+            )
             if type_child and type_child.value:
-                # If TYPE contains a URL, use it as the path
-                if isinstance(type_child.value, str) and type_child.value.startswith("http"):
+                if isinstance(type_child.value, str) and type_child.value.startswith(
+                    "http"
+                ):
                     url.set_path(type_child.value)
                     url.set_description(f"External ID: {child.value}")
                 else:
-                    # TYPE is present but not a URL, store both in description
                     url.set_path(child.value)
-                    url.set_description(f"EXID:{child.value} (Type: {type_child.value})")
+                    url.set_description(
+                        f"EXID:{child.value} (Type: {type_child.value})"
+                    )
             else:
-                # No TYPE substructure, just store the EXID value
                 url.set_path(child.value)
                 url.set_description(f"External ID: {child.value}")
             place.add_url(url)
-    return place, objects
+        elif child.tag == g7const.FORM:
+            # Already processed above
+            pass
+
+
+def handle_place(
+    structure: g7types.GedcomStructure,
+    xref_handle_map: dict[str, str],
+    settings: ImportSettings,
+    place_cache: dict[tuple[tuple[str, ...], str | None], str],
+) -> tuple[str, list[BasicPrimaryObject]]:
+    """Convert a GEDCOM place structure to a Gramps Place object with full hierarchy.
+
+    Args:
+        structure: The GEDCOM structure containing the place data.
+        xref_handle_map: A map of XREFs to Gramps handles.
+        settings: Import settings.
+        place_cache: Cache mapping ((jurisdiction_name,), parent_handle) to place_handle for deduplication.
+
+    Returns:
+        A tuple of the place handle (for the lowest jurisdiction level) and a list of all Place objects created.
+
+    Note:
+        Place deduplication follows a first-event-wins policy for properties:
+        - When multiple events reference the same jurisdiction hierarchy, they share Place objects
+        - Properties (MAP coordinates, LANG, TRAN, NOTE, EXID) are only applied to the first occurrence
+        - Subsequent events reuse the cached place without modifying its properties
+        - This ensures each deduplicated place has one consistent set of properties
+        - Empty places (no jurisdiction list) are never deduplicated to preserve event-specific properties
+    """
+    # Parse jurisdiction list
+    if not structure.value:
+        jurisdiction_list = []
+    else:
+        assert isinstance(structure.value, list), "Expected place value to be a list"
+        jurisdiction_list = structure.value
+
+    # Handle empty places (no jurisdiction list)
+    if not jurisdiction_list:
+        # Empty places are never deduplicated because different events may have
+        # place structures with different properties (coordinates, notes, etc.)
+        # but no jurisdiction list - these should remain separate places
+        place = Place()
+        place.handle = util.make_handle()
+        name = PlaceName()
+        name.set_value("")
+        place.set_name(name)
+        place_objects_list = [place]
+        _apply_place_properties(place, structure, xref_handle_map, place_objects_list)
+        return place.handle, place_objects_list
+
+    # Get FORM list for place types
+    form_list = _get_place_form(structure, settings)
+
+    # Build hierarchy from highest (last) to lowest (first) jurisdiction
+    # Track place objects so we can retrieve cached places
+    objects: list[BasicPrimaryObject] = []
+    place_objects: dict[str, Place] = {}
+    parent_handle = None
+
+    # Process from highest level (end of list) to lowest (beginning)
+    for i in range(len(jurisdiction_list) - 1, -1, -1):
+        jurisdiction_name = jurisdiction_list[i]
+        form_type = form_list[i] if form_list and i < len(form_list) else None
+
+        new_place, place_handle = _create_hierarchy_place(
+            jurisdiction_name, parent_handle, form_type, place_cache, place_objects
+        )
+
+        if new_place:
+            objects.append(new_place)
+
+        parent_handle = place_handle
+
+    # Get the lowest-level place if it was newly created in this call
+    # parent_handle is guaranteed to be non-None here because jurisdiction_list is non-empty
+    assert parent_handle is not None
+    lowest_place = place_objects.get(parent_handle)
+
+    # Apply properties only to newly created places (first-event-wins)
+    # If lowest_place is None, it means the place was cached from a previous event,
+    # and we preserve that event's properties rather than overwriting them.
+    # This ensures each deduplicated place has one consistent set of properties.
+    if lowest_place is not None:
+        _apply_place_properties(lowest_place, structure, xref_handle_map, objects)
+
+    return parent_handle, objects

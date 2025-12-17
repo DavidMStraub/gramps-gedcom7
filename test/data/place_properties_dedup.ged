@@ -1,0 +1,22 @@
+0 HEAD
+1 GEDC
+2 VERS 7.0
+1 PLAC
+2 FORM City, County, State, Country
+0 @I1@ INDI
+1 NAME John /Smith/
+1 SEX M
+1 BIRT
+2 PLAC Baltimore, , Maryland, USA
+3 MAP
+4 LATI N39.2904
+4 LONG W76.6122
+0 @I2@ INDI
+1 NAME Jane /Doe/
+1 SEX F
+1 BIRT
+2 PLAC Baltimore, , Maryland, USA
+3 MAP
+4 LATI N40.0000
+4 LONG W77.0000
+0 TRLR

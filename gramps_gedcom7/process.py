@@ -51,12 +51,20 @@ def process_gedcom_structures(
         if structure.xref and structure.xref not in xref_handle_map:
             xref_handle_map[structure.xref] = make_handle()
 
+    # Create a place cache for deduplication
+    # Maps ((jurisdiction_name,), parent_handle) -> place_handle
+    # parent_handle is None for top-level places, otherwise the handle of the parent place
+    place_cache: dict[tuple[tuple[str, ...], str | None], str] = {}
+
     # Handle the remaining structures (excluding header and trailer)
     objects = []
     for structure in gedcom_structures[1:-1]:
         objects += (
             handle_structure(
-                structure, xref_handle_map=xref_handle_map, settings=settings
+                structure,
+                xref_handle_map=xref_handle_map,
+                settings=settings,
+                place_cache=place_cache,
             )
             or []
         )
@@ -75,20 +83,29 @@ def handle_structure(
     structure: g7types.GedcomStructure,
     xref_handle_map: dict[str, str],
     settings: ImportSettings,
+    place_cache: dict[tuple[tuple[str, ...], str | None], str],
 ) -> list | None:
     """Handle a single GEDCOM structure and import it into the Gramps database.
 
     Args:
         structure: The GEDCOM structure to handle.
-        db: The Gramps database to import the GEDCOM structure into.
+        xref_handle_map: Mapping from GEDCOM XREFs to Gramps handles.
+        settings: Import settings controlling how GEDCOM data is imported.
+        place_cache: Cache mapping place jurisdictions to handles for deduplication.
     """
     if structure.tag == g7const.FAM:
         return handle_family(
-            structure, xref_handle_map=xref_handle_map, settings=settings
+            structure,
+            xref_handle_map=xref_handle_map,
+            settings=settings,
+            place_cache=place_cache,
         )
     elif structure.tag == g7const.INDI:
         return handle_individual(
-            structure, xref_handle_map=xref_handle_map, settings=settings
+            structure,
+            xref_handle_map=xref_handle_map,
+            settings=settings,
+            place_cache=place_cache,
         )
     elif structure.tag == g7const.OBJE:
         return handle_multimedia(
