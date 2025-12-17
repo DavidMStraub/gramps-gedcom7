@@ -5,7 +5,13 @@ from typing import List
 from gedcom7 import const as g7const
 from gedcom7 import types as g7types
 from gedcom7 import util as g7util
-from gramps.gen.lib import Attribute, AttributeType, MediaRef, Note, NoteType, RepoRef, Source, SourceMediaType
+from gramps.gen.lib import (
+    Note,
+    NoteType,
+    RepoRef,
+    Source,
+    SourceMediaType,
+)
 from gramps.gen.lib.primaryobj import BasicPrimaryObject
 
 from . import util
@@ -94,11 +100,29 @@ def handle_source(
                     assert isinstance(
                         media_type.value, str
                     ), "Expected value to be a string"
-                    gramps_source_media_type = MEDIA_TYPE_MAP.get(
-                        media_type.value, SourceMediaType.CUSTOM
+
+                    # Check for MEDI PHRASE substructure
+                    phrase_structure = g7util.get_first_child_with_tag(
+                        media_type, g7const.PHRASE
                     )
-                    repo_ref.set_media_type(SourceMediaType(gramps_source_media_type))
-                # TODO handle PHRASE
+
+                    if phrase_structure and phrase_structure.value:
+                        # Use PHRASE as custom media type
+                        assert isinstance(
+                            phrase_structure.value, str
+                        ), "Expected PHRASE to be a string"
+                        gramps_media_type = SourceMediaType(SourceMediaType.CUSTOM)
+                        gramps_media_type.string = phrase_structure.value
+                    else:
+                        # Use enumerated MEDI value
+                        gramps_source_media_type = MEDIA_TYPE_MAP.get(
+                            media_type.value, SourceMediaType.CUSTOM
+                        )
+                        gramps_media_type = SourceMediaType(gramps_source_media_type)
+                        if gramps_source_media_type == SourceMediaType.CUSTOM:
+                            gramps_media_type.string = media_type.value
+
+                    repo_ref.set_media_type(gramps_media_type)
             source.add_repo_reference(repo_ref)
         elif child.tag == g7const.SNOTE:
             try:
