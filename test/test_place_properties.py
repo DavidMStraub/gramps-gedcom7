@@ -1,8 +1,6 @@
 """Test that place properties follow first-event-wins policy for deduplicated places."""
 
-from gramps.cli.clidbman import CLIDbManager
 from gramps.gen.db.utils import make_database
-from gramps.gen.dbstate import DbState
 
 from gramps_gedcom7.importer import import_gedcom
 
