@@ -184,6 +184,130 @@ def handle_event(
     return event, objects
 
 
+def _get_place_form(
+    structure: g7types.GedcomStructure, settings: ImportSettings
+) -> list[str] | None:
+    """Get the FORM list for a place structure.
+    
+    Returns PLAC.FORM if present, otherwise HEAD.PLAC.FORM from settings.
+    """
+    form_struct = g7util.get_first_child_with_tag(structure, g7const.FORM)
+    if form_struct and form_struct.value:
+        assert isinstance(form_struct.value, list), "Expected FORM value to be a list"
+        return form_struct.value
+    return settings.head_plac_form
+
+
+def _create_hierarchy_place(
+    jurisdiction_name: str,
+    parent_handle: str | None,
+    form_type: str | None,
+    place_cache: dict[tuple[tuple[str, ...], str | None], str],
+    place_objects: dict[str, Place],
+) -> tuple[Place | None, str]:
+    """Create or retrieve a single place in the hierarchy.
+    
+    Args:
+        jurisdiction_name: Name of this jurisdiction level.
+        parent_handle: Handle of parent place (None for top level).
+        form_type: Type of this jurisdiction from FORM (e.g., "City", "State").
+        place_cache: Cache for deduplication (maps cache_key to handle).
+        place_objects: Dict mapping handles to Place objects for retrieval.
+    
+    Returns:
+        Tuple of (Place object if newly created else None, handle of this place).
+    """
+    cache_key = ((jurisdiction_name,), parent_handle)
+    
+    # Check if this place already exists
+    if cache_key in place_cache:
+        return None, place_cache[cache_key]
+    
+    # Create new place
+    place = Place()
+    place.handle = util.make_handle()
+    place_cache[cache_key] = place.handle
+    place_objects[place.handle] = place
+    
+    # Set the place name
+    if jurisdiction_name:  # Only set name if not empty
+        name = PlaceName()
+        name.set_value(jurisdiction_name)
+        place.set_name(name)
+    
+    # Set place type from FORM if available
+    if form_type:
+        place_type = _map_place_type(form_type)
+        place.set_type(PlaceType(place_type))
+    
+    # Link to parent place if this is not the top level
+    if parent_handle is not None:
+        placeref = PlaceRef()
+        placeref.set_reference_handle(parent_handle)
+        place.add_placeref(placeref)
+    
+    return place, place.handle
+
+
+def _apply_place_properties(
+    place: Place,
+    structure: g7types.GedcomStructure,
+    xref_handle_map: dict[str, str],
+    objects: list[BasicPrimaryObject],
+) -> None:
+    """Apply additional properties to a place from GEDCOM structure.
+    
+    Handles MAP, LANG, TRAN, NOTE, SNOTE, EXID substructures.
+    """
+    for child in structure.children:
+        if child.tag == g7const.MAP:
+            lat = g7util.get_first_child_with_tag(child, g7const.LATI)
+            lon = g7util.get_first_child_with_tag(child, g7const.LONG)
+            if lat is not None and lon is not None:
+                if not isinstance(lat.value, str) or not isinstance(lon.value, str):
+                    raise ValueError("Latitude and longitude must be strings")
+                place.set_latitude(lat.value)
+                place.set_longitude(lon.value)
+        elif child.tag == g7const.LANG and child.value:
+            place.name.set_language(child.value)
+        elif child.tag == g7const.TRAN:
+            assert isinstance(child.value, list), "Expected place name value to be a list"
+            assert len(child.value) >= 1, "Expected place name value list to be non-empty"
+            alt_name = PlaceName()
+            alt_name.set_value(child.value[0])
+            if lang := g7util.get_first_child_with_tag(child, g7const.LANG):
+                alt_name.set_language(lang.value)
+            place.add_alternative_name(alt_name)
+        elif child.tag == g7const.SNOTE and child.pointer != g7grammar.voidptr:
+            try:
+                note_handle = xref_handle_map[child.pointer]
+            except KeyError:
+                raise ValueError(f"Shared note {child.pointer} not found")
+            place.add_note(note_handle)
+        elif child.tag == g7const.NOTE:
+            modified_place, note = util.add_note_to_object(child, place)
+            objects.append(note)
+        elif child.tag == g7const.EXID:
+            assert isinstance(child.value, str), "Expected EXID value to be a string"
+            url = Url()
+            url.set_type(UrlType.CUSTOM)
+            type_child = next((c for c in child.children if c.tag == g7const.TYPE), None)
+            if type_child and type_child.value:
+                if isinstance(type_child.value, str) and type_child.value.startswith("http"):
+                    url.set_path(type_child.value)
+                    url.set_description(f"External ID: {child.value}")
+                else:
+                    url.set_path(child.value)
+                    url.set_description(f"EXID:{child.value} (Type: {type_child.value})")
+            else:
+                url.set_path(child.value)
+                url.set_description(f"External ID: {child.value}")
+            place.add_url(url)
+        elif child.tag == g7const.FORM:
+            # Already processed above
+            pass
+
+
 def handle_place(
     structure: g7types.GedcomStructure,
     xref_handle_map: dict[str, str],
@@ -201,131 +325,53 @@ def handle_place(
     Returns:
         A tuple of the place handle (for the lowest jurisdiction level) and a list of all Place objects created.
     """
+    # Parse jurisdiction list
     if not structure.value:
-        # No jurisdiction list - create empty place
         jurisdiction_list = []
     else:
         assert isinstance(structure.value, list), "Expected place value to be a list"
         jurisdiction_list = structure.value
     
-    # Get the FORM (jurisdiction types) - either from PLAC.FORM or HEAD.PLAC.FORM
-    form_list = None
-    form_struct = g7util.get_first_child_with_tag(structure, g7const.FORM)
-    if form_struct and form_struct.value:
-        assert isinstance(form_struct.value, list), "Expected FORM value to be a list"
-        form_list = form_struct.value
-    elif settings.head_plac_form:
-        form_list = settings.head_plac_form
-    
-    # Build hierarchy from highest (last) to lowest (first) jurisdiction
-    # Create parent places first, then link children to parents
-    objects = []
-    parent_handle = None
-    
-    # Process from highest level (end of list) to lowest (beginning)
-    for i in range(len(jurisdiction_list) - 1, -1, -1):
-        jurisdiction_name = jurisdiction_list[i]
-        
-        # Build cache key: single jurisdiction name + parent handle
-        cache_key = ((jurisdiction_name,), parent_handle)
-        
-        # Check if this place already exists
-        if cache_key in place_cache:
-            # Reuse existing place
-            parent_handle = place_cache[cache_key]
-            continue
-        
-        # Create new place for this jurisdiction level
-        place = Place()
-        place.handle = util.make_handle()
-        place_cache[cache_key] = place.handle
-        
-        # Set the place name
-        if jurisdiction_name:  # Only set name if not empty
-            name = PlaceName()
-            name.set_value(jurisdiction_name)
-            place.set_name(name)
-        
-        # Set place type from FORM if available
-        if form_list and i < len(form_list):
-            place_type = _map_place_type(form_list[i])
-            place.set_type(PlaceType(place_type))
-        
-        # Link to parent place if this is not the top level
-        if parent_handle is not None:
-            placeref = PlaceRef()
-            placeref.set_reference_handle(parent_handle)
-            place.add_placeref(placeref)
-        
-        objects.append(place)
-        parent_handle = place.handle
-    
-    # parent_handle now contains the handle of the lowest jurisdiction (the one we return)
-    # If jurisdiction_list was empty, parent_handle is None
+    # Handle empty places (no jurisdiction list)
     if not jurisdiction_list:
-        # Create a minimal empty place without caching
         # Empty places are never deduplicated because different events may have
         # place structures with different properties (coordinates, notes, etc.)
         # but no jurisdiction list - these should remain separate places
         place = Place()
         place.handle = util.make_handle()
-        objects.append(place)
-        lowest_place = place
-        lowest_place_handle = place.handle
-    else:
-        # The last place we created is the lowest jurisdiction
-        lowest_place = objects[-1] if objects else None
-        lowest_place_handle = parent_handle
+        objects = [place]
+        _apply_place_properties(place, structure, xref_handle_map, objects)
+        return place.handle, objects
     
-    # Now apply additional properties only to the lowest-level place
-    # (the one that will be referenced by the event)
+    # Get FORM list for place types
+    form_list = _get_place_form(structure, settings)
+    
+    # Build hierarchy from highest (last) to lowest (first) jurisdiction
+    # Track place objects so we can retrieve cached places
+    objects: list[BasicPrimaryObject] = []
+    place_objects: dict[str, Place] = {}
+    parent_handle = None
+    
+    # Process from highest level (end of list) to lowest (beginning)
+    for i in range(len(jurisdiction_list) - 1, -1, -1):
+        jurisdiction_name = jurisdiction_list[i]
+        form_type = form_list[i] if form_list and i < len(form_list) else None
+        
+        new_place, place_handle = _create_hierarchy_place(
+            jurisdiction_name, parent_handle, form_type, place_cache, place_objects
+        )
+        
+        if new_place:
+            objects.append(new_place)
+        
+        parent_handle = place_handle
+    
+    # Get the lowest-level place (either newly created or from cache)
+    lowest_place = place_objects.get(parent_handle) if parent_handle is not None else None
+    
+    # Apply event-specific properties to the lowest-level place
     if lowest_place:
-        for child in structure.children:
-            if child.tag == g7const.MAP:
-                lat = g7util.get_first_child_with_tag(child, g7const.LATI)
-                lon = g7util.get_first_child_with_tag(child, g7const.LONG)
-                if lat is not None and lon is not None:
-                    if not isinstance(lat.value, str) or not isinstance(lon.value, str):
-                        raise ValueError("Latitude and longitude must be strings")
-                    lowest_place.set_latitude(lat.value)
-                    lowest_place.set_longitude(lon.value)
-            elif child.tag == g7const.LANG and child.value:
-                lowest_place.name.set_language(child.value)
-            elif child.tag == g7const.TRAN:
-                assert isinstance(child.value, list), "Expected place name value to be a list"
-                assert len(child.value) >= 1, "Expected place name value list to be non-empty"
-                alt_name = PlaceName()
-                alt_name.set_value(child.value[0])
-                if lang := g7util.get_first_child_with_tag(child, g7const.LANG):
-                    alt_name.set_language(lang.value)
-                lowest_place.add_alternative_name(alt_name)
-            elif child.tag == g7const.SNOTE and child.pointer != g7grammar.voidptr:
-                try:
-                    note_handle = xref_handle_map[child.pointer]
-                except KeyError:
-                    raise ValueError(f"Shared note {child.pointer} not found")
-                lowest_place.add_note(note_handle)
-            elif child.tag == g7const.NOTE:
-                lowest_place, note = util.add_note_to_object(child, lowest_place)
-                objects.append(note)
-            elif child.tag == g7const.EXID:
-                assert isinstance(child.value, str), "Expected EXID value to be a string"
-                url = Url()
-                url.set_type(UrlType.CUSTOM)
-                type_child = next((c for c in child.children if c.tag == g7const.TYPE), None)
-                if type_child and type_child.value:
-                    if isinstance(type_child.value, str) and type_child.value.startswith("http"):
-                        url.set_path(type_child.value)
-                        url.set_description(f"External ID: {child.value}")
-                    else:
-                        url.set_path(child.value)
-                        url.set_description(f"EXID:{child.value} (Type: {type_child.value})")
-                else:
-                    url.set_path(child.value)
-                    url.set_description(f"External ID: {child.value}")
-                lowest_place.add_url(url)
-            elif child.tag == g7const.FORM:
-                # Already processed above
-                pass
+        _apply_place_properties(lowest_place, structure, xref_handle_map, objects)
     
-    return lowest_place_handle, objects
+    return parent_handle, objects
+
