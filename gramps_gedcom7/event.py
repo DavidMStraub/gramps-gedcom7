@@ -351,7 +351,7 @@ def handle_place(
         structure: The GEDCOM structure containing the place data.
         xref_handle_map: A map of XREFs to Gramps handles.
         settings: Import settings.
-        place_cache: Cache mapping (jurisdiction_name, parent_handle) to place_handle for deduplication.
+        place_cache: Cache mapping ((jurisdiction_name,), parent_handle) to place_handle for deduplication.
 
     Returns:
         A tuple of the place handle (for the lowest jurisdiction level) and a list of all Place objects created.
