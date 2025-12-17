@@ -87,7 +87,7 @@ def handle_event(
             event.add_citation(citation.handle)
             objects.append(citation)
         elif child.tag == g7const.PLAC:
-            place_handle, other_objects = handle_place(child, xref_handle_map, place_cache, settings)
+            place_handle, other_objects = handle_place(child, xref_handle_map, settings, place_cache)
             event.set_place_handle(place_handle)
             objects.extend(other_objects)  # other_objects contains place only if it's new
         elif child.tag == g7const.DATE:
@@ -137,16 +137,16 @@ def handle_event(
 def handle_place(
     structure: g7types.GedcomStructure,
     xref_handle_map: dict[str, str],
-    place_cache: dict[tuple[tuple[str, ...], str | None], str],
     settings: ImportSettings,
+    place_cache: dict[tuple[tuple[str, ...], str | None], str],
 ) -> tuple[str, list[BasicPrimaryObject]]:
     """Convert a GEDCOM place structure to a Gramps Place object.
 
     Args:
         structure: The GEDCOM structure containing the place data.
         xref_handle_map: A map of XREFs to Gramps handles.
-        place_cache: Cache mapping place jurisdictions to handles for deduplication.
         settings: Import settings.
+        place_cache: Cache mapping place jurisdictions to handles for deduplication.
 
     Returns:
         A tuple of the place handle and a list of additional objects created.

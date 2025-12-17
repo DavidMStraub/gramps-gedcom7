@@ -86,7 +86,8 @@ def handle_structure(
 
     Args:
         structure: The GEDCOM structure to handle.
-        db: The Gramps database to import the GEDCOM structure into.
+        xref_handle_map: Mapping from GEDCOM XREFs to Gramps handles.
+        settings: Import settings controlling how GEDCOM data is imported.
         place_cache: Cache mapping place jurisdictions to handles for deduplication.
     """
     if structure.tag == g7const.FAM:

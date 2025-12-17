@@ -22,8 +22,8 @@ def test_places_are_deduplicated():
     p2 = db.get_person_from_gramps_id("I2")
     
     # Get their birth events
-    birth_ref1 = [ref for ref in p1.get_event_ref_list()][0]
-    birth_ref2 = [ref for ref in p2.get_event_ref_list()][0]
+    birth_ref1 = p1.get_event_ref_list()[0]
+    birth_ref2 = p2.get_event_ref_list()[0]
     
     event1 = db.get_event_from_handle(birth_ref1.ref)
     event2 = db.get_event_from_handle(birth_ref2.ref)
@@ -70,8 +70,8 @@ def test_different_places_not_deduplicated():
     p2 = db.get_person_from_gramps_id("I2")
     
     # Get their birth events
-    birth_ref1 = [ref for ref in p1.get_event_ref_list()][0]
-    birth_ref2 = [ref for ref in p2.get_event_ref_list()][0]
+    birth_ref1 = p1.get_event_ref_list()[0]
+    birth_ref2 = p2.get_event_ref_list()[0]
     
     event1 = db.get_event_from_handle(birth_ref1.ref)
     event2 = db.get_event_from_handle(birth_ref2.ref)
