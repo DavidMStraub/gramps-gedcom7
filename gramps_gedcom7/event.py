@@ -339,9 +339,9 @@ def handle_place(
         # but no jurisdiction list - these should remain separate places
         place = Place()
         place.handle = util.make_handle()
-        objects = [place]
-        _apply_place_properties(place, structure, xref_handle_map, objects)
-        return place.handle, objects
+        place_objects_list = [place]
+        _apply_place_properties(place, structure, xref_handle_map, place_objects_list)
+        return place.handle, place_objects_list
     
     # Get FORM list for place types
     form_list = _get_place_form(structure, settings)
@@ -367,7 +367,9 @@ def handle_place(
         parent_handle = place_handle
     
     # Get the lowest-level place (either newly created or from cache)
-    lowest_place = place_objects.get(parent_handle) if parent_handle is not None else None
+    # parent_handle is guaranteed to be non-None here because jurisdiction_list is non-empty
+    assert parent_handle is not None
+    lowest_place = place_objects.get(parent_handle)
     
     # Apply event-specific properties to the lowest-level place
     if lowest_place:
