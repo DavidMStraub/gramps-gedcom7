@@ -4,9 +4,7 @@ A GEDCOM 7 import library for Gramps.
 
 ## Project Status
 
-The project is currently in active development. The implementation of GEDCOM 7 import is almost complete. You can search for the `TODO` comments in the code to see what is still missing.
-
-**The library is not yet ready for production use, but testing and feedback is welcome!**
+The library provides comprehensive GEDCOM 7 import functionality. The implementation covers the vast majority of features and has been successfully tested with real-world files. While suitable for production use, users should verify results as with any conversion tool.
 
 ## Installation
 
