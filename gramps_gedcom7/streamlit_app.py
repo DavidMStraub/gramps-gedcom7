@@ -1,6 +1,7 @@
 """Streamlit app for GEDCOM 7 to Gramps-XML conversion."""
 
 import gzip
+import subprocess
 import tempfile
 import traceback
 from pathlib import Path
@@ -17,6 +18,28 @@ from gramps.gen.db.utils import make_database
 from gramps.plugins.export.exportxml import export_data
 
 from gramps_gedcom7.importer import import_gedcom
+
+
+def get_git_commit_hash() -> Optional[str]:
+    """
+    Get the current git commit hash.
+
+    Returns:
+        Optional[str]: Short commit hash or None if git is not available
+    """
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"],
+            capture_output=True,
+            text=True,
+            timeout=2,
+            cwd=Path(__file__).parent,
+        )
+        if result.returncode == 0:
+            return result.stdout.strip()
+    except (FileNotFoundError, subprocess.TimeoutExpired, Exception):
+        pass
+    return None
 
 
 class StreamlitProgressCallback:
@@ -251,6 +274,12 @@ def main():
         - [python-gedcom7 Library](https://github.com/DavidMStraub/python-gedcom7)
         """
         )
+
+        # Display git commit hash if available
+        commit_hash = get_git_commit_hash()
+        if commit_hash:
+            st.markdown("---")
+            st.markdown(f"**Version:** `{commit_hash}`")
 
 
 if __name__ == "__main__":
