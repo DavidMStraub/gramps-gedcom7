@@ -94,11 +94,13 @@ def convert_gedcom_to_xml(
             if isinstance(gedcom_content, bytes):
                 try:
                     gedcom_content = gedcom_content.decode("utf-8")
-                except UnicodeDecodeError:
-                    try:
-                        gedcom_content = gedcom_content.decode("latin-1")
-                    except UnicodeDecodeError:
-                        gedcom_content = gedcom_content.decode("cp1252")
+                except UnicodeDecodeError as e:
+                    raise ValueError(
+                        f"The uploaded file is not valid UTF-8. GEDCOM 7 requires UTF-8 encoding. "
+                        f"If this file was exported by older software it may use a legacy encoding "
+                        f"(e.g. ANSEL, latin-1, or Windows-1252) and must be converted before import. "
+                        f"Detail: {e}"
+                    ) from e
             input_temp.write(gedcom_content)
             input_temp_path = input_temp.name
 
