@@ -33,7 +33,12 @@ def import_gedcom(
                 f"GEDCOM 7 requires UTF-8 encoding, but '{input_file}' contains invalid UTF-8 bytes: {e}"
             ) from e
     elif isinstance(input_file, TextIO):
-        gedcom_data = input_file.read()
+        try:
+            gedcom_data = input_file.read()
+        except UnicodeDecodeError as e:
+            raise ValueError(
+                f"GEDCOM 7 requires UTF-8 encoding, but the file contains invalid UTF-8 bytes: {e}"
+            ) from e
     elif isinstance(input_file, BinaryIO):
         try:
             gedcom_data = input_file.read().decode("utf-8")

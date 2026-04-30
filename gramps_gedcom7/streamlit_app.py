@@ -141,6 +141,9 @@ def convert_gedcom_to_xml(
         finally:
             Path(input_temp_path).unlink(missing_ok=True)
 
+    except ValueError as e:
+        errors.append(str(e))
+        return None, errors, warnings
     except Exception as e:
         error_msg = f"Conversion error: {str(e)}"
         errors.append(error_msg)
