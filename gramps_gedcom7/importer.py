@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from gramps.gen.db import DbWriteBase
 import gedcom7
+import io
 from pathlib import Path
 from typing import TextIO, BinaryIO
 
@@ -32,14 +33,14 @@ def import_gedcom(
             raise ValueError(
                 f"GEDCOM 7 requires UTF-8 encoding, but '{input_file}' contains invalid UTF-8 bytes: {e}"
             ) from e
-    elif isinstance(input_file, TextIO):
+    elif isinstance(input_file, io.TextIOBase):
         try:
             gedcom_data = input_file.read()
         except UnicodeDecodeError as e:
             raise ValueError(
                 f"GEDCOM 7 requires UTF-8 encoding, but the file contains invalid UTF-8 bytes: {e}"
             ) from e
-    elif isinstance(input_file, BinaryIO):
+    elif isinstance(input_file, (io.RawIOBase, io.BufferedIOBase)):
         try:
             gedcom_data = input_file.read().decode("utf-8")
         except UnicodeDecodeError as e:
