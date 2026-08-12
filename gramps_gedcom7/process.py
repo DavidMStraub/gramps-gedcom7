@@ -131,25 +131,31 @@ def handle_structure(
 
 
 def add_objects_to_database(objects, db):
-    with DbTxn("Add child to family", db) as transaction:
-        for obj in objects:
-            if obj.__class__.__name__ == "Person":
-                db.add_person(obj, transaction)
-            elif obj.__class__.__name__ == "Family":
-                db.add_family(obj, transaction)
-            elif obj.__class__.__name__ == "Event":
-                db.add_event(obj, transaction)
-            elif obj.__class__.__name__ == "Citation":
-                db.add_citation(obj, transaction)
-            elif obj.__class__.__name__ == "Source":
-                db.add_source(obj, transaction)
-            elif obj.__class__.__name__ == "Note":
-                db.add_note(obj, transaction)
-            elif obj.__class__.__name__ == "Media":
-                db.add_media(obj, transaction)
-            elif obj.__class__.__name__ == "Place":
-                db.add_place(obj, transaction)
-            elif obj.__class__.__name__ == "Repository":
-                db.add_repository(obj, transaction)
-            elif obj.__class__.__name__ == "Tag":
-                db.add_tag(obj, transaction)
+    """Add the objects to the database in a single batch transaction."""
+    db.disable_signals()
+    try:
+        with DbTxn("GEDCOM 7 import", db, batch=True) as transaction:
+            for obj in objects:
+                if obj.__class__.__name__ == "Person":
+                    db.add_person(obj, transaction)
+                elif obj.__class__.__name__ == "Family":
+                    db.add_family(obj, transaction)
+                elif obj.__class__.__name__ == "Event":
+                    db.add_event(obj, transaction)
+                elif obj.__class__.__name__ == "Citation":
+                    db.add_citation(obj, transaction)
+                elif obj.__class__.__name__ == "Source":
+                    db.add_source(obj, transaction)
+                elif obj.__class__.__name__ == "Note":
+                    db.add_note(obj, transaction)
+                elif obj.__class__.__name__ == "Media":
+                    db.add_media(obj, transaction)
+                elif obj.__class__.__name__ == "Place":
+                    db.add_place(obj, transaction)
+                elif obj.__class__.__name__ == "Repository":
+                    db.add_repository(obj, transaction)
+                elif obj.__class__.__name__ == "Tag":
+                    db.add_tag(obj, transaction)
+    finally:
+        db.enable_signals()
+        db.request_rebuild()
