@@ -1,0 +1,6 @@
+# Dependencies for the Streamlit Cloud deployment of the web app.
+# PyGObject is pinned to match the version tested in CI; newer releases
+# switch to girepository-2.0 and fail to load against gir1.2-gtk-3.0.
+PyGObject<=3.50.0
+gramps[all]
+.[streamlit]
