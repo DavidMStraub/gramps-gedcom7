@@ -191,7 +191,7 @@ def handle_submitter(
                 url.set_type(UrlType.WEB_HOME)
                 repo.add_url(url)
         elif child.tag == g7const.SNOTE:
-            if child.pointer != g7grammar.voidptr:
+            if child.pointer and child.pointer != g7grammar.voidptr:
                 try:
                     note_handle = xref_handle_map[child.pointer]
                     repo.add_note(note_handle)

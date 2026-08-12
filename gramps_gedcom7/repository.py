@@ -32,6 +32,8 @@ def handle_repository(
                 assert isinstance(child.value, str), "Expected value to be a string"
                 repository.set_name(child.value)
         elif child.tag == g7const.SNOTE:
+            if not child.pointer:
+                raise ValueError("Shared note reference without pointer")
             try:
                 note_handle = xref_handle_map[child.pointer]
             except KeyError:

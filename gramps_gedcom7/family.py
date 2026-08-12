@@ -60,7 +60,11 @@ def handle_family(
         elif child.tag in (g7const.NCHI, g7const.FACT):
             # Family attributes
             util.handle_attribute_structure(child, family)
-        elif child.tag == g7const.HUSB and child.pointer != g7grammar.voidptr:
+        elif (
+            child.tag == g7const.HUSB
+            and child.pointer
+            and child.pointer != g7grammar.voidptr
+        ):
             person_handle = xref_handle_map.get(child.pointer)
             if not person_handle:
                 raise ValueError(f"Person {child.pointer} not found")
@@ -70,7 +74,11 @@ def handle_family(
             if phrase_structure and phrase_structure.value:
                 family, note = util.add_note_to_object(phrase_structure, family)
                 objects.append(note)
-        elif child.tag == g7const.WIFE and child.pointer != g7grammar.voidptr:
+        elif (
+            child.tag == g7const.WIFE
+            and child.pointer
+            and child.pointer != g7grammar.voidptr
+        ):
             person_handle = xref_handle_map.get(child.pointer)
             if not person_handle:
                 raise ValueError(f"Person {child.pointer} not found")
@@ -80,7 +88,11 @@ def handle_family(
             if phrase_structure and phrase_structure.value:
                 family, note = util.add_note_to_object(phrase_structure, family)
                 objects.append(note)
-        elif child.tag == g7const.CHIL and child.pointer != g7grammar.voidptr:
+        elif (
+            child.tag == g7const.CHIL
+            and child.pointer
+            and child.pointer != g7grammar.voidptr
+        ):
             person_handle = xref_handle_map.get(child.pointer)
             if not person_handle:
                 raise ValueError(f"Child {child.pointer} not found")
@@ -96,7 +108,11 @@ def handle_family(
                 child_ref, note = util.add_note_to_object(phrase_structure, child_ref)
                 objects.append(note)
         # TODO handle associations
-        elif child.tag == g7const.SNOTE and child.pointer != g7grammar.voidptr:
+        elif (
+            child.tag == g7const.SNOTE
+            and child.pointer
+            and child.pointer != g7grammar.voidptr
+        ):
             try:
                 note_handle = xref_handle_map[child.pointer]
             except KeyError:

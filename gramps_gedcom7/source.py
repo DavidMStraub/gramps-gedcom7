@@ -85,6 +85,8 @@ def handle_source(
             objects.append(note)
         elif child.tag == g7const.REPO:
             repo_ref = RepoRef()
+            if not child.pointer:
+                raise ValueError("Repository reference without pointer")
             try:
                 repo_handle = xref_handle_map[child.pointer]
             except KeyError:
@@ -125,6 +127,8 @@ def handle_source(
                     repo_ref.set_media_type(gramps_media_type)
             source.add_repo_reference(repo_ref)
         elif child.tag == g7const.SNOTE:
+            if not child.pointer:
+                raise ValueError("Shared note reference without pointer")
             try:
                 note_handle = xref_handle_map[child.pointer]
             except KeyError:

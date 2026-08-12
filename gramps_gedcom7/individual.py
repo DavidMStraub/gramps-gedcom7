@@ -138,20 +138,32 @@ def handle_individual(
             util.handle_external_id(child, person)
         elif child.tag == g7const.UID:
             util.add_uid_to_object(child, person)
-        elif child.tag == g7const.FAMC and child.pointer != g7grammar.voidptr:
+        elif (
+            child.tag == g7const.FAMC
+            and child.pointer
+            and child.pointer != g7grammar.voidptr
+        ):
             family_handle = xref_handle_map.get(child.pointer)
             if not family_handle:
                 raise ValueError(f"Family {child.pointer} not found")
             person.add_parent_family_handle(family_handle)
             # TODO child ref type should be handled in the family!
             # TODO handle FAMC PHRASE
-        elif child.tag == g7const.FAMS and child.pointer != g7grammar.voidptr:
+        elif (
+            child.tag == g7const.FAMS
+            and child.pointer
+            and child.pointer != g7grammar.voidptr
+        ):
             family_handle = xref_handle_map.get(child.pointer)
             if not family_handle:
                 raise ValueError(f"Family {child.pointer} not found")
             person.add_family_handle(family_handle)
             # TODO handle FAMS PHRASE
-        elif child.tag == g7const.SNOTE and child.pointer != g7grammar.voidptr:
+        elif (
+            child.tag == g7const.SNOTE
+            and child.pointer
+            and child.pointer != g7grammar.voidptr
+        ):
             try:
                 note_handle = xref_handle_map[child.pointer]
             except KeyError:
@@ -207,9 +219,9 @@ def handle_association_structure(
         a list of additional objects (notes, citations) to add to database.
     """
     assert structure.tag == g7const.ASSO, "Expected ASSO structure"
-    
+
     # Skip void pointers
-    if structure.pointer == g7grammar.voidptr:
+    if not structure.pointer or structure.pointer == g7grammar.voidptr:
         return None, []
     
     assoc_handle = xref_handle_map.get(structure.pointer)
@@ -248,7 +260,11 @@ def handle_association_structure(
         elif child.tag == g7const.NOTE:
             person_ref, note = util.add_note_to_object(child, person_ref)
             objects.append(note)
-        elif child.tag == g7const.SNOTE and child.pointer != g7grammar.voidptr:
+        elif (
+            child.tag == g7const.SNOTE
+            and child.pointer
+            and child.pointer != g7grammar.voidptr
+        ):
             try:
                 note_handle = xref_handle_map[child.pointer]
             except KeyError:
@@ -282,9 +298,9 @@ def handle_alias_structure(
         a list of additional objects (notes) to add to database.
     """
     assert structure.tag == g7const.ALIA, "Expected ALIA structure"
-    
+
     # Skip void pointers
-    if structure.pointer == g7grammar.voidptr:
+    if not structure.pointer or structure.pointer == g7grammar.voidptr:
         return None, []
     
     alias_handle = xref_handle_map.get(structure.pointer)
@@ -349,7 +365,11 @@ def handle_name(
         elif child.tag == g7const.NSFX:
             assert isinstance(child.value, str), "Expected NSFX value to be a string"
             name.set_suffix(child.value)
-        elif child.tag == g7const.SNOTE and child.pointer != g7grammar.voidptr:
+        elif (
+            child.tag == g7const.SNOTE
+            and child.pointer
+            and child.pointer != g7grammar.voidptr
+        ):
             try:
                 note_handle = xref_handle_map[child.pointer]
             except KeyError:

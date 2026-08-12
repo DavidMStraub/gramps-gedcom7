@@ -128,7 +128,11 @@ def handle_event(
         elif child.tag == g7const.CAUS:
             assert isinstance(child.value, str), "Expected CAUS value to be a string"
             util.add_attribute_to_object(event, AttributeType.CAUSE, child.value)
-        elif child.tag == g7const.SNOTE and child.pointer != g7grammar.voidptr:
+        elif (
+            child.tag == g7const.SNOTE
+            and child.pointer
+            and child.pointer != g7grammar.voidptr
+        ):
             try:
                 note_handle = xref_handle_map[child.pointer]
             except KeyError:
@@ -284,10 +288,13 @@ def _apply_place_properties(
             lat = g7util.get_first_child_with_tag(child, g7const.LATI)
             lon = g7util.get_first_child_with_tag(child, g7const.LONG)
             if lat is not None and lon is not None:
-                if not isinstance(lat.value, str) or not isinstance(lon.value, str):
-                    raise ValueError("Latitude and longitude must be strings")
-                place.set_latitude(lat.value)
-                place.set_longitude(lon.value)
+                if not isinstance(lat.value, float) or not isinstance(lon.value, float):
+                    raise ValueError("Latitude and longitude must be numbers")
+                # gedcom7 parses LATI/LONG into signed degrees, but Gramps stores
+                # coordinates as strings and understands the GEDCOM notation
+                # (e.g. "N40.7128") natively, so keep the original payload.
+                place.set_latitude(lat.text)
+                place.set_longitude(lon.text)
         elif child.tag == g7const.LANG and child.value:
             place.name.set_language(child.value)
         elif child.tag == g7const.TRAN:
@@ -302,7 +309,11 @@ def _apply_place_properties(
             if lang := g7util.get_first_child_with_tag(child, g7const.LANG):
                 alt_name.set_language(lang.value)
             place.add_alternative_name(alt_name)
-        elif child.tag == g7const.SNOTE and child.pointer != g7grammar.voidptr:
+        elif (
+            child.tag == g7const.SNOTE
+            and child.pointer
+            and child.pointer != g7grammar.voidptr
+        ):
             try:
                 note_handle = xref_handle_map[child.pointer]
             except KeyError:

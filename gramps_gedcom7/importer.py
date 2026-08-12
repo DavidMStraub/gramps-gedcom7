@@ -52,5 +52,9 @@ def import_gedcom(
             "input_file must be a string, Path object, or file-like object."
         )
 
-    gedcom_structures = gedcom7.loads(gedcom_data)
+    try:
+        gedcom_structures = gedcom7.loads(gedcom_data)
+    except gedcom7.GedcomParseError as e:
+        source = f"'{input_file}'" if isinstance(input_file, (str, Path)) else "input"
+        raise ValueError(f"{source} is not a valid GEDCOM 7 file: {e}") from e
     process.process_gedcom_structures(gedcom_structures, db, settings=settings)

@@ -350,7 +350,7 @@ def add_media_ref_to_object(
 ) -> MediaBaseT:
     """Add a media reference to a Gramps object."""
     pointer = multimedia_link_structure.pointer
-    if pointer == g7grammar.voidptr:
+    if not pointer or pointer == g7grammar.voidptr:
         # no media reference, return the object as is
         return obj
     media_ref = MediaRef()

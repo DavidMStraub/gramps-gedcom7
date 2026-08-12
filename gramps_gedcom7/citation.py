@@ -50,6 +50,8 @@ def handle_citation(
                     CONFIDENCE_MAP.get(child.value, Citation.CONF_NORMAL)
                 )
         elif child.tag == g7const.SNOTE:
+            if not child.pointer:
+                raise ValueError("Shared note reference without pointer")
             try:
                 note_handle = xref_handle_map[child.pointer]
             except KeyError:
