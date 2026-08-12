@@ -17,6 +17,7 @@ from gramps.gen.db import DbWriteBase
 from gramps.gen.db.utils import make_database
 from gramps.plugins.export.exportxml import export_data
 
+from gramps_gedcom7 import __version__
 from gramps_gedcom7.importer import import_gedcom
 
 
@@ -278,11 +279,13 @@ def main():
         """
         )
 
-        # Display git commit hash if available
+        # Display package version, plus the git commit hash if available
         commit_hash = get_git_commit_hash()
+        st.markdown("---")
         if commit_hash:
-            st.markdown("---")
-            st.markdown(f"**Version:** `{commit_hash}`")
+            st.markdown(f"**Version:** `{__version__}` (`{commit_hash}`)")
+        else:
+            st.markdown(f"**Version:** `{__version__}`")
 
 
 if __name__ == "__main__":

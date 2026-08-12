@@ -1,16 +1,31 @@
 [build-system]
-requires = ["setuptools>=42"]
+requires = ["setuptools>=77", "setuptools-scm>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "gramps_gedcom7"
-version = "0.3.1"
+dynamic = ["version"]
 description = "A GEDCOM 7 support library for Gramps genealogy software"
 readme = "README.md"
 requires-python = ">=3.10"
-license = {text = "MIT"}
+license = "MIT"
+license-files = ["LICENSE"]
+keywords = ["gedcom", "gedcom7", "gramps", "genealogy"]
 authors = [
     {name = "David Straub", email = "straub@protonmail.com"},
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Sociology :: Genealogy",
 ]
 dependencies = [
     "gramps>=6.0.0",
@@ -23,6 +38,18 @@ streamlit = ["streamlit"]
 
 [project.urls]
 "Homepage" = "https://github.com/DavidMStraub/gramps-gedcom7"
+"Repository" = "https://github.com/DavidMStraub/gramps-gedcom7"
+"Issues" = "https://github.com/DavidMStraub/gramps-gedcom7/issues"
 
 [tool.setuptools]
 packages = ["gramps_gedcom7"]
+
+[tool.setuptools_scm]
+# used when building outside a git checkout (e.g. from an unpacked sdist)
+fallback_version = "0.0.0"
+
+[tool.pytest.ini_options]
+testpaths = ["test"]
+
+[tool.mypy]
+ignore_missing_imports = true
