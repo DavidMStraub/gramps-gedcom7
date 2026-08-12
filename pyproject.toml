@@ -28,7 +28,6 @@ classifiers = [
     "Topic :: Sociology :: Genealogy",
 ]
 dependencies = [
-    "gramps>=6.0.0",
     "gedcom7>=0.5.0",
     "click",
 ]

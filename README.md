@@ -14,7 +14,8 @@ To install the library, simply run:
 python -m pip install gramps-gedcom7
 ```
 
-Note that this will also install Gramps with `pip`, if it is not installed in your environment yet.
+Gramps 6.0 or newer is required, but is not installed automatically. Install it with
+`python -m pip install "gramps>=6.0.0"`.
 
 ## Usage as command-line tool
 
