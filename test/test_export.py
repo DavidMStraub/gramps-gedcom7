@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import codecs
 import io
 import pathlib
 import re
@@ -40,6 +41,7 @@ from gramps_gedcom7 import process
 from gramps_gedcom7.export import db_to_structures, export_gedcom
 from gramps_gedcom7.export import util as export_util
 from gramps_gedcom7.export.xrefs import XrefMap
+from gramps_gedcom7.settings import ExportSettings
 from gramps_gedcom7.importer import import_gedcom
 
 DATA = pathlib.Path(__file__).parent / "data"
@@ -402,7 +404,7 @@ def test_export_writes_a_file(tmp_path):
     path = tmp_path / "out.ged"
     export_gedcom(db_from_objects(make_person()), path)
     data = path.read_bytes()
-    assert data.startswith("﻿".encode("utf-8"))
+    assert data.startswith(codecs.BOM_UTF8)
     assert b"0 @I0001@ INDI" in data
 
 
@@ -876,3 +878,29 @@ def test_note_attached_to_something_stays_attached(path):
             continue
         lost.append(note.get()[:40])
     assert lost == [], f"{path.name} writes {lost} with nothing pointing at them"
+
+
+def test_byte_order_mark_is_written_by_default():
+    """The specification says a data stream should begin with U+FEFF."""
+    stream = io.BytesIO()
+    export_gedcom(db_from_objects(make_person()), stream)
+    assert stream.getvalue().startswith(codecs.BOM_UTF8)
+
+
+def test_byte_order_mark_can_be_turned_off():
+    """It is a should, not a must, and it means nothing inside the format."""
+    stream = io.BytesIO()
+    export_gedcom(
+        db_from_objects(make_person()), stream, ExportSettings(byte_order_mark=False)
+    )
+    data = stream.getvalue()
+    assert not data.startswith(codecs.BOM_UTF8)
+    assert data.startswith(b"0 HEAD")
+
+
+def test_byte_order_mark_setting_reaches_a_file(tmp_path):
+    path = tmp_path / "out.ged"
+    export_gedcom(
+        db_from_objects(make_person()), path, ExportSettings(byte_order_mark=False)
+    )
+    assert not path.read_bytes().startswith(codecs.BOM_UTF8)

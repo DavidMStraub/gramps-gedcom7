@@ -201,18 +201,20 @@ def export_gedcom(
             that does not conform. Turn it off to write anyway and see what a
             reader makes of it.
     """
+    settings = settings or ExportSettings()
     records = db_to_structures(db, settings=settings)
     if validate:
         errors = gedcom7.validate(records)
         if errors:
             raise gedcom7.GedcomValidationError(errors)
+    mark = settings.byte_order_mark
     if isinstance(output_file, (str, Path)):
         with open(output_file, "wb") as handle:
-            gedcom7.dump(records, handle)
+            gedcom7.dump(records, handle, byte_order_mark=mark)
     elif isinstance(output_file, io.TextIOBase):
         raise TypeError(
             "output_file must be opened in binary mode, e.g. open(path, 'wb'), "
             "since a GEDCOM 7 data stream is UTF-8 with its own line terminators"
         )
     else:
-        gedcom7.dump(records, output_file)
+        gedcom7.dump(records, output_file, byte_order_mark=mark)
