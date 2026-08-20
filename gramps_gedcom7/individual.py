@@ -5,6 +5,7 @@ from typing import List
 from gedcom7 import const as g7const
 from gedcom7 import grammar as g7grammar
 from gedcom7 import types as g7types
+from gedcom7 import util as g7util
 from gramps.gen.lib import (
     EventRef,
     EventType,
@@ -28,10 +29,13 @@ GENDER_MAP = {
     "X": Person.OTHER,
 }
 
+# The values of g7:enumset-NAME-TYPE that Gramps has a name type for. The rest --
+# IMMIGRANT, MAIDEN, PROFESSIONAL and OTHER -- become custom types named by the
+# value, or by the phrase beside it where there is one.
 NAME_TYPE_MAP = {
     "AKA": NameType(NameType.AKA),
     "BIRTH": NameType(NameType.BIRTH),
-    "MARR": NameType(NameType.MARRIED),
+    "MARRIED": NameType(NameType.MARRIED),
     "OTHER": NameType(NameType.CUSTOM),
 }
 
@@ -345,7 +349,16 @@ def handle_name(
             gramps_name_type_value = NAME_TYPE_MAP.get(child.value, NameType.CUSTOM)
             gramps_name_type = NameType(gramps_name_type_value)
             if gramps_name_type_value == NameType.CUSTOM:
-                gramps_name_type.string = child.value
+                # OTHER says only that the value is not one the specification
+                # lists; the phrase beside it says what the name is.
+                phrase_structure = g7util.get_first_child_with_tag(
+                    child, g7const.PHRASE
+                )
+                gramps_name_type.string = (
+                    phrase_structure.value
+                    if phrase_structure and phrase_structure.value
+                    else child.value
+                )
             name.set_type(gramps_name_type)
         elif child.tag == g7const.NPFX:
             assert isinstance(child.value, str), "Expected NPFX value to be a string"

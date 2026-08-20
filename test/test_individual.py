@@ -236,7 +236,7 @@ def test_name_type():
     for name_type, expected_type in [
         ("BIRTH", NameType.BIRTH),
         ("AKA", NameType.AKA),
-        ("MARR", NameType.MARRIED),
+        ("MARRIED", NameType.MARRIED),
         ("OTHER", NameType.CUSTOM),
     ]:
         name_structure = create_name_structure("Test Name")
