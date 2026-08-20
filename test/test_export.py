@@ -27,6 +27,7 @@ from gramps.gen.lib import (
     Note,
     NoteType,
     Person,
+    PersonRef,
     RepoRef,
     Repository,
     RepositoryType,
@@ -770,3 +771,108 @@ def test_records_are_written_in_a_settled_order():
         "@I0002@",
         "@I0003@",
     ]
+
+
+def alias_with_notes(*texts):
+    """A person aliased to another, with notes on the reference between them."""
+    first = make_person(gramps_id="I0001", handle="p1")
+    second = make_person(gramps_id="I0002", handle="p2", given="Jack")
+    person_ref = PersonRef()
+    person_ref.ref = "p2"
+    person_ref.set_relation("ALIA")
+    notes = []
+    for index, text in enumerate(texts):
+        note = make_note(
+            handle=f"n{index}",
+            gramps_id=f"N000{index}",
+            text=text,
+            note_type=NoteType.ASSOCIATION,
+        )
+        person_ref.add_note(note.handle)
+        notes.append(note)
+    first.add_person_ref(person_ref)
+    return db_from_objects(first, second, *notes)
+
+
+def test_alias_note_is_written_as_its_phrase():
+    records = db_to_structures(alias_with_notes("also called Jack"))
+    (first, _) = records_by_tag(records, g7const.INDI)
+    assert find(find(first, g7const.ALIA), g7const.PHRASE).text == "also called Jack"
+    assert records_by_tag(records, g7const.SNOTE) == []
+
+
+def test_every_alias_note_reaches_the_phrase():
+    """Only one phrase may stand beside an alias, so the notes are joined.
+
+    Writing the first and leaving the rest made them records nothing pointed at,
+    which put their text in the file but lost the alias they belonged to.
+    """
+    records = db_to_structures(alias_with_notes("first note", "second note"))
+    (first, _) = records_by_tag(records, g7const.INDI)
+    phrase = find(find(first, g7const.ALIA), g7const.PHRASE)
+    assert phrase.text == "first note\n\nsecond note"
+    assert records_by_tag(records, g7const.SNOTE) == []
+    assert gedcom7.validate(records) == []
+
+
+def test_every_child_note_reaches_the_phrase():
+    child = make_person(gramps_id="I0002", handle="p2", given="Jane")
+    family = Family()
+    family.handle = "f1"
+    family.gramps_id = "F0001"
+    child_ref = _child_ref("p2")
+    notes = []
+    for index, text in enumerate(("youngest of three", "adopted in 1910")):
+        note = make_note(
+            handle=f"n{index}",
+            gramps_id=f"N000{index}",
+            text=text,
+            note_type=NoteType.CHILDREF,
+        )
+        child_ref.add_note(note.handle)
+        notes.append(note)
+    family.add_child_ref(child_ref)
+    child.add_parent_family_handle("f1")
+    records = db_to_structures(db_from_objects(child, family, *notes))
+    (fam,) = records_by_tag(records, g7const.FAM)
+    phrase = find(find(fam, g7const.CHIL), g7const.PHRASE)
+    assert phrase.text == "youngest of three\n\nadopted in 1910"
+    assert records_by_tag(records, g7const.SNOTE) == []
+
+
+@pytest.mark.parametrize("path", DATA_FILES, ids=lambda p: p.name)
+def test_note_attached_to_something_stays_attached(path):
+    """A note some object carries must be reachable from that object in the file.
+
+    A note the database attaches to nothing may be written as a record nothing
+    points at, which is what it is. One that is attached may not: writing it
+    loose keeps its text but loses what it was a note about.
+    """
+    db = db_from_file(str(path))
+    records = db_to_structures(db)
+
+    pointed_at, inline = set(), []
+
+    def walk(structure):
+        if structure.pointer:
+            pointed_at.add(structure.pointer)
+        if structure.tag in (g7const.NOTE, g7const.PHRASE, g7const.TEXT):
+            inline.append(structure.text)
+        for child in structure.children:
+            walk(child)
+
+    for record in records:
+        walk(record)
+
+    lost = []
+    for note in db.iter_notes():
+        if not any(db.find_backlink_handles(note.handle)):
+            continue
+        xref = next(
+            (r.xref for r in records if r.tag == g7const.SNOTE and r.text == note.get()),
+            None,
+        )
+        if xref in pointed_at or any(note.get() in text for text in inline):
+            continue
+        lost.append(note.get()[:40])
+    assert lost == [], f"{path.name} writes {lost} with nothing pointing at them"

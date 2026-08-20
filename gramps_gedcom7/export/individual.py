@@ -13,7 +13,7 @@ from .citation import add_citations
 from .event import INDIVIDUAL_EVENT_TAGS, add_event
 from .multimedia import add_media_refs
 from .note import add_notes
-from .util import ROLE_VOCABULARY, add, find_phrase
+from .util import ROLE_VOCABULARY, add, add_phrase_from_notes
 
 if TYPE_CHECKING:
     from .exporter import ExportContext
@@ -135,13 +135,7 @@ def add_association(
     relation = person_ref.get_relation() or ""
     if relation == ALIAS_RELATION:
         alias = add(parent, g7const.ALIA, pointer=pointer)
-        # An alias has nowhere to carry a note, so the import reads the phrase
-        # beside it into one, and this puts it back where it came from.
-        for handle in person_ref.get_note_list():
-            note = context.db.get_note_from_handle(handle)
-            if note is not None and note.get() and not find_phrase(alias):
-                add(alias, g7const.PHRASE, note.get())
-                context.written_notes.add(handle)
+        add_phrase_from_notes(alias, person_ref, context)
         return
     associate = add(parent, g7const.ASSO, pointer=pointer)
     if relation in ROLE_VOCABULARY:

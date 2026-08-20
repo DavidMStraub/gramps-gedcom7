@@ -21,9 +21,9 @@ HTML_MIME = "text/html"
 def note_to_record(note: Note, context: ExportContext) -> g7types.GedcomStructure:
     """Write a note as a shared note record.
 
-    Every Gramps note becomes a record of its own, whether it was read from a
-    shared note or from one written inside another structure, because a Gramps
-    note is an object that any number of others may point at.
+    Only the notes :func:`add_note` did not write inside the structure carrying
+    them get here: those several structures share, those Gramps calls general,
+    and those whose structure has no room for a note of its own.
     """
     record = g7types.GedcomStructure(
         tag=g7const.SNOTE, xref=context.xrefs.get(note.handle)

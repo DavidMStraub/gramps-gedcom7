@@ -13,7 +13,7 @@ from .citation import add_citations
 from .event import FAMILY_EVENT_TAGS, add_event
 from .multimedia import add_media_refs
 from .note import add_notes
-from .util import add, find_phrase
+from .util import add, add_phrase_from_notes
 
 if TYPE_CHECKING:
     from .exporter import ExportContext
@@ -39,13 +39,7 @@ def family_to_record(family: Family, context: ExportContext) -> g7types.GedcomSt
         add(record, g7const.WIFE, pointer=context.xrefs.pointer(family.get_mother_handle()))
     for child_ref in family.get_child_ref_list():
         child = add(record, g7const.CHIL, pointer=context.xrefs.pointer(child_ref.ref))
-        # A child has nowhere to carry a note, so the import reads the phrase
-        # beside it into one; this puts the note back where it came from.
-        for handle in child_ref.get_note_list():
-            note = context.db.get_note_from_handle(handle)
-            if note is not None and note.get() and not find_phrase(child):
-                add(child, g7const.PHRASE, note.get())
-                context.written_notes.add(handle)
+        add_phrase_from_notes(child, child_ref, context)
 
     add_notes(record, family, context)
     add_media_refs(record, family, context)

@@ -124,9 +124,24 @@ def add(
     return child
 
 
-def find_phrase(structure: g7types.GedcomStructure) -> g7types.GedcomStructure | None:
-    """Get the phrase already written beside a structure, if there is one."""
-    return next((c for c in structure.children if c.tag == g7const.PHRASE), None)
+def add_phrase_from_notes(
+    parent: g7types.GedcomStructure, obj: object, context: ExportContext
+) -> None:
+    """Carry an object's notes in the phrase beside a pointer.
+
+    A pointer such as ALIA or CHIL has nowhere to carry a note, which is why the
+    import reads the phrase beside it into one. Only one phrase may stand there,
+    so several notes are joined into it: writing the first and leaving the rest
+    would make them records that nothing points at.
+    """
+    texts = []
+    for handle in obj.get_note_list():  # type: ignore[attr-defined]
+        note = context.db.get_note_from_handle(handle)
+        if note is not None and note.get():
+            texts.append(note.get())
+            context.written_notes.add(handle)
+    if texts:
+        add(parent, g7const.PHRASE, "\n\n".join(texts))
 
 
 def allows(structure: g7types.GedcomStructure, tag: str) -> bool:
