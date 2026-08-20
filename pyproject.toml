@@ -40,8 +40,8 @@ streamlit = ["streamlit"]
 "Repository" = "https://github.com/DavidMStraub/gramps-gedcom7"
 "Issues" = "https://github.com/DavidMStraub/gramps-gedcom7/issues"
 
-[tool.setuptools]
-packages = ["gramps_gedcom7"]
+[tool.setuptools.packages.find]
+include = ["gramps_gedcom7", "gramps_gedcom7.*"]
 
 [tool.setuptools_scm]
 # used when building outside a git checkout (e.g. from an unpacked sdist)
