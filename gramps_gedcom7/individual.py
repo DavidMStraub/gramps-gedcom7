@@ -354,11 +354,13 @@ def handle_name(
                 phrase_structure = g7util.get_first_child_with_tag(
                     child, g7const.PHRASE
                 )
-                gramps_name_type.string = (
-                    phrase_structure.value
-                    if phrase_structure and phrase_structure.value
-                    else child.value
-                )
+                if phrase_structure and phrase_structure.value:
+                    assert isinstance(
+                        phrase_structure.value, str
+                    ), "Expected PHRASE value to be a string"
+                    gramps_name_type.string = phrase_structure.value
+                else:
+                    gramps_name_type.string = child.value
             name.set_type(gramps_name_type)
         elif child.tag == g7const.NPFX:
             assert isinstance(child.value, str), "Expected NPFX value to be a string"
