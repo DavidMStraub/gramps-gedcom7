@@ -205,6 +205,7 @@ def test_custom_event_attributes():
     graduation_events = [e for e in events if e.get_type().xml_str() == "Graduation"]
     assert len(graduation_events) == 1
     custom = graduation_events[0]
+    assert custom.get_type() == EventType.GRADUATION
     
     # Check attributes
     attrs = custom.get_attribute_list()

@@ -1,14 +1,9 @@
 """Test TIME substructure import."""
 
-import os
-
-# Set language BEFORE importing anything else
-os.environ['LANGUAGE'] = 'en'
-
 import pytest
 from gramps.gen.db import DbWriteBase
 from gramps.gen.db.utils import make_database
-from gramps.gen.lib import EventType
+from gramps.gen.lib import AttributeType, EventType
 from gramps_gedcom7.importer import import_gedcom
 
 
@@ -51,6 +46,7 @@ def test_date_time_on_birth():
     assert len(attributes) == 1
     time_attr = attributes[0]
     assert time_attr.get_type().xml_str() == "Time"
+    assert time_attr.get_type() == AttributeType.TIME
     assert time_attr.get_value() == "14:30:00"
 
 
@@ -81,6 +77,7 @@ def test_date_time_utc():
     assert len(attributes) == 1
     time_attr = attributes[0]
     assert time_attr.get_type().xml_str() == "Time"
+    assert time_attr.get_type() == AttributeType.TIME
     assert time_attr.get_value() == "09:15:30Z"
 
 
@@ -133,6 +130,7 @@ def test_time_with_phrase():
     assert len(attributes) == 1
     time_attr = attributes[0]
     assert time_attr.get_type().xml_str() == "Time"
+    assert time_attr.get_type() == AttributeType.TIME
     assert time_attr.get_value() == "18:45:00"
 
 
@@ -158,5 +156,6 @@ def test_time_without_seconds():
     assert len(attributes) == 1
     time_attr = attributes[0]
     assert time_attr.get_type().xml_str() == "Time"
+    assert time_attr.get_type() == AttributeType.TIME
     assert time_attr.get_value() == "10:15:00"
 
