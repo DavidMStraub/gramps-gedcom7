@@ -231,3 +231,46 @@ def test_gedcom_date_value_to_gramps_date_period_from_with_julian():
     assert year == 1500
     assert month == 11
     assert day == 5
+
+
+def _sortval(calendar, dateval):
+    """The sort value Gramps gives a date entered in its own calendar."""
+    date = Date()
+    date.set(calendar=calendar, value=dateval)
+    return date.get_sort_value()
+
+
+def test_gedcom_date_value_to_gramps_date_julian_sortval():
+    """Test that a Julian date sorts by its own calendar, not as Gregorian."""
+    date_value = g7types.Date(year=1700, month="APR", day=1, calendar="JULIAN")
+    gramps_date = gedcom_date_value_to_gramps_date(date_value)
+
+    assert gramps_date.get_sort_value() == _sortval(
+        Date.CAL_JULIAN, (1, 4, 1700, False)
+    )
+
+
+def test_gedcom_date_value_to_gramps_date_range_julian_sortval():
+    """Test that a Julian date range sorts by its own calendar."""
+    date_value = g7types.DateRange(
+        start=g7types.Date(year=1752, month="FEB", day=15, calendar="JULIAN"),
+        end=g7types.Date(year=1752, month="MAR", day=25, calendar="JULIAN"),
+    )
+    gramps_date = gedcom_date_value_to_gramps_date(date_value)
+
+    assert gramps_date.get_sort_value() == _sortval(
+        Date.CAL_JULIAN, (15, 2, 1752, False)
+    )
+
+
+def test_gedcom_date_value_to_gramps_date_bce():
+    """Test that a BCE date is stored with a negative year."""
+    date_value = g7types.Date(
+        year=44, month="MAR", day=15, calendar="JULIAN", epoch="BCE"
+    )
+    gramps_date = gedcom_date_value_to_gramps_date(date_value)
+
+    assert gramps_date.get_year() == -44
+    assert gramps_date.get_sort_value() == _sortval(
+        Date.CAL_JULIAN, (15, 3, -44, False)
+    )

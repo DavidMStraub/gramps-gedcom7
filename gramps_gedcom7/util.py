@@ -225,6 +225,8 @@ def gedcom_date_to_numeric_year_month_day(
 ) -> dict[str, int]:
     """Convert a GEDCOM date to a numeric year, month, and day."""
     year = date_value.year or 0
+    if date_value.epoch == "BCE":
+        year = -year
     month = GEDCOM_MONTHS.get(date_value.month or "", 0)
     day = date_value.day or 0
     return {"year": year, "month": month, "day": day}
@@ -324,6 +326,8 @@ def gedcom_date_value_to_gramps_date(
                 and date_value.end.calendar in CALENDAR_MAP
             ):
                 date.set_calendar(CALENDAR_MAP[date_value.end.calendar])
+    # The sort value was computed before the calendar was set.
+    date.recalc_sort_value()
     return date
 
 
