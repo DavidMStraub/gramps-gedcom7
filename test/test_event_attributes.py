@@ -34,7 +34,7 @@ def test_birth_event_attributes():
     assert agency_attrs[0].get_value() == "State Registry Office"
     
     # Check RELI (Religion) - stored as custom
-    reli_attrs = [a for a in attrs if a.get_type().string == "Religion"]
+    reli_attrs = [a for a in attrs if a.get_type().xml_str() == "Religion"]
     assert len(reli_attrs) == 1
     assert reli_attrs[0].get_value() == "Catholic"
     assert reli_attrs[0].get_type() == AttributeType.CUSTOM
@@ -73,7 +73,7 @@ def test_death_event_attributes():
     assert agency_attrs[0].get_value() == "County Coroner"
     
     # Check RELI
-    reli_attrs = [a for a in attrs if a.get_type().string == "Religion"]
+    reli_attrs = [a for a in attrs if a.get_type().xml_str() == "Religion"]
     assert len(reli_attrs) == 1
     assert reli_attrs[0].get_value() == "Baptist"
     
@@ -111,7 +111,7 @@ def test_baptism_event_attributes():
     assert agency_attrs[0].get_value() == "First Baptist Church"
     
     # Check RELI
-    reli_attrs = [a for a in attrs if a.get_type().string == "Religion"]
+    reli_attrs = [a for a in attrs if a.get_type().xml_str() == "Religion"]
     assert len(reli_attrs) == 1
     assert reli_attrs[0].get_value() == "Baptist"
 
@@ -144,7 +144,7 @@ def test_marriage_event_attributes():
     assert agency_attrs[0].get_value() == "City Clerk Office"
     
     # Check RELI
-    reli_attrs = [a for a in attrs if a.get_type().string == "Religion"]
+    reli_attrs = [a for a in attrs if a.get_type().xml_str() == "Religion"]
     assert len(reli_attrs) == 1
     assert reli_attrs[0].get_value() == "Civil Ceremony"
     
@@ -202,7 +202,7 @@ def test_custom_event_attributes():
     event_refs = test_person.get_event_ref_list()
     events = [db.get_event_from_handle(ref.ref) for ref in event_refs]
     # Custom events with a TYPE substructure have their type set to that value
-    graduation_events = [e for e in events if e.get_type().string == "Graduation"]
+    graduation_events = [e for e in events if e.get_type().xml_str() == "Graduation"]
     assert len(graduation_events) == 1
     custom = graduation_events[0]
     
@@ -216,6 +216,6 @@ def test_custom_event_attributes():
     assert agency_attrs[0].get_value() == "University of Example"
     
     # Check RELI
-    reli_attrs = [a for a in attrs if a.get_type().string == "Religion"]
+    reli_attrs = [a for a in attrs if a.get_type().xml_str() == "Religion"]
     assert len(reli_attrs) == 1
     assert reli_attrs[0].get_value() == "Non-denominational"

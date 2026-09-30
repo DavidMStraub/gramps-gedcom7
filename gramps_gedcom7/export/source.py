@@ -119,7 +119,7 @@ def _add_medium(parent: g7types.GedcomStructure, media_type) -> None:
 def _is_submitter(repository: Repository) -> bool:
     """Say whether this repository is a submitter the import had to park here."""
     repository_type = repository.get_type()
-    return repository_type.is_custom() and repository_type.string == SUBMITTER_TYPE
+    return repository_type.xml_str() == SUBMITTER_TYPE
 
 
 def repository_to_record(

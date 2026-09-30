@@ -23,6 +23,8 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install Ubuntu dependencies
         run: sudo apt update && sudo apt-get -y install gettext appstream pkg-config libcairo2-dev gir1.2-gtk-3.0 libgirepository1.0-dev libicu-dev gir1.2-pango-1.0
+      - name: Generate test locale
+        run: sudo locale-gen it_IT.UTF-8
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip wheel
@@ -34,5 +36,10 @@ jobs:
         run: |
           mypy --install-types --non-interactive gramps_gedcom7
       - name: Test with pytest
+        # Gramps translates type names, so tests run in a non-English locale.
+        env:
+          LANG: it_IT.UTF-8
+          LC_ALL: it_IT.UTF-8
         run: |
+          python -c "from gramps.gen.lib import AttributeType as A; assert str(A(A.TIME)) != 'Time', 'Gramps is not translating'"
           pytest

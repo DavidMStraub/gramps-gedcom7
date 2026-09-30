@@ -67,21 +67,21 @@ def test_contact_fields_event():
     assert len(attrs) == 4  # PHON, EMAIL, FAX, WWW
     
     # Check phone attribute
-    phone_attrs = [a for a in attrs if a.get_type().string == "Phone"]
+    phone_attrs = [a for a in attrs if a.get_type().xml_str() == "Phone"]
     assert len(phone_attrs) == 1
     assert phone_attrs[0].get_value() == "+1-555-0127"
     
     # Check email attribute
-    email_attrs = [a for a in attrs if a.get_type().string == "Email"]
+    email_attrs = [a for a in attrs if a.get_type().xml_str() == "Email"]
     assert len(email_attrs) == 1
     assert email_attrs[0].get_value() == "birth@hospital.com"
     
     # Check fax attribute
-    fax_attrs = [a for a in attrs if a.get_type().string == "Fax"]
+    fax_attrs = [a for a in attrs if a.get_type().xml_str() == "Fax"]
     assert len(fax_attrs) == 1
     assert fax_attrs[0].get_value() == "+1-555-0128"
     
     # Check website attribute
-    www_attrs = [a for a in attrs if a.get_type().string == "Website"]
+    www_attrs = [a for a in attrs if a.get_type().xml_str() == "Website"]
     assert len(www_attrs) == 1
     assert www_attrs[0].get_value() == "https://hospital.com/births"

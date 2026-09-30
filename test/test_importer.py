@@ -117,13 +117,13 @@ def test_importer_maximal70():
         len(marriage.attribute_list) == 14
     )  # 8 contact fields + 3 event attrs + 2 UID + 1 TIME
     # Check contact fields by type string
-    phone_attrs = [a for a in marriage.attribute_list if a.get_type().string == "Phone"]
+    phone_attrs = [a for a in marriage.attribute_list if a.get_type().xml_str() == "Phone"]
     assert len(phone_attrs) == 2
-    email_attrs = [a for a in marriage.attribute_list if a.get_type().string == "Email"]
+    email_attrs = [a for a in marriage.attribute_list if a.get_type().xml_str() == "Email"]
     assert len(email_attrs) == 2
-    fax_attrs = [a for a in marriage.attribute_list if a.get_type().string == "Fax"]
+    fax_attrs = [a for a in marriage.attribute_list if a.get_type().xml_str() == "Fax"]
     assert len(fax_attrs) == 2
-    www_attrs = [a for a in marriage.attribute_list if a.get_type().string == "Website"]
+    www_attrs = [a for a in marriage.attribute_list if a.get_type().xml_str() == "Website"]
     assert len(www_attrs) == 2
     # Check UIDs
     uid_attrs = [a for a in marriage.attribute_list if a.get_type() == "UID"]
@@ -137,7 +137,7 @@ def test_importer_maximal70():
     ]
     assert len(agency_attrs) == 1
     reli_attrs = [
-        a for a in marriage.attribute_list if a.get_type().string == "Religion"
+        a for a in marriage.attribute_list if a.get_type().xml_str() == "Religion"
     ]
     assert len(reli_attrs) == 1
     caus_attrs = [
@@ -149,7 +149,7 @@ def test_importer_maximal70():
     event = db.get_event_from_handle(family.event_ref_list[10].ref)
     assert isinstance(event, Event)
     assert event.get_type().value == EventType.CUSTOM
-    assert event.get_type().string == "Event type"
+    assert event.get_type().xml_str() == "Event type"
 
     # husband
     father = db.get_person_from_handle(family.father_handle)
@@ -408,7 +408,7 @@ def test_importer_maximal70():
     # person event UID + contact fields (DEAT event has contact fields too) + AGNC, RELI, CAUS
     assert len(event.attribute_list) == 13  # 8 contact fields + 3 event attrs + 2 UID
     # Check contact fields and UIDs
-    phone_attrs = [a for a in event.attribute_list if a.get_type().string == "Phone"]
+    phone_attrs = [a for a in event.attribute_list if a.get_type().xml_str() == "Phone"]
     assert len(phone_attrs) == 2
     uid_attrs = [a for a in event.attribute_list if a.get_type() == "UID"]
     assert len(uid_attrs) == 2
@@ -420,7 +420,7 @@ def test_importer_maximal70():
         a for a in event.attribute_list if a.get_type().value == AttributeType.AGENCY
     ]
     assert len(agency_attrs) == 1
-    reli_attrs = [a for a in event.attribute_list if a.get_type().string == "Religion"]
+    reli_attrs = [a for a in event.attribute_list if a.get_type().xml_str() == "Religion"]
     assert len(reli_attrs) == 1
     caus_attrs = [
         a for a in event.attribute_list if a.get_type().value == AttributeType.CAUSE
@@ -495,7 +495,7 @@ def test_importer_maximal70():
     event = db.get_event_from_handle(person.event_ref_list[25].ref)
     assert isinstance(event, Event)
     assert event.get_type().value == EventType.CUSTOM
-    assert event.get_type().string == "Event type"
+    assert event.get_type().xml_str() == "Event type"
 
     # family relations
     assert len(person.parent_family_list) == 1

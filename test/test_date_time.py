@@ -35,7 +35,7 @@ def test_date_time_on_birth():
     birth = None
     for ref in event_refs:
         event = db.get_event_from_handle(ref.ref)
-        if str(event.get_type()) == "Birth":
+        if event.get_type().xml_str() == "Birth":
             birth = event
             break
     assert birth is not None
@@ -50,7 +50,7 @@ def test_date_time_on_birth():
     attributes = birth.get_attribute_list()
     assert len(attributes) == 1
     time_attr = attributes[0]
-    assert str(time_attr.get_type()) == "Time"
+    assert time_attr.get_type().xml_str() == "Time"
     assert time_attr.get_value() == "14:30:00"
 
 
@@ -70,7 +70,7 @@ def test_date_time_utc():
     death = None
     for ref in event_refs:
         event = db.get_event_from_handle(ref.ref)
-        if str(event.get_type()) == "Death":
+        if event.get_type().xml_str() == "Death":
             death = event
             break
     
@@ -80,7 +80,7 @@ def test_date_time_utc():
     attributes = death.get_attribute_list()
     assert len(attributes) == 1
     time_attr = attributes[0]
-    assert str(time_attr.get_type()) == "Time"
+    assert time_attr.get_type().xml_str() == "Time"
     assert time_attr.get_value() == "09:15:30Z"
 
 
@@ -118,7 +118,7 @@ def test_time_with_phrase():
     burial = None
     for handle in db.get_event_handles():
         event = db.get_event_from_handle(handle)
-        if str(event.get_type()) == "Burial":
+        if event.get_type().xml_str() == "Burial":
             burial = event
             break
     
@@ -132,7 +132,7 @@ def test_time_with_phrase():
     attributes = burial.get_attribute_list()
     assert len(attributes) == 1
     time_attr = attributes[0]
-    assert str(time_attr.get_type()) == "Time"
+    assert time_attr.get_type().xml_str() == "Time"
     assert time_attr.get_value() == "18:45:00"
 
 
@@ -147,7 +147,7 @@ def test_time_without_seconds():
     christening = None
     for handle in db.get_event_handles():
         event = db.get_event_from_handle(handle)
-        if str(event.get_type()) == "Christening":
+        if event.get_type().xml_str() == "Christening":
             christening = event
             break
     
@@ -157,6 +157,6 @@ def test_time_without_seconds():
     attributes = christening.get_attribute_list()
     assert len(attributes) == 1
     time_attr = attributes[0]
-    assert str(time_attr.get_type()) == "Time"
+    assert time_attr.get_type().xml_str() == "Time"
     assert time_attr.get_value() == "10:15:00"
 

@@ -383,12 +383,15 @@ def add_attribute_to_object(
     Args:
         obj: The object to add the attribute to (must support add_attribute).
         attr_type: The attribute type (string, int enum value, tuple for custom types, or Type object).
+            A string is read as the untranslated name, so the result is the same in any locale.
         value: The attribute value.
     """
     if isinstance(obj, SrcAttributeBase):
         attr = SrcAttribute()
         if isinstance(attr_type, str):
-            attr.set_type(SrcAttributeType(attr_type))
+            attr_type_obj = SrcAttributeType()
+            attr_type_obj.set_from_xml_str(attr_type)
+            attr.set_type(attr_type_obj)
         elif isinstance(attr_type, int):
             attr.set_type(SrcAttributeType(attr_type))
         elif isinstance(attr_type, tuple):
@@ -398,7 +401,9 @@ def add_attribute_to_object(
     elif isinstance(obj, AttributeBase):
         attr = Attribute()
         if isinstance(attr_type, str):
-            attr.set_type(AttributeType(attr_type))
+            attr_type_obj = AttributeType()
+            attr_type_obj.set_from_xml_str(attr_type)
+            attr.set_type(attr_type_obj)
         elif isinstance(attr_type, int):
             attr.set_type(AttributeType(attr_type))
         elif isinstance(attr_type, tuple):

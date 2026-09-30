@@ -67,5 +67,5 @@ def add_media_refs(
         reference = add(parent, g7const.OBJE, pointer=pointer)
         for attribute in media_ref.get_attribute_list():
             attribute_type = attribute.get_type()
-            if attribute_type.is_custom() and attribute_type.string == TITLE_ATTRIBUTE:
+            if attribute_type.xml_str() == TITLE_ATTRIBUTE:
                 add(reference, g7const.TITL, attribute.get_value())
