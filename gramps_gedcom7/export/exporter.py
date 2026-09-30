@@ -4,17 +4,27 @@ from __future__ import annotations
 
 import io
 import logging
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, BinaryIO
+from typing import TYPE_CHECKING, Any, BinaryIO
 
 import gedcom7
 from gedcom7 import const as g7const
 from gedcom7 import types as g7types
 from gramps.gen.db import DbReadBase
+from gramps.gen.errors import HandleError
 
 from .. import __version__
+from ..report import GrampsObject, Progress, Report
 from ..settings import ExportSettings
+from .errors import (
+    ExportValidationError,
+    MissingObjectsError,
+    MissingReference,
+    ValidationProblem,
+)
 from .family import family_to_record
 from .header import make_header
 from .individual import person_to_record
@@ -24,7 +34,7 @@ from .source import repository_to_record, source_to_record
 from .xrefs import XrefMap
 
 if TYPE_CHECKING:
-    from gramps.gen.lib import Attribute, Event, EventRoleType
+    from gramps.gen.lib import Event, EventRoleType
 
 logger = logging.getLogger(__name__)
 
@@ -45,13 +55,75 @@ class ExportContext:
     people_at: dict[str, list[tuple[str, EventRoleType]]] = field(default_factory=dict)
     note_backlinks: dict[str, int] = field(default_factory=dict)
     written_notes: set[str] = field(default_factory=set)
-    skipped_attributes: list[Attribute] = field(default_factory=list)
+    report: Report = field(default_factory=Report)
+    # The Gramps object each structure was written from, by the structure's id.
+    origins: dict[int, GrampsObject] = field(default_factory=dict)
+    missing: dict[tuple[str, str], MissingReference] = field(default_factory=dict)
+    current: GrampsObject | None = None
+
+    def load(self, kind: str, handle: str) -> Any:
+        """Get an object by handle, or None if it is missing or filtered out.
+
+        A missing one is recorded rather than raised, so that every missing
+        reference can be reported at once.
+        """
+        try:
+            return getattr(self.db, f"get_{kind}_from_handle")(handle)
+        except HandleError:
+            if not self._record_missing(kind, handle):
+                raise
+            return None
+
+    def _record_missing(self, kind: str, handle: str) -> bool:
+        """Find what is missing, in the database beneath any proxy.
+
+        A proxy loads what an object references to decide what to hide, so the
+        object that failed to load may exist and be referencing what does not.
+        """
+        base = getattr(self.db, "basedb", self.db)
+        if not getattr(base, f"has_{kind}_handle")(handle):
+            self._add_missing(self.current, kind, handle)
+            return True
+        obj = getattr(base, f"get_{kind}_from_handle")(handle)
+        found = False
+        for class_name, ref in obj.get_referenced_handles_recursively():
+            ref_kind = class_name.lower()
+            if not getattr(base, f"has_{ref_kind}_handle")(ref):
+                self._add_missing(GrampsObject.of(obj), ref_kind, ref)
+                found = True
+        return found
+
+    def _add_missing(self, referrer: GrampsObject | None, kind: str, handle: str) -> None:
+        key = (referrer.handle if referrer else "", handle)
+        self.missing.setdefault(key, MissingReference(referrer, kind, handle))
+
+    @contextmanager
+    def writing(
+        self, obj: object, structure: g7types.GedcomStructure | None = None
+    ) -> Iterator[None]:
+        """Attribute what is loaded and written meanwhile to this object."""
+        described = GrampsObject.of(obj)
+        if structure is not None:
+            self.origins[id(structure)] = described
+        previous, self.current = self.current, described
+        try:
+            yield
+        finally:
+            self.current = previous
+
+    def origin(self, structure: g7types.GedcomStructure | None) -> GrampsObject | None:
+        """Find the Gramps object a structure, or the nearest above it, came from."""
+        while structure is not None:
+            if id(structure) in self.origins:
+                return self.origins[id(structure)]
+            structure = structure.parent
+        return None
 
     def owned_event(self, event_handle: str, owner_handle: str) -> Event | None:
         """Get the event if this record is the one to write it, else None."""
         if owner_handle not in self.owners.get(event_handle, set()):
             return None
-        return self.db.get_event_from_handle(event_handle)
+        return self.load("event", event_handle)
 
     def participants(
         self, event_handle: str, owner_handle: str
@@ -65,123 +137,150 @@ class ExportContext:
 
 
 # Every kind of Gramps object written as a record of its own, in the order the
-# records are written: how to reach them, what to call one whose Gramps ID
-# cannot be used, and what writes it. A Gramps citation is not among them, being
-# written where it is cited rather than as a record.
+# records are written: what to call one whose Gramps ID cannot be used, and what
+# writes it. A Gramps citation is not among them, being written where it is
+# cited rather than as a record.
 RECORD_KINDS = (
-    ("get_person_handles", "get_person_from_handle", "I", person_to_record),
-    ("get_family_handles", "get_family_from_handle", "F", family_to_record),
-    ("get_source_handles", "get_source_from_handle", "S", source_to_record),
-    ("get_repository_handles", "get_repository_from_handle", "R", repository_to_record),
-    ("get_media_handles", "get_media_from_handle", "M", media_to_record),
-    ("get_note_handles", "get_note_from_handle", "N", note_to_record),
+    ("person", "I", person_to_record),
+    ("family", "F", family_to_record),
+    ("source", "S", source_to_record),
+    ("repository", "R", repository_to_record),
+    ("media", "M", media_to_record),
+    ("note", "N", note_to_record),
 )
 
 
-def _handles(db: DbReadBase, getter: str) -> list[str]:
+def _handles(db: DbReadBase, kind: str) -> list[str]:
     """List the handles of one kind of object.
 
     Only some of these take an argument saying whether to sort, and sorting is
     by a locale's collation, which is not what an export order should turn on.
     """
+    getter = getattr(db, f"get_{kind}_handles")
     try:
-        return list(getattr(db, getter)(sort_handles=False))
+        return list(getter(sort_handles=False))
     except TypeError:
-        return list(getattr(db, getter)())
+        return list(getter())
 
 
-def _in_order(db: DbReadBase, getter: str, xrefs: XrefMap) -> list[str]:
-    """List the handles of one kind of object, in the order they are written.
+def _load_records(context: ExportContext) -> dict[str, list[Any]]:
+    """Load every object written as a record, once.
+
+    Through a proxy, listing and loading can be slow enough that doing either
+    twice would double the time an export takes.
+    """
+    loaded = {}
+    for kind, _, _ in RECORD_KINDS:
+        objects = (context.load(kind, handle) for handle in _handles(context.db, kind))
+        loaded[kind] = [obj for obj in objects if obj is not None]
+    return loaded
+
+
+def _allocate_xrefs(loaded: dict[str, list[Any]], xrefs: XrefMap) -> None:
+    """Allocate an identifier for every record that will be written.
+
+    Every one is allocated before any record is written, so that a pointer can
+    be resolved whichever order the records come in.
+    """
+    for kind, prefix, _ in RECORD_KINDS:
+        # By Gramps ID, so that which of two objects claiming one identifier has
+        # to give way does not depend on the order the database yields them in.
+        for obj in sorted(loaded[kind], key=lambda obj: obj.gramps_id or ""):
+            xrefs.add(obj.handle, obj.gramps_id, prefix)
+
+
+def _in_order(objects: list[Any], xrefs: XrefMap) -> list[Any]:
+    """Sort objects in the order their records are written.
 
     A handle is a fresh identifier every time a file is read, so writing records
     in the order the database yields them would put the same data in a different
     order every time. Ordering by cross-reference identifier instead makes two
     exports of the same data the same file.
     """
-    return sorted(_handles(db, getter), key=lambda handle: xrefs.get(handle) or "")
+    return sorted(objects, key=lambda obj: xrefs.get(obj.handle) or "")
 
 
-def _allocate_xrefs(db: DbReadBase, xrefs: XrefMap) -> None:
-    """Allocate an identifier for every record that will be written.
-
-    Every one is allocated before any record is written, so that a pointer can
-    be resolved whichever order the records come in.
-    """
-    for handles_getter, object_getter, prefix, _ in RECORD_KINDS:
-        objects = [
-            (getattr(db, object_getter)(handle), handle)
-            for handle in _handles(db, handles_getter)
-        ]
-        # By Gramps ID, so that which of two objects claiming one identifier has
-        # to give way does not depend on the order the database yields them in.
-        for obj, handle in sorted(objects, key=lambda pair: pair[0].gramps_id or ""):
-            xrefs.add(handle, obj.gramps_id, prefix)
-
-
-def _plan_events(db: DbReadBase, context: ExportContext) -> None:
+def _plan_events(loaded: dict[str, list[Any]], context: ExportContext) -> None:
     """Decide which record writes each event, and who else took part in it.
 
     A person and a family that point at the same event each write their own copy
     of it, there being no way to name a family as an associate; two people
     sharing one write it once, the second appearing as an associate of the first.
     """
-    for handle in _in_order(db, "get_person_handles", context.xrefs):
-        person = db.get_person_from_handle(handle)
+    for person in _in_order(loaded["person"], context.xrefs):
         for event_ref in person.get_event_ref_list():
             context.people_at.setdefault(event_ref.ref, []).append(
-                (handle, event_ref.get_role())
+                (person.handle, event_ref.get_role())
             )
     # The first person to point at an event writes it, and the first family
     # likewise, each kind independently of the other.
-    for handles_getter, object_getter in (
-        ("get_person_handles", "get_person_from_handle"),
-        ("get_family_handles", "get_family_from_handle"),
-    ):
+    for kind in ("person", "family"):
         owned: set[str] = set()
-        for handle in _in_order(db, handles_getter, context.xrefs):
-            for event_ref in getattr(db, object_getter)(handle).get_event_ref_list():
+        for obj in _in_order(loaded[kind], context.xrefs):
+            for event_ref in obj.get_event_ref_list():
                 if event_ref.ref not in owned:
                     owned.add(event_ref.ref)
-                    context.owners.setdefault(event_ref.ref, set()).add(handle)
+                    context.owners.setdefault(event_ref.ref, set()).add(obj.handle)
 
 
-def _plan_notes(db: DbReadBase, context: ExportContext) -> None:
+def _plan_notes(loaded: dict[str, list[Any]], context: ExportContext) -> None:
     """Count what points at each note, which decides where the note is written."""
-    for handle in _handles(db, "get_note_handles"):
-        context.note_backlinks[handle] = sum(1 for _ in db.find_backlink_handles(handle))
+    for note in loaded["note"]:
+        context.note_backlinks[note.handle] = sum(
+            1 for _ in context.db.find_backlink_handles(note.handle)
+        )
 
 
-def db_to_structures(
-    db: DbReadBase, settings: ExportSettings | None = None
-) -> list[g7types.GedcomStructure]:
-    """Convert a Gramps database to the structures of a GEDCOM 7 dataset."""
-    settings = settings or ExportSettings()
-    xrefs = XrefMap()
-    _allocate_xrefs(db, xrefs)
-    context = ExportContext(db=db, xrefs=xrefs, settings=settings)
-    _plan_events(db, context)
-    _plan_notes(db, context)
+def _build(
+    db: DbReadBase, settings: ExportSettings, progress: Progress | None
+) -> tuple[list[g7types.GedcomStructure], ExportContext]:
+    """Build the dataset, and the context that says where each part came from."""
+    context = ExportContext(db=db, xrefs=XrefMap(), settings=settings)
+    loaded = _load_records(context)
+    _allocate_xrefs(loaded, context.xrefs)
+    _plan_events(loaded, context)
+    _plan_notes(loaded, context)
 
+    total = sum(len(objects) for objects in loaded.values())
+    done = 0
     records: list[g7types.GedcomStructure] = [make_header(__version__)]
-    for handles_getter, object_getter, _, write in RECORD_KINDS:
-        for handle in _in_order(db, handles_getter, xrefs):
+    for kind, _, write in RECORD_KINDS:
+        for obj in _in_order(loaded[kind], context.xrefs):
             # Only notes are ever in this set, and notes come last, so by now
             # every note written inside another structure is known and only the
             # rest need records of their own.
-            if handle in context.written_notes:
-                continue
-            records.append(write(getattr(db, object_getter)(handle), context))
+            if obj.handle not in context.written_notes:
+                with context.writing(obj):
+                    record = write(obj, context)
+                context.origins[id(record)] = GrampsObject.of(obj)
+                records.append(record)
+            done += 1
+            if progress is not None:
+                progress(done, total)
     records.append(g7types.GedcomStructure(tag=g7const.TRLR))
 
-    if context.skipped_attributes:
-        names = sorted({str(a.get_type()) for a in context.skipped_attributes})
+    if context.missing:
+        raise MissingObjectsError(list(context.missing.values()))
+    if context.report:
         logger.warning(
-            "%s attributes were not written, having no place in the structure "
-            "holding them: %s",
-            len(context.skipped_attributes),
-            ", ".join(names),
+            "%s things were not written: %s",
+            len(context.report),
+            "; ".join(context.report.messages()[:3]),
         )
     gedcom7.generate_schema(records)
+    return records, context
+
+
+def db_to_structures(
+    db: DbReadBase,
+    settings: ExportSettings | None = None,
+    progress: Progress | None = None,
+) -> list[g7types.GedcomStructure]:
+    """Convert a Gramps database to the structures of a GEDCOM 7 dataset.
+
+    Raises :class:`MissingObjectsError` if objects reference missing ones.
+    """
+    records, _ = _build(db, settings or ExportSettings(), progress)
     return records
 
 
@@ -190,7 +289,8 @@ def export_gedcom(
     output_file: str | Path | BinaryIO,
     settings: ExportSettings | None = None,
     validate: bool = True,
-) -> None:
+    progress: Progress | None = None,
+) -> Report:
     """Export a Gramps database to a GEDCOM 7 file.
 
     Args:
@@ -200,13 +300,26 @@ def export_gedcom(
         validate: Check the dataset before writing it, and refuse to write one
             that does not conform. Turn it off to write anyway and see what a
             reader makes of it.
+        progress: Called with the number of records written so far and the
+            number there are in all.
+
+    Returns:
+        A report of what was not written.
+
+    Raises:
+        MissingObjectsError: Objects reference objects missing from the database.
+        ExportValidationError: The dataset does not conform.
     """
     settings = settings or ExportSettings()
-    records = db_to_structures(db, settings=settings)
+    records, context = _build(db, settings, progress)
     if validate:
         errors = gedcom7.validate(records)
         if errors:
-            raise gedcom7.GedcomValidationError(errors)
+            problems = [
+                ValidationProblem(error, context.origin(error.structure))
+                for error in errors
+            ]
+            raise ExportValidationError(errors, problems)
     mark = settings.byte_order_mark
     if isinstance(output_file, (str, Path)):
         with open(output_file, "wb") as handle:
@@ -218,3 +331,4 @@ def export_gedcom(
         )
     else:
         gedcom7.dump(records, output_file, byte_order_mark=mark)
+    return context.report

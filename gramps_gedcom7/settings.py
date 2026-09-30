@@ -8,6 +8,10 @@ class ImportSettings:
     head_plac_form: list[str] | None = None
     """Default place form from HEAD.PLAC.FORM, used when PLAC.FORM is absent."""
 
+    void_broken_pointers: bool = False
+    """Import a pointer to a record missing from the file as a void pointer, and
+    report it, rather than refusing the file."""
+
 
 @dataclass
 class ExportSettings:

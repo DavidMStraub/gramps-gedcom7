@@ -93,7 +93,7 @@ def _add_source_text(
 ) -> None:
     """Write the text a source itself carries, which the import keeps as a note."""
     for handle in source.get_note_list():
-        note = context.db.get_note_from_handle(handle)
+        note = context.load("note", handle)
         if note is None or int(note.get_type()) != NoteType.SOURCE_TEXT:
             continue
         if context.note_backlinks.get(handle, 0) <= 1:

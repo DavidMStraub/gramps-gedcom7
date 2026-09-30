@@ -113,7 +113,7 @@ def set_change_date(
     assert isinstance(
         date_structure.value, g7types.DateExact
     ), "Expected date to be a DateExact object"
-    time_structure = g7util.get_first_child_with_tag(change_structure, g7const.TIME)
+    time_structure = g7util.get_first_child_with_tag(date_structure, g7const.TIME)
     if time_structure:
         assert isinstance(
             time_structure.value, g7types.Time
@@ -232,10 +232,39 @@ def gedcom_date_to_numeric_year_month_day(
     return {"year": year, "month": month, "day": day}
 
 
+def structure_path(structure: g7types.GedcomStructure) -> str:
+    """Name a structure by the tags leading down to it, e.g. "@I1@ INDI > BIRT"."""
+    parts = []
+    node: g7types.GedcomStructure | None = structure
+    while node is not None:
+        parts.append(f"{node.xref} {node.tag}" if node.xref else node.tag)
+        node = node.parent
+    return " > ".join(reversed(parts))
+
+
+class MixedCalendarsError(ValueError):
+    """Raised for a date whose two ends are in different calendars."""
+
+
+def _one_calendar(first: g7types.Date, second: g7types.Date) -> str:
+    """Name the calendar both ends of a date are in, where it is one calendar.
+
+    A Gramps date has one calendar for both ends, so one whose ends are in two
+    cannot be imported as a date. A date naming no calendar is Gregorian.
+    """
+    calendars = {first.calendar or "GREGORIAN", second.calendar or "GREGORIAN"}
+    if len(calendars) > 1:
+        raise MixedCalendarsError("the two ends of the date are in different calendars")
+    return calendars.pop()
+
+
 def gedcom_date_value_to_gramps_date(
     date_value: g7types.DateValue,
 ) -> Date:
-    """Convert a GEDCOM date value to a Gramps date."""
+    """Convert a GEDCOM date value to a Gramps date.
+
+    Raises :class:`MixedCalendarsError` if its two ends are in different calendars.
+    """
     date = Date()
     if isinstance(date_value, g7types.Date):
         date.set_yr_mon_day(**gedcom_date_to_numeric_year_month_day(date_value))
@@ -249,15 +278,9 @@ def gedcom_date_value_to_gramps_date(
                 remove_stop_date=False,
             )
             date.set2_yr_mon_day(**gedcom_date_to_numeric_year_month_day(date_value.to))
-            if date_value.from_.calendar and date_value.to.calendar:
-                if date_value.from_.calendar == date_value.to.calendar:
-                    if date_value.from_.calendar in CALENDAR_MAP:
-                        date.set_calendar(CALENDAR_MAP[date_value.from_.calendar])
-                else:
-                    # TODO handle mixed calendars
-                    raise NotImplementedError(
-                        "Mixed calendars in date period are not yet implemented"
-                    )
+            calendar = _one_calendar(date_value.from_, date_value.to)
+            if calendar in CALENDAR_MAP:
+                date.set_calendar(CALENDAR_MAP[calendar])
         elif date_value.from_:
             date.set_modifier(Date.MOD_FROM)
             date.set_yr_mon_day(
@@ -299,15 +322,9 @@ def gedcom_date_value_to_gramps_date(
             date.set2_yr_mon_day(
                 **gedcom_date_to_numeric_year_month_day(date_value.end)
             )
-            if date_value.start.calendar and date_value.end.calendar:
-                if date_value.start.calendar == date_value.end.calendar:
-                    if date_value.start.calendar in CALENDAR_MAP:
-                        date.set_calendar(CALENDAR_MAP[date_value.start.calendar])
-                else:
-                    # TODO handle mixed calendars
-                    raise NotImplementedError(
-                        "Mixed calendars in date range are not yet implemented"
-                    )
+            calendar = _one_calendar(date_value.start, date_value.end)
+            if calendar in CALENDAR_MAP:
+                date.set_calendar(CALENDAR_MAP[calendar])
         elif date_value.start:
             date.set_modifier(Date.MOD_AFTER)
             date.set_yr_mon_day(

@@ -241,5 +241,5 @@ def test_invalid_person_reference():
     ]
     family = get_family(children)
 
-    with pytest.raises(ValueError, match="Person @NONEXISTENT@ not found"):
+    with pytest.raises(ValueError, match="@F1@ FAM > HUSB points at missing @NONEXISTENT@"):
         import_to_memory([family])

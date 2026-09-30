@@ -10,6 +10,7 @@ from gedcom7 import grammar as g7grammar
 from gedcom7 import types as g7types
 from gramps.gen.lib import Event, EventType, Place, PlaceType
 
+from ..report import GrampsObject
 from . import util
 from .citation import add_citations
 from .multimedia import add_media_refs
@@ -17,8 +18,6 @@ from .note import add_notes
 from .util import ROLE_ENUMS, add
 
 if TYPE_CHECKING:
-    from gramps.gen.db import DbReadBase
-
     from .exporter import ExportContext
 
 # Written under an individual record.
@@ -132,7 +131,7 @@ def add_coordinate(
 
 
 def place_jurisdictions(
-    place: Place, db: DbReadBase
+    place: Place, context: ExportContext
 ) -> tuple[list[str], list[str]]:
     """List a place and the places enclosing it, and what each one is.
 
@@ -151,24 +150,24 @@ def place_jurisdictions(
         place_type = current.get_type()
         forms.append(place_type.xml_str() if int(place_type) != PlaceType.UNKNOWN else "")
         placerefs = current.get_placeref_list()
-        current = (
-            db.get_place_from_handle(placerefs[0].ref)
-            if placerefs and placerefs[0].ref
-            else None
-        )
+        if not (placerefs and placerefs[0].ref):
+            break
+        with context.writing(current):
+            current = context.load("place", placerefs[0].ref)
     return names, forms
 
 
 def add_place(
-    parent: g7types.GedcomStructure, place: Place, db: DbReadBase
+    parent: g7types.GedcomStructure, place: Place, context: ExportContext
 ) -> g7types.GedcomStructure:
     """Write the place an event happened at.
 
     A place whose name is empty is still written, with an empty payload, since
     Gramps records that the event had a place and what else is known about it.
     """
-    names, forms = place_jurisdictions(place, db)
+    names, forms = place_jurisdictions(place, context)
     structure = add(parent, g7const.PLAC, names)
+    context.origins[id(structure)] = GrampsObject.of(place)
     if any(forms):
         add(structure, g7const.FORM, forms)
     if place.get_latitude() and place.get_longitude():
@@ -197,6 +196,20 @@ def add_event(
     """
     tag, event_type = event_tag(event, tags)
     structure = add(parent, tag)
+    with context.writing(event, structure):
+        _add_event_details(structure, event, event_type, tag, context, owner)
+    return structure
+
+
+def _add_event_details(
+    structure: g7types.GedcomStructure,
+    event: Event,
+    event_type: str | None,
+    tag: str,
+    context: ExportContext,
+    owner: str,
+) -> None:
+    """Write what is known about an event beneath its structure."""
     if event_type is not None:
         add(structure, g7const.TYPE, event_type)
     description = event.get_description()
@@ -210,9 +223,9 @@ def add_event(
     if date is not None:
         add_time(date, event)
     if event.get_place_handle():
-        place = context.db.get_place_from_handle(event.get_place_handle())
+        place = context.load("place", event.get_place_handle())
         if place is not None:
-            add_place(structure, place, context.db)
+            add_place(structure, place, context)
     if description:
         add(structure, g7const.NOTE, description)
     util.add_attributes(structure, event, context)
@@ -228,4 +241,3 @@ def add_event(
         add(associate, g7const.ROLE, enum or "OTHER")
         if enum is None:
             add(associate.children[-1], g7const.PHRASE, role.xml_str() or str(role))
-    return structure

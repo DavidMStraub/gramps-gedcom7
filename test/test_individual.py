@@ -433,7 +433,7 @@ def test_invalid_family_reference():
     )
     individual = get_individual([famc_ref])
 
-    with pytest.raises(ValueError, match="Family @NONEXISTENT@ not found"):
+    with pytest.raises(ValueError, match="@I1@ INDI > FAMC points at missing @NONEXISTENT@"):
         import_to_memory([individual])
 
 

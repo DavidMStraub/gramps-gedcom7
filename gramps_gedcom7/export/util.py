@@ -16,6 +16,8 @@ from gramps.gen.lib import (
     SrcAttribute,
 )
 
+from ..report import GrampsObject
+
 if TYPE_CHECKING:
     from .exporter import ExportContext
 
@@ -137,7 +139,7 @@ def add_phrase_from_notes(
     """
     texts = []
     for handle in obj.get_note_list():  # type: ignore[attr-defined]
-        note = context.db.get_note_from_handle(handle)
+        note = context.load("note", handle)
         if note is not None and note.get():
             texts.append(note.get())
             if context.note_backlinks.get(handle, 0) <= 1:
@@ -334,7 +336,7 @@ def _attribute_structure(
 def add_attributes(
     parent: g7types.GedcomStructure, obj: object, context: ExportContext
 ) -> None:
-    """Write an object's attributes, recording those with nowhere to go.
+    """Write an object's attributes, reporting those with nowhere to go.
 
     An attribute is written only where its superstructure may contain it, so
     that what is left over is reported rather than making the file unreadable.
@@ -350,7 +352,13 @@ def add_attributes(
             continue
         tag, value, identifier_type = placed
         if not allows(parent, tag):
-            context.skipped_attributes.append(attribute)
+            owner = GrampsObject.of(obj)
+            context.report.add(
+                str(owner),
+                f"attribute {attribute.get_type()} not written, GEDCOM having "
+                f"no {tag} under {parent.tag}",
+                owner,
+            )
             continue
         structure = add(parent, tag)
         structure.text = value

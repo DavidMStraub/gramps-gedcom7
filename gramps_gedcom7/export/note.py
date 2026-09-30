@@ -8,6 +8,7 @@ from gedcom7 import const as g7const
 from gedcom7 import types as g7types
 from gramps.gen.lib import Note, NoteType
 
+from ..report import GrampsObject
 from . import util
 from .util import add
 
@@ -59,6 +60,7 @@ def add_note(
         structure.text = note.get()
         if int(note.get_type()) == NoteType.HTML_CODE:
             add(structure, g7const.MIME, HTML_MIME)
+        context.origins[id(structure)] = GrampsObject.of(note)
         context.written_notes.add(note.handle)
         return structure
     pointer = context.xrefs.get(note.handle)
@@ -72,6 +74,6 @@ def add_notes(
 ) -> None:
     """Write the notes an object carries, where the structure allows them."""
     for handle in obj.get_note_list():  # type: ignore[attr-defined]
-        note = context.db.get_note_from_handle(handle)
+        note = context.load("note", handle)
         if note is not None:
             add_note(parent, note, context)

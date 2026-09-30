@@ -54,6 +54,15 @@ def add_citation(
     structure = add(
         parent, g7const.SOUR, pointer=context.xrefs.pointer(citation.source_handle)
     )
+    with context.writing(citation, structure):
+        _add_citation_details(structure, citation, context)
+    return structure
+
+
+def _add_citation_details(
+    structure: g7types.GedcomStructure, citation: Citation, context: ExportContext
+) -> None:
+    """Write what a citation says beneath the pointer to its source."""
     if citation.get_page():
         add(structure, g7const.PAGE, citation.get_page())
 
@@ -78,7 +87,6 @@ def add_citation(
 
     add_notes(structure, citation, context)
     add_media_refs(structure, citation, context)
-    return structure
 
 
 def add_citations(
@@ -86,6 +94,6 @@ def add_citations(
 ) -> None:
     """Write every citation an object cites."""
     for handle in obj.get_citation_list():  # type: ignore[attr-defined]
-        citation = context.db.get_citation_from_handle(handle)
+        citation = context.load("citation", handle)
         if citation is not None:
             add_citation(parent, citation, context)
