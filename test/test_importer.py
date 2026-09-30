@@ -606,8 +606,9 @@ def test_importer_maximal70():
 
     name: Name = person.alternate_names[0]
     assert name.first_name == "Married Name"
-    assert name.type.value == NameType.CUSTOM
-    assert name.type.string == "MARRIED"
+    # MARRIED is one of the values in g7:enumset-NAME-TYPE that Gramps has a
+    # name type of its own for, unlike MAIDEN and PROFESSIONAL.
+    assert name.type.value == NameType.MARRIED
 
     name: Name = person.alternate_names[1]
     assert name.first_name == "Professional Name"

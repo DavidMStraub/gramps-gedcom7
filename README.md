@@ -1,10 +1,12 @@
 # gramps-gedcom7
 
-A GEDCOM 7 import library for Gramps.
+A GEDCOM 7 import and export library for Gramps.
 
 ## Project Status
 
 The library provides comprehensive GEDCOM 7 import functionality. The implementation covers the vast majority of features and has been successfully tested with real-world files. While suitable for production use, users should verify results as with any conversion tool.
+
+Export is newer than import. Every test file survives a round trip unchanged, but the researcher recorded in the database is not yet written.
 
 ## Installation
 
@@ -26,6 +28,26 @@ python -m gramps_gedcom7.gedcom2xml path/to/input.ged path/to/output.gramps
 ```
 
 Instead of an output file name, you can also specify `-` to write the output to standard output.
+
+## Usage as a library
+
+```python
+from gramps.gen.db.utils import make_database
+from gramps_gedcom7 import import_gedcom, export_gedcom
+
+db = make_database("sqlite")
+db.load("/path/to/grampsdb/<id>")
+
+import_gedcom("input.ged", db)
+export_gedcom(db, "output.ged")
+```
+
+`db` is a Gramps database: `DbWriteBase` to import into, `DbReadBase` to export
+from.
+
+`export_gedcom` validates the dataset before writing and raises
+`gedcom7.GedcomValidationError` if it does not conform; pass `validate=False` to
+write anyway.
 
 ## Usage as Gramps plugin
 
