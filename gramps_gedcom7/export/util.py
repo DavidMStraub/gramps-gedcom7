@@ -309,10 +309,11 @@ def _attribute_structure(
     """
     attribute_type = attribute.get_type()
     value = attribute.get_value() or ""
+    # The untranslated name, which a standard type such as Time shares.
+    if attribute_type.xml_str() in ATTRIBUTES_WRITTEN_ELSEWHERE:
+        return None
     if attribute_type.is_custom():
         name = attribute_type.string
-        if name in ATTRIBUTES_WRITTEN_ELSEWHERE:
-            return None
         if name in CUSTOM_ATTRIBUTE_TAGS:
             return CUSTOM_ATTRIBUTE_TAGS[name], value, None
         if name == "UID":

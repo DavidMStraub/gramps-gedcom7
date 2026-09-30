@@ -35,7 +35,7 @@ def _attribute(citation: Citation, name: str) -> str | None:
     """Get the value of a citation attribute the import may have left."""
     for attribute in citation.get_attribute_list():
         attribute_type = attribute.get_type()
-        if attribute_type.is_custom() and attribute_type.string == name:
+        if attribute_type.xml_str() == name:
             return attribute.get_value()
     return None
 

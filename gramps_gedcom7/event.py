@@ -102,7 +102,10 @@ def handle_event(
                 assert isinstance(
                     child.value, str
                 ), "Expected TYPE value to be a string"
-                event.set_type(EventType(child.value))
+                # The untranslated name, so the result is the same in any locale.
+                event_type = EventType()
+                event_type.set_from_xml_str(child.value)
+                event.set_type(event_type)
         elif child.tag == g7const.RESN:
             util.set_privacy_on_object(resn_structure=child, obj=event)
         elif child.tag == g7const.PHON:

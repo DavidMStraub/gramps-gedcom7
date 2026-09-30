@@ -44,7 +44,7 @@ def test_submitter_to_repository():
             break
     
     assert subm2_repo is not None
-    assert subm2_repo.get_type().string == "GEDCOM data"
+    assert subm2_repo.get_type().xml_str() == "GEDCOM data"
     
     # Check address
     addresses = subm2_repo.get_address_list()

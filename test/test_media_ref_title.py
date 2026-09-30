@@ -20,7 +20,7 @@ def test_media_ref_title():
     media_ref1 = person.media_list[0]
     assert len(media_ref1.attribute_list) == 1
     attr = media_ref1.attribute_list[0]
-    assert attr.get_type().string == "OBJE:TITL"
+    assert attr.get_type().xml_str() == "OBJE:TITL"
     assert attr.get_value() == "Custom Title for This Reference"
     
     # Second media ref has no title
