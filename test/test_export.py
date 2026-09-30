@@ -669,13 +669,19 @@ def test_citation_points_at_the_media_it_shows():
 
 
 @pytest.mark.parametrize("time", ["14:30:00", "09:05:07.25Z"])
-def test_time_the_import_kept_is_written_beside_the_date(time):
+@pytest.mark.parametrize(
+    "time_type",
+    # Which of the two the import makes depends on the locale.
+    [AttributeType.TIME, (AttributeType.CUSTOM, "Time")],
+    ids=["standard", "custom"],
+)
+def test_time_the_import_kept_is_written_beside_the_date(time, time_type):
     person = make_person()
     event = make_event()
     event.set_date_object(Date())
     event.get_date_object().set_yr_mon_day(1900, 5, 1)
     attribute = Attribute()
-    attribute.set_type(AttributeType("Time"))
+    attribute.set_type(AttributeType(time_type))
     attribute.set_value(time)
     event.add_attribute(attribute)
     event_ref = EventRef()

@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from gedcom7 import const as g7const
 from gedcom7 import grammar as g7grammar
 from gedcom7 import types as g7types
-from gramps.gen.lib import Event, EventType, Place, PlaceType
+from gramps.gen.lib import AttributeType, Event, EventType, Place, PlaceType
 
 from . import util
 from .citation import add_citations
@@ -73,7 +73,11 @@ def add_time(date: g7types.GedcomStructure, event: Event) -> None:
     """Write the time the import kept as an attribute beside the event's date."""
     for attribute in event.get_attribute_list():
         attribute_type = attribute.get_type()
-        if not (attribute_type.is_custom() and attribute_type.string == TIME_ATTRIBUTE):
+        # Gramps reads the name as its own Time type where the locale spells it so.
+        if attribute_type.is_custom():
+            if attribute_type.string != TIME_ATTRIBUTE:
+                continue
+        elif int(attribute_type) != AttributeType.TIME:
             continue
         match = _TIME.fullmatch((attribute.get_value() or "").strip())
         if match is None:
