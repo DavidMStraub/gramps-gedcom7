@@ -595,6 +595,27 @@ def test_note_on_a_child_reference_is_written_as_its_phrase():
     assert records_by_tag(records, g7const.SNOTE) == []
 
 
+@pytest.mark.parametrize("alias_id", ["I0000", "I0002"])
+def test_note_an_alias_shares_keeps_its_record(alias_id):
+    """The phrase carries the text, but others still point at the note's record."""
+    person = make_person(gramps_id="I0001", handle="p1")
+    person.add_note("n1")
+    alias_holder = make_person(gramps_id=alias_id, handle="p2", given="Jack")
+    alias = PersonRef()
+    alias.ref = "p1"
+    alias.set_relation("ALIA")
+    alias.add_note("n1")
+    alias_holder.add_person_ref(alias)
+    note = make_note(text="shared", note_type=NoteType.PERSON)
+    records = db_to_structures(db_from_objects(person, alias_holder, note))
+    (shared,) = records_by_tag(records, g7const.SNOTE)
+    by_xref = {record.xref: record for record in records_by_tag(records, g7const.INDI)}
+    assert find(by_xref["@I0001@"], g7const.SNOTE).pointer == shared.xref
+    alia = find(by_xref[f"@{alias_id}@"], g7const.ALIA)
+    assert find(alia, g7const.PHRASE).text == "shared"
+    assert gedcom7.validate(records) == []
+
+
 def test_source_text_is_written_as_the_text_of_the_source():
     source = make_source()
     source.add_note("n1")

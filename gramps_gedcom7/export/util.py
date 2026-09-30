@@ -132,14 +132,16 @@ def add_phrase_from_notes(
     A pointer such as ALIA or CHIL has nowhere to carry a note, which is why the
     import reads the phrase beside it into one. Only one phrase may stand there,
     so several notes are joined into it: writing the first and leaving the rest
-    would make them records that nothing points at.
+    would make them records that nothing points at. A note shared with other
+    objects still gets its own record, which they point at.
     """
     texts = []
     for handle in obj.get_note_list():  # type: ignore[attr-defined]
         note = context.db.get_note_from_handle(handle)
         if note is not None and note.get():
             texts.append(note.get())
-            context.written_notes.add(handle)
+            if context.note_backlinks.get(handle, 0) <= 1:
+                context.written_notes.add(handle)
     if texts:
         add(parent, g7const.PHRASE, "\n\n".join(texts))
 
