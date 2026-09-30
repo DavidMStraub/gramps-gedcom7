@@ -73,7 +73,11 @@ def add_citation(
     if quality is not None:
         add(structure, g7const.QUAY, quality)
 
+    # Imported here, the media writer itself citing sources.
+    from .multimedia import add_media_refs
+
     add_notes(structure, citation, context)
+    add_media_refs(structure, citation, context)
     return structure
 
 

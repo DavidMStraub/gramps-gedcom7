@@ -23,6 +23,7 @@ from gramps.gen.lib import (
     EventType,
     Family,
     Media,
+    MediaRef,
     Name,
     NameType,
     Note,
@@ -643,6 +644,52 @@ def test_citation_is_written_where_it_is_cited():
     assert find(cited, g7const.PAGE).text == "page 42"
     assert find(cited, g7const.QUAY).text == "3"
     assert gedcom7.validate(records) == []
+
+
+def test_citation_points_at_the_media_it_shows():
+    person = make_person()
+    source = make_source()
+    media = Media()
+    media.handle = "m1"
+    media.gramps_id = "O0001"
+    media.set_path("/scans/page42.jpg")
+    citation = Citation()
+    citation.handle = "c1"
+    citation.gramps_id = "C0001"
+    citation.set_reference_handle("s1")
+    media_ref = MediaRef()
+    media_ref.ref = "m1"
+    citation.add_media_reference(media_ref)
+    person.add_citation("c1")
+    records = db_to_structures(db_from_objects(person, source, media, citation))
+    (individual,) = records_by_tag(records, g7const.INDI)
+    cited = find(individual, g7const.SOUR)
+    assert find(cited, g7const.OBJE).pointer == "@O0001@"
+    assert gedcom7.validate(records) == []
+
+
+@pytest.mark.parametrize("time", ["14:30:00", "09:05:07.25Z"])
+def test_time_the_import_kept_is_written_beside_the_date(time):
+    person = make_person()
+    event = make_event()
+    event.set_date_object(Date())
+    event.get_date_object().set_yr_mon_day(1900, 5, 1)
+    attribute = Attribute()
+    attribute.set_type(AttributeType("Time"))
+    attribute.set_value(time)
+    event.add_attribute(attribute)
+    event_ref = EventRef()
+    event_ref.ref = "e1"
+    person.add_event_ref(event_ref)
+    records = db_to_structures(db_from_objects(person, event))
+    (individual,) = records_by_tag(records, g7const.INDI)
+    birth = find(individual, g7const.BIRT)
+    assert find(find(birth, g7const.DATE), g7const.TIME).text == time
+    assert find(birth, g7const.FACT) is None
+    assert gedcom7.validate(records) == []
+    db = reimport(records)
+    (event,) = [db.get_event_from_handle(h) for h in db.get_event_handles()]
+    assert [a.get_value() for a in event.get_attribute_list()] == [time]
 
 
 @pytest.mark.parametrize(

@@ -64,6 +64,34 @@ FAMILY_EVENT_TAGS = {
 _LATITUDE = re.compile(g7grammar.latitude)
 _LONGITUDE = re.compile(g7grammar.longitude)
 
+# The import keeps an event's time as an attribute, spelled HH:MM:SS[.frac][Z].
+TIME_ATTRIBUTE = "Time"
+_TIME = re.compile(r"(\d{1,2}):(\d{2})(?::(\d{2})(?:\.(\d+))?)?(Z)?")
+
+
+def add_time(date: g7types.GedcomStructure, event: Event) -> None:
+    """Write the time the import kept as an attribute beside the event's date."""
+    for attribute in event.get_attribute_list():
+        attribute_type = attribute.get_type()
+        if not (attribute_type.is_custom() and attribute_type.string == TIME_ATTRIBUTE):
+            continue
+        match = _TIME.fullmatch((attribute.get_value() or "").strip())
+        if match is None:
+            continue
+        hour, minute, second, fraction, tz = match.groups()
+        add(
+            date,
+            g7const.TIME,
+            g7types.Time(
+                hour=int(hour),
+                minute=int(minute),
+                second=int(second) if second else None,
+                fraction=fraction,
+                tz="Z" if tz else None,
+            ),
+        )
+        return
+
 
 def event_tag(event: Event, tags: dict[int, str]) -> tuple[str, str | None]:
     """Name the tag an event is written as, and the type to write beneath it.
@@ -178,7 +206,9 @@ def add_event(
         structure.text = description
         description = ""
     util.add_privacy(structure, event.get_privacy())
-    util.add_date(structure, event.get_date_object())
+    date = util.add_date(structure, event.get_date_object())
+    if date is not None:
+        add_time(date, event)
     if event.get_place_handle():
         place = context.db.get_place_from_handle(event.get_place_handle())
         if place is not None:
