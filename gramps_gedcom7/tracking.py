@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Iterator
 from types import TracebackType
+from typing import Any
 
 from gedcom7 import const as g7const
 from gedcom7.types import GedcomStructure
@@ -39,7 +40,7 @@ class ReadTracker:
         def tracked(name: str) -> property:
             # A property takes precedence over the attribute it shadows, so only
             # reading these costs anything more than it did.
-            slot = GedcomStructure.__dict__.get(name)
+            slot: Any = GedcomStructure.__dict__.get(name)
             if hasattr(slot, "__set__"):
 
                 def get(structure: GedcomStructure):

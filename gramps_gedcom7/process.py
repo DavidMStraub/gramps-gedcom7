@@ -55,7 +55,7 @@ def _check_pointers(
 ) -> None:
     """Refuse pointers to missing records, or make them void and report them."""
     broken = [
-        structure
+        (structure, structure.pointer)
         for structure in structures
         if structure.pointer
         and structure.pointer != g7const.VOIDPTR
@@ -63,12 +63,12 @@ def _check_pointers(
     ]
     if broken and not settings.void_broken_pointers:
         raise BrokenPointersError(
-            [BrokenPointer(structure_path(s), s.pointer) for s in broken]
+            [BrokenPointer(structure_path(s), pointer) for s, pointer in broken]
         )
-    for structure in broken:
+    for structure, pointer in broken:
         report.add(
             structure_path(structure),
-            f"points at missing {structure.pointer}, so the link was left out",
+            f"points at missing {pointer}, so the link was left out",
         )
         structure.pointer = g7const.VOIDPTR
 
