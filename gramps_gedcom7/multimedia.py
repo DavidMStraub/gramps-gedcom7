@@ -32,7 +32,7 @@ def handle_multimedia(
     for child in structure.children:
         if child.tag == g7const.RESN:
             util.set_privacy_on_object(resn_structure=child, obj=media)
-        elif child.tag == g7const.SNOTE:
+        elif child.tag == g7const.SNOTE and child.pointer != g7const.VOIDPTR:
             if not child.pointer:
                 raise ValueError("Shared note reference without pointer")
             try:

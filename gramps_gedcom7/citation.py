@@ -49,7 +49,7 @@ def handle_citation(
                 citation.set_confidence_level(
                     CONFIDENCE_MAP.get(child.value, Citation.CONF_NORMAL)
                 )
-        elif child.tag == g7const.SNOTE:
+        elif child.tag == g7const.SNOTE and child.pointer != g7const.VOIDPTR:
             if not child.pointer:
                 raise ValueError("Shared note reference without pointer")
             try:

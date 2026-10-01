@@ -170,3 +170,31 @@ def test_progress_completes_when_nothing_is_imported():
         progress=lambda done, total: calls.append((done, total)),
     )
     assert calls[-1] == (4, 4)
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        "0 @S1@ SOUR\n1 REPO @VOID@\n",
+        "0 @S1@ SOUR\n1 SNOTE @VOID@\n",
+        "0 @I1@ INDI\n1 SOUR @VOID@\n2 SNOTE @VOID@\n",
+        "0 @R1@ REPO\n1 NAME R\n1 SNOTE @VOID@\n",
+        "0 @O1@ OBJE\n1 FILE a.jpg\n2 FORM image/jpeg\n1 SNOTE @VOID@\n",
+    ],
+)
+def test_void_pointer_is_a_link_left_out(body):
+    db, report = import_text(body)
+    assert len(report) == 0
+
+
+def test_broken_pointer_to_repository_can_be_left_out():
+    db, report = import_text(
+        "0 @S1@ SOUR\n1 REPO @R9@\n2 CALN 123\n",
+        settings=ImportSettings(void_broken_pointers=True),
+    )
+    (source,) = db.iter_sources()
+    assert source.get_reporef_list() == []
+    assert report.messages() == [
+        "@S1@ SOUR > REPO: points at missing @R9@, so the link was left out",
+        "SOUR > REPO > CALN: not imported (first in @S1@)",
+    ]

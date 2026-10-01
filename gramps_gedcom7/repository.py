@@ -31,7 +31,7 @@ def handle_repository(
             if child.value is not None:
                 assert isinstance(child.value, str), "Expected value to be a string"
                 repository.set_name(child.value)
-        elif child.tag == g7const.SNOTE:
+        elif child.tag == g7const.SNOTE and child.pointer != g7const.VOIDPTR:
             if not child.pointer:
                 raise ValueError("Shared note reference without pointer")
             try:

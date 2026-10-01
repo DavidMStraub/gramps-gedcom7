@@ -83,7 +83,7 @@ def handle_source(
             note.handle = util.make_handle()
             source.add_note(note.handle)
             objects.append(note)
-        elif child.tag == g7const.REPO:
+        elif child.tag == g7const.REPO and child.pointer != g7const.VOIDPTR:
             repo_ref = RepoRef()
             if not child.pointer:
                 raise ValueError("Repository reference without pointer")
@@ -126,7 +126,7 @@ def handle_source(
 
                     repo_ref.set_media_type(gramps_media_type)
             source.add_repo_reference(repo_ref)
-        elif child.tag == g7const.SNOTE:
+        elif child.tag == g7const.SNOTE and child.pointer != g7const.VOIDPTR:
             if not child.pointer:
                 raise ValueError("Shared note reference without pointer")
             try:

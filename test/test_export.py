@@ -1123,3 +1123,11 @@ def test_filtered_out_record_is_written_as_void():
     records = db_to_structures(db)
     (fam,) = records_by_tag(records, g7const.FAM)
     assert find(fam, g7const.HUSB).pointer == g7const.VOIDPTR
+
+
+def test_missing_objects_sharing_a_handle_are_both_reported():
+    person = person_with_missing("event")
+    person.add_note("missing")
+    with pytest.raises(MissingObjectsError) as caught:
+        export_gedcom(db_from_objects(person), io.BytesIO())
+    assert sorted(m.kind for m in caught.value.missing) == ["event", "note"]

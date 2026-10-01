@@ -58,7 +58,7 @@ class ExportContext:
     report: Report = field(default_factory=Report)
     # The Gramps object each structure was written from, by the structure's id.
     origins: dict[int, GrampsObject] = field(default_factory=dict)
-    missing: dict[tuple[str, str], MissingReference] = field(default_factory=dict)
+    missing: dict[tuple[str, str, str], MissingReference] = field(default_factory=dict)
     current: GrampsObject | None = None
 
     def load(self, kind: str, handle: str) -> Any:
@@ -111,7 +111,7 @@ class ExportContext:
         return self.xref(kind, handle) or g7const.VOIDPTR
 
     def _add_missing(self, referrer: GrampsObject | None, kind: str, handle: str) -> None:
-        key = (referrer.handle if referrer else "", handle)
+        key = (referrer.handle if referrer else "", kind, handle)
         self.missing.setdefault(key, MissingReference(referrer, kind, handle))
 
     @contextmanager
