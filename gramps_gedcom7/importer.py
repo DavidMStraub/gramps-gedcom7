@@ -9,21 +9,32 @@ from pathlib import Path
 from typing import TextIO, BinaryIO
 
 from . import process
+from .report import Progress, Report
 from .settings import ImportSettings
 
 
 def import_gedcom(
     input_file: str | Path | TextIO | BinaryIO,
     db: DbWriteBase,
-    settings: ImportSettings = ImportSettings(),
-) -> None:
+    settings: ImportSettings | None = None,
+    progress: Progress | None = None,
+) -> Report:
     """Import a GEDCOM file into a Gramps database.
 
     Args:
 
         input_file: The GEDCOM file to import. This can be a string, Path object, or file-like object.
         db: The Gramps database to import the GEDCOM file into.
+        settings: Import settings controlling how GEDCOM data is imported.
+        progress: Called with how far the import has got, and how far it goes.
+
+    Returns:
+        A report of what was not imported.
+
+    Raises:
+        BrokenPointersError: Pointers point at records missing from the file.
     """
+    settings = settings or ImportSettings()
     # Check if input_file is a string or Path object
     if isinstance(input_file, (str, Path)):
         try:
@@ -57,4 +68,6 @@ def import_gedcom(
     except gedcom7.GedcomParseError as e:
         source = f"'{input_file}'" if isinstance(input_file, (str, Path)) else "input"
         raise ValueError(f"{source} is not a valid GEDCOM 7 file: {e}") from e
-    process.process_gedcom_structures(gedcom_structures, db, settings=settings)
+    return process.process_gedcom_structures(
+        gedcom_structures, db, settings=settings, progress=progress
+    )

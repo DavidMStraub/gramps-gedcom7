@@ -61,7 +61,7 @@ def add_media_refs(
     if not util.allows(parent, g7const.OBJE):
         return
     for media_ref in obj.get_media_list():  # type: ignore[attr-defined]
-        pointer = context.xrefs.get(media_ref.ref)
+        pointer = context.xref("media", media_ref.ref)
         if pointer is None:
             continue
         reference = add(parent, g7const.OBJE, pointer=pointer)

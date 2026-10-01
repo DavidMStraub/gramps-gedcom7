@@ -45,9 +45,16 @@ export_gedcom(db, "output.ged")
 `db` is a Gramps database: `DbWriteBase` to import into, `DbReadBase` to export
 from.
 
-`export_gedcom` validates the dataset before writing and raises
-`gedcom7.GedcomValidationError` if it does not conform; pass `validate=False` to
-write anyway.
+Both return a `Report` of what was left out; `report.messages()` lists it as
+text. Both take `progress`, a callable given how much is done and the total.
+
+`import_gedcom` raises `BrokenPointersError` for pointers to records missing from
+the file; `ImportSettings(void_broken_pointers=True)` imports it anyway.
+
+`export_gedcom` raises `MissingObjectsError` for references to objects missing
+from the database. It validates the dataset before writing and raises
+`ExportValidationError` if it does not conform; pass `validate=False` to write
+anyway.
 
 ## Usage as Gramps plugin
 

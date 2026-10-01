@@ -11,6 +11,7 @@ import gedcom7
 import pytest
 from gedcom7 import const as g7const
 from gramps.gen.db.utils import make_database
+from gramps.gen.proxy import PrivateProxyDb
 from gramps.gen.lib import (
     Address,
     Attribute,
@@ -30,6 +31,8 @@ from gramps.gen.lib import (
     NoteType,
     Person,
     PersonRef,
+    Place,
+    PlaceRef,
     RepoRef,
     Repository,
     RepositoryType,
@@ -41,6 +44,7 @@ from gramps.gen.lib import (
 from gramps_gedcom7 import process
 from gramps_gedcom7.export import db_to_structures, export_gedcom
 from gramps_gedcom7.export import util as export_util
+from gramps_gedcom7.export.errors import ExportValidationError, MissingObjectsError
 from gramps_gedcom7.export.xrefs import XrefMap
 from gramps_gedcom7.settings import ExportSettings
 from gramps_gedcom7.importer import import_gedcom
@@ -275,10 +279,106 @@ def test_attribute_with_nowhere_to_go_is_left_out():
     event_ref = EventRef()
     event_ref.ref = "e1"
     person.add_event_ref(event_ref)
-    records = db_to_structures(db_from_objects(person, event))
+    db = db_from_objects(person, event)
+    records = db_to_structures(db)
     assert find(find(records_by_tag(records, g7const.INDI)[0], g7const.BIRT),
                 g7const.CAST) is None
     assert gedcom7.validate(records) == []
+
+    (entry,) = export_gedcom(db, io.BytesIO())
+    assert entry.gramps_object.kind == "Event"
+    assert entry.gramps_object.gramps_id == "E0001"
+    assert str(entry).startswith("Event E0001: attribute ")
+
+
+def person_with_missing(kind):
+    """A person referencing an object of this kind that is not in the database."""
+    person = make_person(gramps_id="I0042")
+    if kind == "event":
+        event_ref = EventRef()
+        event_ref.ref = "missing"
+        person.add_event_ref(event_ref)
+    elif kind == "note":
+        person.add_note("missing")
+    elif kind == "citation":
+        person.add_citation("missing")
+    return person
+
+
+@pytest.mark.parametrize("kind", ["event", "note", "citation"])
+@pytest.mark.parametrize("proxy", [None, PrivateProxyDb])
+def test_missing_object_names_what_references_it(kind, proxy):
+    db = db_from_objects(person_with_missing(kind))
+    with pytest.raises(MissingObjectsError) as caught:
+        export_gedcom(proxy(db) if proxy else db, io.BytesIO())
+    (missing,) = caught.value.missing
+    assert str(missing) == f"Person I0042 references a missing {kind}"
+    assert missing.handle == "missing"
+
+
+def test_missing_objects_are_reported_together():
+    event = make_event()
+    event.set_place_handle("missing place")
+    event_ref = EventRef()
+    event_ref.ref = "e1"
+    person = person_with_missing("note")
+    person.add_event_ref(event_ref)
+    with pytest.raises(MissingObjectsError) as caught:
+        export_gedcom(db_from_objects(person, event), io.BytesIO())
+    assert sorted(map(str, caught.value.missing)) == [
+        "Event E0001 references a missing place",
+        "Person I0042 references a missing note",
+    ]
+
+
+def test_missing_enclosing_place_names_the_place():
+    place = Place()
+    place.handle = "pl1"
+    place.gramps_id = "P0001"
+    place.get_name().set_value("Springfield")
+    enclosed_by = PlaceRef()
+    enclosed_by.ref = "missing"
+    place.add_placeref(enclosed_by)
+    event = make_event()
+    event.set_place_handle("pl1")
+    event_ref = EventRef()
+    event_ref.ref = "e1"
+    person = make_person()
+    person.add_event_ref(event_ref)
+    with pytest.raises(MissingObjectsError) as caught:
+        db_to_structures(db_from_objects(person, event, place))
+    assert list(map(str, caught.value.missing)) == [
+        "Place P0001 references a missing place"
+    ]
+
+
+def test_validation_error_names_the_gramps_object():
+    """A value Gramps accepts but GEDCOM does not is the user's to fix."""
+    family = Family()
+    family.handle = "f1"
+    family.gramps_id = "F0007"
+    attribute = Attribute()
+    attribute.set_type(AttributeType(AttributeType.NUM_CHILD))
+    attribute.set_value("several")
+    family.add_attribute(attribute)
+    with pytest.raises(ExportValidationError) as caught:
+        export_gedcom(db_from_objects(family), io.BytesIO())
+    (problem,) = caught.value.problems
+    assert str(problem.gramps_object) == "Family F0007"
+    assert problem.from_data
+    assert caught.value.from_data
+    assert str(caught.value).startswith("1 validation errors: Family F0007: ")
+
+
+def test_progress_counts_every_record():
+    calls = []
+    note = make_note()
+    export_gedcom(
+        db_from_objects(make_person(), make_source(), note),
+        io.BytesIO(),
+        progress=lambda done, total: calls.append((done, total)),
+    )
+    assert calls == [(1, 3), (2, 3), (3, 3)]
 
 
 def test_identifiers_keep_their_type():
@@ -424,12 +524,15 @@ def test_export_refuses_to_write_an_invalid_dataset(monkeypatch):
     """Validation is the safety net between a Gramps quirk and an unreadable file."""
     from gramps_gedcom7.export import exporter
 
-    def broken(db, settings=None):
-        return [gedcom7.types.GedcomStructure(tag=g7const.TRLR)]
+    def broken(db, settings, progress):
+        records = [gedcom7.types.GedcomStructure(tag=g7const.TRLR)]
+        return records, exporter.ExportContext(db, XrefMap(), settings)
 
-    monkeypatch.setattr(exporter, "db_to_structures", broken)
-    with pytest.raises(gedcom7.GedcomValidationError):
+    monkeypatch.setattr(exporter, "_build", broken)
+    with pytest.raises(gedcom7.GedcomValidationError) as caught:
         exporter.export_gedcom(empty_db(), io.BytesIO())
+    # Nothing in Gramps wrote that, so it is the exporter's mistake.
+    assert not caught.value.from_data
 
 
 def make_source(handle="s1", gramps_id="S0001", title="Parish register"):
@@ -978,3 +1081,53 @@ def test_byte_order_mark_setting_reaches_a_file(tmp_path):
         db_from_objects(make_person()), path, ExportSettings(byte_order_mark=False)
     )
     assert not path.read_bytes().startswith(codecs.BOM_UTF8)
+
+
+def test_missing_record_is_not_written_as_void():
+    """A void pointer is for a record filtered out, not one that is missing."""
+    family = Family()
+    family.handle = "f1"
+    family.gramps_id = "F0001"
+    family.set_father_handle("missing")
+    media_ref = MediaRef()
+    media_ref.ref = "missing media"
+    family.add_media_reference(media_ref)
+    with pytest.raises(MissingObjectsError) as caught:
+        export_gedcom(db_from_objects(family), io.BytesIO())
+    assert sorted(map(str, caught.value.missing)) == [
+        "Family F0001 references a missing media",
+        "Family F0001 references a missing person",
+    ]
+
+
+class HidingProxy:
+    """A proxy hiding one person but leaving references to them alone."""
+
+    def __init__(self, db, hidden):
+        self.db = self.basedb = db
+        self.hidden = hidden
+
+    def get_person_handles(self, sort_handles=False):
+        return [h for h in self.db.get_person_handles() if h != self.hidden]
+
+    def __getattr__(self, name):
+        return getattr(self.db, name)
+
+
+def test_filtered_out_record_is_written_as_void():
+    family = Family()
+    family.handle = "f1"
+    family.gramps_id = "F0001"
+    family.set_father_handle("p1")
+    db = HidingProxy(db_from_objects(make_person(), family), hidden="p1")
+    records = db_to_structures(db)
+    (fam,) = records_by_tag(records, g7const.FAM)
+    assert find(fam, g7const.HUSB).pointer == g7const.VOIDPTR
+
+
+def test_missing_objects_sharing_a_handle_are_both_reported():
+    person = person_with_missing("event")
+    person.add_note("missing")
+    with pytest.raises(MissingObjectsError) as caught:
+        export_gedcom(db_from_objects(person), io.BytesIO())
+    assert sorted(m.kind for m in caught.value.missing) == ["event", "note"]

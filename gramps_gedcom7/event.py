@@ -6,6 +6,7 @@ from gedcom7 import types as g7types
 from gedcom7 import util as g7util
 from gramps.gen.lib import (
     AttributeType,
+    Date,
     Event,
     EventType,
     Place,
@@ -17,7 +18,7 @@ from gramps.gen.lib import (
 )
 from gramps.gen.lib.primaryobj import BasicPrimaryObject
 
-from . import util
+from . import report, util
 from .citation import handle_citation
 from .settings import ImportSettings
 
@@ -171,14 +172,27 @@ def handle_event(
                     g7types.DateRange,
                 ),
             ), "Expected value to be a date-related object"
-            date = util.gedcom_date_value_to_gramps_date(child.value)
+            try:
+                date = util.gedcom_date_value_to_gramps_date(child.value)
+            except util.MixedCalendarsError as error:
+                date = Date()
+                date.set_modifier(Date.MOD_TEXTONLY)
+                date.set_text_value(child.text)
+                report.note(
+                    util.structure_path(child),
+                    f"{child.text} imported as text, {error}",
+                )
             # Handle PHRASE substructure
             phrase_structure = g7util.get_first_child_with_tag(child, g7const.PHRASE)
             if phrase_structure and phrase_structure.value:
                 assert isinstance(
                     phrase_structure.value, str
                 ), "Expected PHRASE value to be a string"
-                date.set_text_value(phrase_structure.value)
+                if date.get_modifier() == Date.MOD_TEXTONLY:
+                    # The text is all that is left of the date, so it is kept.
+                    date.set_text_value(f"{child.text} ({phrase_structure.value})")
+                else:
+                    date.set_text_value(phrase_structure.value)
             event.set_date_object(date)
             # Handle TIME substructure
             time_structure = g7util.get_first_child_with_tag(child, g7const.TIME)

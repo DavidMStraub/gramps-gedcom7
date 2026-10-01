@@ -72,7 +72,7 @@ def source_to_record(source: Source, context: ExportContext) -> g7types.GedcomSt
         add(record, g7const.PUBL, source.get_publication_info())
 
     for repo_ref in source.get_reporef_list():
-        pointer = context.xrefs.get(repo_ref.ref)
+        pointer = context.xref("repository", repo_ref.ref)
         if pointer is None:
             continue
         reference = add(record, g7const.REPO, pointer=pointer)
@@ -93,7 +93,7 @@ def _add_source_text(
 ) -> None:
     """Write the text a source itself carries, which the import keeps as a note."""
     for handle in source.get_note_list():
-        note = context.db.get_note_from_handle(handle)
+        note = context.load("note", handle)
         if note is None or int(note.get_type()) != NoteType.SOURCE_TEXT:
             continue
         if context.note_backlinks.get(handle, 0) <= 1:
