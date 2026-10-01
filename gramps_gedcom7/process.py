@@ -136,6 +136,9 @@ def process_gedcom_structures(
                 progress(current, 2 * records)
 
         add_objects_to_database(objects, db, progress=step)
+        if records and last != 2 * records:
+            # The records made no objects, so writing never counted.
+            progress(2 * records, 2 * records)
     if researcher is not None:
         db.set_researcher(researcher)
     return report

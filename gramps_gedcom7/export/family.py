@@ -34,11 +34,11 @@ def family_to_record(family: Family, context: ExportContext) -> g7types.GedcomSt
             add_event(record, event, FAMILY_EVENT_TAGS, context, family.handle)
 
     if family.get_father_handle():
-        add(record, g7const.HUSB, pointer=context.xrefs.pointer(family.get_father_handle()))
+        add(record, g7const.HUSB, pointer=context.pointer("person", family.get_father_handle()))
     if family.get_mother_handle():
-        add(record, g7const.WIFE, pointer=context.xrefs.pointer(family.get_mother_handle()))
+        add(record, g7const.WIFE, pointer=context.pointer("person", family.get_mother_handle()))
     for child_ref in family.get_child_ref_list():
-        child = add(record, g7const.CHIL, pointer=context.xrefs.pointer(child_ref.ref))
+        child = add(record, g7const.CHIL, pointer=context.pointer("person", child_ref.ref))
         add_phrase_from_notes(child, child_ref, context)
 
     add_notes(record, family, context)

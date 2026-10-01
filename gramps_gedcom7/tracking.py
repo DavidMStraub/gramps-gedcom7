@@ -38,26 +38,16 @@ class ReadTracker:
         mark = self._read.add
 
         def tracked(name: str) -> property:
-            # A property takes precedence over the attribute it shadows, so only
+            # A property takes precedence over the slot it shadows, so only
             # reading these costs anything more than it did.
-            slot: Any = GedcomStructure.__dict__.get(name)
-            if hasattr(slot, "__set__"):
+            slot: Any = GedcomStructure.__dict__[name]
 
-                def get(structure: GedcomStructure):
-                    mark(id(structure))
-                    return slot.__get__(structure, GedcomStructure)
+            def get(structure: GedcomStructure):
+                mark(id(structure))
+                return slot.__get__(structure, GedcomStructure)
 
-                def set_(structure: GedcomStructure, value) -> None:
-                    slot.__set__(structure, value)
-
-            else:
-                # A version of the class without slots keeps them in __dict__.
-                def get(structure: GedcomStructure):
-                    mark(id(structure))
-                    return structure.__dict__[name]
-
-                def set_(structure: GedcomStructure, value) -> None:
-                    structure.__dict__[name] = value
+            def set_(structure: GedcomStructure, value) -> None:
+                slot.__set__(structure, value)
 
             return property(get, set_)
 

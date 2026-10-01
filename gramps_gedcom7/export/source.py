@@ -72,7 +72,7 @@ def source_to_record(source: Source, context: ExportContext) -> g7types.GedcomSt
         add(record, g7const.PUBL, source.get_publication_info())
 
     for repo_ref in source.get_reporef_list():
-        pointer = context.xrefs.get(repo_ref.ref)
+        pointer = context.xref("repository", repo_ref.ref)
         if pointer is None:
             continue
         reference = add(record, g7const.REPO, pointer=pointer)

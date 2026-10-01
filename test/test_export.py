@@ -1081,3 +1081,45 @@ def test_byte_order_mark_setting_reaches_a_file(tmp_path):
         db_from_objects(make_person()), path, ExportSettings(byte_order_mark=False)
     )
     assert not path.read_bytes().startswith(codecs.BOM_UTF8)
+
+
+def test_missing_record_is_not_written_as_void():
+    """A void pointer is for a record filtered out, not one that is missing."""
+    family = Family()
+    family.handle = "f1"
+    family.gramps_id = "F0001"
+    family.set_father_handle("missing")
+    media_ref = MediaRef()
+    media_ref.ref = "missing media"
+    family.add_media_reference(media_ref)
+    with pytest.raises(MissingObjectsError) as caught:
+        export_gedcom(db_from_objects(family), io.BytesIO())
+    assert sorted(map(str, caught.value.missing)) == [
+        "Family F0001 references a missing media",
+        "Family F0001 references a missing person",
+    ]
+
+
+class HidingProxy:
+    """A proxy hiding one person but leaving references to them alone."""
+
+    def __init__(self, db, hidden):
+        self.db = self.basedb = db
+        self.hidden = hidden
+
+    def get_person_handles(self, sort_handles=False):
+        return [h for h in self.db.get_person_handles() if h != self.hidden]
+
+    def __getattr__(self, name):
+        return getattr(self.db, name)
+
+
+def test_filtered_out_record_is_written_as_void():
+    family = Family()
+    family.handle = "f1"
+    family.gramps_id = "F0001"
+    family.set_father_handle("p1")
+    db = HidingProxy(db_from_objects(make_person(), family), hidden="p1")
+    records = db_to_structures(db)
+    (fam,) = records_by_tag(records, g7const.FAM)
+    assert find(fam, g7const.HUSB).pointer == g7const.VOIDPTR

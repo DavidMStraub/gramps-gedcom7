@@ -188,7 +188,11 @@ def handle_event(
                 assert isinstance(
                     phrase_structure.value, str
                 ), "Expected PHRASE value to be a string"
-                date.set_text_value(phrase_structure.value)
+                if date.get_modifier() == Date.MOD_TEXTONLY:
+                    # The text is all that is left of the date, so it is kept.
+                    date.set_text_value(f"{child.text} ({phrase_structure.value})")
+                else:
+                    date.set_text_value(phrase_structure.value)
             event.set_date_object(date)
             # Handle TIME substructure
             time_structure = g7util.get_first_child_with_tag(child, g7const.TIME)

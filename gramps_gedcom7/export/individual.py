@@ -129,7 +129,7 @@ def add_association(
     parent: g7types.GedcomStructure, person_ref: PersonRef, context: ExportContext
 ) -> None:
     """Write a person's link to another person, as an alias or an association."""
-    pointer = context.xrefs.get(person_ref.ref)
+    pointer = context.xref("person", person_ref.ref)
     if pointer is None:
         return
     relation = person_ref.get_relation() or ""
@@ -171,9 +171,9 @@ def person_to_record(person: Person, context: ExportContext) -> g7types.GedcomSt
             add_event(record, event, INDIVIDUAL_EVENT_TAGS, context, person.handle)
 
     for handle in person.get_parent_family_handle_list():
-        add(record, g7const.FAMC, pointer=context.xrefs.pointer(handle))
+        add(record, g7const.FAMC, pointer=context.pointer("family", handle))
     for handle in person.get_family_handle_list():
-        add(record, g7const.FAMS, pointer=context.xrefs.pointer(handle))
+        add(record, g7const.FAMS, pointer=context.pointer("family", handle))
 
     for person_ref in person.get_person_ref_list():
         add_association(record, person_ref, context)

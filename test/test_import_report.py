@@ -95,11 +95,6 @@ def test_broken_pointer_can_be_left_out():
 
 
 def test_file_with_broken_pointers_imports_when_asked():
-    text = gedcom("0 @F3@ FAM\n1 HUSB @I9@\n1 SNOTE @N1@\n")
-    try:
-        gedcom7.loads(text)
-    except gedcom7.GedcomParseError:
-        pytest.skip("this gedcom7 refuses dangling pointers when parsing")
     with pytest.raises(process.BrokenPointersError) as caught:
         import_text("0 @F3@ FAM\n1 HUSB @I9@\n1 SNOTE @N1@\n")
     assert len(caught.value.broken) == 2
@@ -160,3 +155,18 @@ def test_import_leaves_parsed_structures_as_it_found_them():
     records = gedcom7.loads(gedcom("0 @I1@ INDI\n1 NAME John /Doe/\n"))
     process.process_gedcom_structures(records, empty_db(), ImportSettings())
     assert all(type(r) is gedcom7.types.GedcomStructure for r in records)
+
+
+def test_date_in_two_calendars_keeps_its_phrase_and_value():
+    value = "BET JULIAN 1700 AND 1701"
+    db, _ = import_text(f"0 @I1@ INDI\n1 BIRT\n2 DATE {value}\n3 PHRASE around 1700\n")
+    assert first_event_date(db).get_text() == f"{value} (around 1700)"
+
+
+def test_progress_completes_when_nothing_is_imported():
+    calls = []
+    import_text(
+        "0 @X1@ _REC\n0 @X2@ _REC\n",
+        progress=lambda done, total: calls.append((done, total)),
+    )
+    assert calls[-1] == (4, 4)

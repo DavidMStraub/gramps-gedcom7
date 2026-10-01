@@ -52,7 +52,7 @@ def add_citation(
     if not util.allows(parent, g7const.SOUR):
         return None
     structure = add(
-        parent, g7const.SOUR, pointer=context.xrefs.pointer(citation.source_handle)
+        parent, g7const.SOUR, pointer=context.pointer("source", citation.source_handle)
     )
     with context.writing(citation, structure):
         _add_citation_details(structure, citation, context)

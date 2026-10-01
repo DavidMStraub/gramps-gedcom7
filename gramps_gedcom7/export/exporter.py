@@ -93,6 +93,23 @@ class ExportContext:
                 found = True
         return found
 
+    def xref(self, kind: str, handle: str | None) -> str | None:
+        """Get the identifier of a referenced record, or None if it has none.
+
+        One with none is either filtered out, which leaves the reference out, or
+        missing from the database, which is recorded.
+        """
+        xref = self.xrefs.get(handle)
+        if xref is None and handle:
+            base = getattr(self.db, "basedb", self.db)
+            if not getattr(base, f"has_{kind}_handle")(handle):
+                self._add_missing(self.current, kind, handle)
+        return xref
+
+    def pointer(self, kind: str, handle: str | None) -> str:
+        """Get the pointer to a referenced record, the void pointer if it has none."""
+        return self.xref(kind, handle) or g7const.VOIDPTR
+
     def _add_missing(self, referrer: GrampsObject | None, kind: str, handle: str) -> None:
         key = (referrer.handle if referrer else "", handle)
         self.missing.setdefault(key, MissingReference(referrer, kind, handle))
