@@ -651,7 +651,7 @@ def test_media_without_a_type_is_given_one():
     "path, expected",
     [
         ("/photos/john.png", "image/png"),
-        ("/papers/letter.pdf.1", "application/pdf"),
+        ("/papers/letter.pdf.1", "application/octet-stream"),
         ("/papers/letter", "application/octet-stream"),
     ],
 )

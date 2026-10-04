@@ -28,10 +28,6 @@ DEFAULT_MEDIA_TYPE = "application/octet-stream"
 TITLE_ATTRIBUTE = "OBJE:TITL"
 
 
-# A copy saved next to a file of the same name, e.g. "letter.pdf.1".
-DUPLICATE_SUFFIX = re.compile(r"\.\d+$")
-
-
 def is_media_type(value: str) -> bool:
     """Say whether a value can be written as the payload of a FORM."""
     return re.fullmatch(g7grammar.mediatype, value) is not None
@@ -46,12 +42,8 @@ def media_type(media: Media) -> str:
     stored = media.get_mime_type()
     if stored and is_media_type(stored):
         return stored
-    path = media.get_path() or ""
-    for name in (path, DUPLICATE_SUFFIX.sub("", path)):
-        guessed, _ = mimetypes.guess_type(name)
-        if guessed:
-            return guessed
-    return DEFAULT_MEDIA_TYPE
+    guessed, _ = mimetypes.guess_type(media.get_path() or "")
+    return guessed or DEFAULT_MEDIA_TYPE
 
 
 def media_to_record(media: Media, context: ExportContext) -> g7types.GedcomStructure:
