@@ -647,6 +647,29 @@ def test_media_without_a_type_is_given_one():
     assert find(find(record, g7const.FILE), g7const.FORM).text == "image/png"
 
 
+@pytest.mark.parametrize(
+    "path, expected",
+    [
+        ("/photos/john.png", "image/png"),
+        ("/papers/letter.pdf.1", "application/pdf"),
+        ("/papers/letter", "application/octet-stream"),
+    ],
+)
+def test_media_with_an_unknown_type_is_given_one_and_reported(path, expected):
+    """Gramps stores "unknown" where it cannot tell, which is not a media type."""
+    media = Media()
+    media.handle = "m1"
+    media.gramps_id = "O0001"
+    media.set_path(path)
+    media.set_mime_type("unknown")
+    db = db_from_objects(media)
+    (record,) = records_by_tag(db_to_structures(db), g7const.OBJE)
+    assert find(find(record, g7const.FILE), g7const.FORM).text == expected
+    assert export_gedcom(db, io.BytesIO()).messages() == [
+        f"Media O0001: media type 'unknown' not a media type, written as {expected}"
+    ]
+
+
 def test_note_belonging_to_one_record_is_written_inside_it():
     person = make_person()
     note = make_note(note_type=NoteType.PERSON)
