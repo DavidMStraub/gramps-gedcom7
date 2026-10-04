@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import mimetypes
+import re
 from typing import TYPE_CHECKING
 
 from gedcom7 import const as g7const
+from gedcom7 import grammar as g7grammar
 from gedcom7 import types as g7types
 from gramps.gen.lib import Media
 
+from ..report import GrampsObject
 from . import util
 from .citation import add_citations
 from .note import add_notes
@@ -25,10 +28,20 @@ DEFAULT_MEDIA_TYPE = "application/octet-stream"
 TITLE_ATTRIBUTE = "OBJE:TITL"
 
 
+def is_media_type(value: str) -> bool:
+    """Say whether a value can be written as the payload of a FORM."""
+    return re.fullmatch(g7grammar.mediatype, value) is not None
+
+
 def media_type(media: Media) -> str:
-    """Say what kind of file this is, guessing from its name if need be."""
-    if media.get_mime_type():
-        return media.get_mime_type()
+    """Say what kind of file this is, guessing from its name if need be.
+
+    Gramps stores the word "unknown", translated, where it could not tell the
+    type of a file, so a stored type that is not a media type counts as none.
+    """
+    stored = media.get_mime_type()
+    if stored and is_media_type(stored):
+        return stored
     guessed, _ = mimetypes.guess_type(media.get_path() or "")
     return guessed or DEFAULT_MEDIA_TYPE
 
@@ -43,7 +56,16 @@ def media_to_record(media: Media, context: ExportContext) -> g7types.GedcomStruc
     # written even when Gramps has no path for it.
     file_structure = add(record, g7const.FILE)
     file_structure.text = media.get_path() or ""
-    add(file_structure, g7const.FORM, g7types.MediaType(media_type(media)))
+    form = media_type(media)
+    stored = media.get_mime_type()
+    if stored and stored != form:
+        owner = GrampsObject.of(media)
+        context.report.add(
+            str(owner),
+            f"media type {stored!r} not a media type, written as {form}",
+            owner,
+        )
+    add(file_structure, g7const.FORM, g7types.MediaType(form))
     if media.get_description():
         add(file_structure, g7const.TITL, media.get_description())
 
