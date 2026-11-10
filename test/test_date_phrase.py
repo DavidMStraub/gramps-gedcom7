@@ -1,8 +1,10 @@
 """Test import of DATE PHRASE structures."""
 
+import io
+
 from gramps.gen.db import DbWriteBase
 from gramps.gen.db.utils import make_database
-from gramps.gen.lib import EventType
+from gramps.gen.lib import Date, EventType
 from gramps_gedcom7.importer import import_gedcom
 
 
@@ -123,3 +125,32 @@ def test_date_phrase_preserves_non_textonly_modifier():
     
     # But it should have the text field populated
     assert date.get_text() == "30th of January, 1648/9"
+
+
+def import_marriage_date(date_lines):
+    """Import a family whose marriage has these lines under its DATE."""
+    gedcom = (
+        "0 HEAD\n1 GEDC\n2 VERS 7.0\n"
+        "0 @F1@ FAM\n1 MARR\n2 DATE\n" + date_lines + "0 TRLR\n"
+    )
+    db: DbWriteBase = make_database("sqlite")
+    db.load(":memory:", callback=None)
+    import_gedcom(io.BytesIO(gedcom.encode("utf-8")), db)
+    (family,) = db.iter_families()
+    (event_ref,) = family.get_event_ref_list()
+    return db.get_event_from_handle(event_ref.ref)
+
+
+def test_empty_date_with_phrase_is_a_text_only_date():
+    """The exporter writes a text-only date as an empty DATE with a PHRASE."""
+    marriage = import_marriage_date("3 PHRASE unknown\n")
+    assert marriage.get_type() == EventType.MARRIAGE
+    date = marriage.get_date_object()
+    assert date.get_modifier() == Date.MOD_TEXTONLY
+    assert date.get_text() == "unknown"
+
+
+def test_empty_date_without_phrase_keeps_the_event():
+    marriage = import_marriage_date("")
+    assert marriage.get_type() == EventType.MARRIAGE
+    assert marriage.get_date_object().is_empty()
