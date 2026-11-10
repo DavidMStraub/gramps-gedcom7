@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import re
 from typing import TYPE_CHECKING
 
 from gedcom7 import const as g7const
+from gedcom7 import grammar as g7grammar
 from gedcom7 import types as g7types
 from gramps.gen.lib import Citation
 
+from ..report import GrampsObject
 from . import util
 from .note import add_notes
 from .util import add
@@ -40,6 +43,28 @@ def _attribute(citation: Citation, name: str) -> str | None:
     return None
 
 
+def _is_enumeration(
+    name: str, value: str | None, citation: Citation, context: ExportContext
+) -> bool:
+    """Say whether an attribute value can be written as an enumeration value.
+
+    Gramps keeps whatever another program wrote, such as "Record", where
+    GEDCOM takes a tag or a number. What cannot be written is reported, and
+    an attribute that is not there is not an enumeration value to report.
+    """
+    if not value:
+        return False
+    if re.fullmatch(g7grammar.enum, value):
+        return True
+    owner = GrampsObject.of(citation)
+    context.report.add(
+        str(owner),
+        f"attribute {name} not written, {value!r} not being an enumeration value",
+        owner,
+    )
+    return False
+
+
 def add_citation(
     parent: g7types.GedcomStructure, citation: Citation, context: ExportContext
 ) -> g7types.GedcomStructure | None:
@@ -67,10 +92,12 @@ def _add_citation_details(
         add(structure, g7const.PAGE, citation.get_page())
 
     event_type = _attribute(citation, EVENT_ATTRIBUTE)
-    if event_type:
+    role = _attribute(citation, EVENT_ROLE_ATTRIBUTE)
+    valid_type = _is_enumeration(EVENT_ATTRIBUTE, event_type, citation, context)
+    valid_role = _is_enumeration(EVENT_ROLE_ATTRIBUTE, role, citation, context)
+    if valid_type:
         event = add(structure, g7const.EVEN, event_type)
-        role = _attribute(citation, EVENT_ROLE_ATTRIBUTE)
-        if role:
+        if valid_role:
             add(event, g7const.ROLE, role)
 
     date = util.date_to_date_value(citation.get_date_object())

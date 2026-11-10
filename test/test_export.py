@@ -772,6 +772,62 @@ def test_citation_is_written_where_it_is_cited():
     assert gedcom7.validate(records) == []
 
 
+def cited_with_attributes(**attributes):
+    """A person citing a source, the citation holding these source attributes."""
+    person = make_person()
+    source = make_source()
+    citation = Citation()
+    citation.handle = "c1"
+    citation.gramps_id = "C0001"
+    citation.set_reference_handle("s1")
+    for name, value in attributes.items():
+        attribute = Attribute()
+        attribute.set_type(AttributeType(name.replace("_", ":")))
+        attribute.set_value(value)
+        citation.add_attribute(attribute)
+    person.add_citation("c1")
+    return db_from_objects(person, source, citation)
+
+
+def test_citation_event_that_is_not_an_enumeration_value_is_left_out():
+    """Values another program wrote do not stop the export, and are reported."""
+    db = cited_with_attributes(EVEN="Record", EVEN_ROLE="40001:123:")
+    records = db_to_structures(db)
+    (individual,) = records_by_tag(records, g7const.INDI)
+    assert find(find(individual, g7const.SOUR), g7const.EVEN) is None
+    assert gedcom7.validate(records) == []
+
+    report = export_gedcom(db, io.BytesIO())
+    assert [str(entry) for entry in report] == [
+        "Citation C0001: attribute EVEN not written, 'Record' not being an "
+        "enumeration value",
+        "Citation C0001: attribute EVEN:ROLE not written, '40001:123:' not "
+        "being an enumeration value",
+    ]
+
+
+def test_citation_role_that_is_not_an_enumeration_value_is_left_out():
+    db = cited_with_attributes(EVEN="BIRT", EVEN_ROLE="40001:123:")
+    records = db_to_structures(db)
+    (individual,) = records_by_tag(records, g7const.INDI)
+    event = find(find(individual, g7const.SOUR), g7const.EVEN)
+    assert event.text == "BIRT"
+    assert find(event, g7const.ROLE) is None
+    assert gedcom7.validate(records) == []
+
+    (entry,) = export_gedcom(db, io.BytesIO())
+    assert str(entry).startswith("Citation C0001: attribute EVEN:ROLE not written")
+
+
+def test_citation_event_and_role_that_are_enumeration_values_are_written():
+    db = cited_with_attributes(EVEN="BIRT", EVEN_ROLE="WITN")
+    records = db_to_structures(db)
+    (individual,) = records_by_tag(records, g7const.INDI)
+    event = find(find(individual, g7const.SOUR), g7const.EVEN)
+    assert find(event, g7const.ROLE).text == "WITN"
+    assert len(export_gedcom(db, io.BytesIO())) == 0
+
+
 def test_citation_points_at_the_media_it_shows():
     person = make_person()
     source = make_source()
