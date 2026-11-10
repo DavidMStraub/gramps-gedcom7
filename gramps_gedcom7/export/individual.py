@@ -87,13 +87,6 @@ def add_name(
         " ".join(part.replace("/", " ").split()) if "/" in part else part
         for part in (given, surname, suffix)
     )
-    if (payload_given, payload_surname, payload_suffix) != (given, surname, suffix):
-        owner = context.current
-        context.report.add(
-            str(owner or ""),
-            "slash written as a space in the NAME payload, GIVN and SURN keep it",
-            owner,
-        )
     if not (payload_given or payload_surname or payload_suffix):
         if not (any(parts) or given or surname or suffix):
             # An empty name is not a name, and the payload cannot be empty.

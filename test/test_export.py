@@ -172,13 +172,8 @@ def test_slash_in_a_name_part_is_a_space_in_the_payload_only(given, surname, pay
     assert find(name, g7const.GIVN).text == given
     assert find(name, g7const.SURN).text == surname
     assert gedcom7.validate(records) == []
-
-    (entry,) = export_gedcom(db, io.BytesIO())
-    assert entry.gramps_object.kind == "Person"
-    assert str(entry) == (
-        "Person I0001: slash written as a space in the NAME payload, "
-        "GIVN and SURN keep it"
-    )
+    # Nothing is left out, so there is nothing to report.
+    assert export_gedcom(db, io.BytesIO()).messages() == []
 
 
 def test_name_made_only_of_a_slash_is_still_written():
