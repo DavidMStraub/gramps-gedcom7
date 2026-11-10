@@ -163,7 +163,8 @@ def handle_event(
                 other_objects
             )  # other_objects contains place only if it's new
         elif child.tag == g7const.DATE:
-            assert isinstance(
+            # An empty payload is a date value too, and is read as no date.
+            assert child.value is None or isinstance(
                 child.value,
                 (
                     g7types.Date,
@@ -173,7 +174,11 @@ def handle_event(
                 ),
             ), "Expected value to be a date-related object"
             try:
-                date = util.gedcom_date_value_to_gramps_date(child.value)
+                date = (
+                    Date()
+                    if child.value is None
+                    else util.gedcom_date_value_to_gramps_date(child.value)
+                )
             except util.MixedCalendarsError as error:
                 date = Date()
                 date.set_modifier(Date.MOD_TEXTONLY)
@@ -188,7 +193,10 @@ def handle_event(
                 assert isinstance(
                     phrase_structure.value, str
                 ), "Expected PHRASE value to be a string"
-                if date.get_modifier() == Date.MOD_TEXTONLY:
+                if child.value is None:
+                    # The phrase is all there is of the date.
+                    date.set_as_text(phrase_structure.value)
+                elif date.get_modifier() == Date.MOD_TEXTONLY:
                     # The text is all that is left of the date, so it is kept.
                     date.set_text_value(f"{child.text} ({phrase_structure.value})")
                 else:
