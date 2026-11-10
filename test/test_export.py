@@ -154,6 +154,42 @@ def test_person_is_written_as_an_individual_record():
     assert find(find(individual, g7const.NAME), g7const.SURN).text == "Doe"
 
 
+@pytest.mark.parametrize(
+    ("given", "surname", "payload"),
+    [
+        ("Ana/Belen", "Test", "Ana Belen /Test/"),
+        ("Ana / Belen", "Test", "Ana Belen /Test/"),
+        ("Ana", "Ruiz/Ruis", "Ana /Ruiz Ruis/"),
+    ],
+)
+def test_slash_in_a_name_part_is_a_space_in_the_payload_only(given, surname, payload):
+    """The slash delimits the surname, so the parts beneath keep the name as written."""
+    db = db_from_objects(make_person(given=given, surname=surname))
+    records = db_to_structures(db)
+    (individual,) = records_by_tag(records, g7const.INDI)
+    name = find(individual, g7const.NAME)
+    assert name.text == payload
+    assert find(name, g7const.GIVN).text == given
+    assert find(name, g7const.SURN).text == surname
+    assert gedcom7.validate(records) == []
+
+    (entry,) = export_gedcom(db, io.BytesIO())
+    assert entry.gramps_object.kind == "Person"
+    assert str(entry) == (
+        "Person I0001: slash written as a space in the NAME payload, "
+        "GIVN and SURN keep it"
+    )
+
+
+def test_name_made_only_of_a_slash_is_still_written():
+    records = db_to_structures(db_from_objects(make_person(given="", surname="/")))
+    (individual,) = records_by_tag(records, g7const.INDI)
+    name = find(individual, g7const.NAME)
+    assert name.text == "//"
+    assert find(name, g7const.SURN).text == "/"
+    assert gedcom7.validate(records) == []
+
+
 def test_person_without_a_surname_is_written_without_slashes():
     person = make_person(given="Madonna", surname="")
     records = db_to_structures(db_from_objects(person))

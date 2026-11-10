@@ -80,25 +80,43 @@ def add_name(
         name.get_nick_name(),
         primary.get_prefix() if primary else "",
     )
-    if not (given or surname or suffix):
-        if not any(parts):
+    # The slash delimits the surname in the payload, which has no way to spell
+    # one that belongs to a name. It becomes a space there, so the words on
+    # either side stay apart, and the parts beneath keep the name as written.
+    payload_given, payload_surname, payload_suffix = (
+        " ".join(part.replace("/", " ").split()) if "/" in part else part
+        for part in (given, surname, suffix)
+    )
+    if (payload_given, payload_surname, payload_suffix) != (given, surname, suffix):
+        owner = context.current
+        context.report.add(
+            str(owner or ""),
+            "slash written as a space in the NAME payload, GIVN and SURN keep it",
+            owner,
+        )
+    if not (payload_given or payload_surname or payload_suffix):
+        if not (any(parts) or given or surname or suffix):
             # An empty name is not a name, and the payload cannot be empty.
             return None
         # Nothing to spell out, but parts to write beneath: the surname markers
         # stand for the name that is not recorded.
         personal = g7types.PersonalName(fullname="//")
-    elif surname:
+    elif payload_surname:
         personal = g7types.PersonalName(
-            fullname=" ".join(part for part in (given, surname, suffix) if part),
-            given=given or None,
-            surname=surname,
-            suffix=suffix or None,
+            fullname=" ".join(
+                part
+                for part in (payload_given, payload_surname, payload_suffix)
+                if part
+            ),
+            given=payload_given or None,
+            surname=payload_surname,
+            suffix=payload_suffix or None,
         )
     else:
         # With no surname there are no slashes to place, and the name is written
         # as it stands.
         personal = g7types.PersonalName(
-            fullname=" ".join(part for part in (given, suffix) if part)
+            fullname=" ".join(part for part in (payload_given, payload_suffix) if part)
         )
     structure = add(parent, g7const.NAME, personal)
 
