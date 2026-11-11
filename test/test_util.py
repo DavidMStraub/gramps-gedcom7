@@ -274,3 +274,43 @@ def test_gedcom_date_value_to_gramps_date_bce():
     assert gramps_date.get_sort_value() == _sortval(
         Date.CAL_JULIAN, (15, 3, -44, False)
     )
+
+
+def test_gedcom_date_value_to_gramps_date_hebrew_month():
+    """Test that a Hebrew month is read by its Gramps number."""
+    date_value = g7types.Date(year=5780, month="NSN", day=15, calendar="HEBREW")
+    gramps_date = gedcom_date_value_to_gramps_date(date_value)
+
+    assert gramps_date.get_start_date() == (15, 8, 5780, False)
+    assert gramps_date.get_sort_value() == _sortval(
+        Date.CAL_HEBREW, (15, 8, 5780, False)
+    )
+
+
+def test_gedcom_date_value_to_gramps_date_hebrew_adar():
+    """Test that ADR and ADS are Adar I and Adar II, the same Adar in a common year."""
+    for year, adar_i_is_adar_ii in ((5782, False), (5780, True)):
+        adar_i, adar_ii = (
+            gedcom_date_value_to_gramps_date(
+                g7types.Date(year=year, month=month, day=1, calendar="HEBREW")
+            )
+            for month in ("ADR", "ADS")
+        )
+        assert adar_i.get_month() == 6
+        assert adar_ii.get_month() == 7
+        assert (adar_i.get_sort_value() == adar_ii.get_sort_value()) is adar_i_is_adar_ii
+
+
+def test_gedcom_date_value_to_gramps_date_french_month():
+    """Test that a French Republican month is read by its Gramps number."""
+    date_value = g7types.DateRange(
+        start=g7types.Date(year=8, month="VEND", day=1, calendar="FRENCH_R"),
+        end=g7types.Date(year=8, month="COMP", day=5, calendar="FRENCH_R"),
+    )
+    gramps_date = gedcom_date_value_to_gramps_date(date_value)
+
+    assert gramps_date.get_start_date() == (1, 1, 8, False)
+    assert gramps_date.get_stop_date() == (5, 13, 8, False)
+    assert gramps_date.get_sort_value() == _sortval(
+        Date.CAL_FRENCH, (1, 1, 8, False)
+    )

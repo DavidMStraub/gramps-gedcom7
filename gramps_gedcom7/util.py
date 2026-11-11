@@ -86,6 +86,28 @@ GEDCOM_MONTHS = {
     "DEC": 12,
 }
 
+# Gramps numbers Hebrew months from Tishrei, with Adar I as 6 and Adar II as 7;
+# in a common year both name the one Adar.
+HEBREW_MONTHS = {
+    name: number
+    for number, name in enumerate(
+        ("TSH", "CSH", "KSL", "TVT", "SHV", "ADR", "ADS",
+         "NSN", "IYR", "SVN", "TMZ", "AAV", "ELL"),
+        start=1,
+    )
+}  # fmt: skip
+
+FRENCH_MONTHS = {
+    name: number
+    for number, name in enumerate(
+        ("VEND", "BRUM", "FRIM", "NIVO", "PLUV", "VENT", "GERM",
+         "FLOR", "PRAI", "MESS", "THER", "FRUC", "COMP"),
+        start=1,
+    )
+}  # fmt: skip
+
+MONTHS_BY_CALENDAR = {"HEBREW": HEBREW_MONTHS, "FRENCH_R": FRENCH_MONTHS}
+
 # map from GEDCOM date approx qualifiers to Gramps date quality and modifier
 DATE_QUALITY_MODIFIER_MAP = {
     "ABT": (Date.QUAL_NONE, Date.MOD_ABOUT),
@@ -227,7 +249,8 @@ def gedcom_date_to_numeric_year_month_day(
     year = date_value.year or 0
     if date_value.epoch == "BCE":
         year = -year
-    month = GEDCOM_MONTHS.get(date_value.month or "", 0)
+    months = MONTHS_BY_CALENDAR.get(date_value.calendar or "", GEDCOM_MONTHS)
+    month = months.get(date_value.month or "", 0)
     day = date_value.day or 0
     return {"year": year, "month": month, "day": day}
 

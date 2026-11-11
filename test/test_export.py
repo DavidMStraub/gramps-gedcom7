@@ -964,8 +964,8 @@ def test_incomplete_date_in_a_calendar_gedcom_cannot_name_is_not_written():
     assert date_payload(gramps_date(Date.CAL_ISLAMIC, 0, 0, 1440)) is None
 
 
-def test_month_lost_by_the_import_is_not_invented_on_the_way_out():
-    """The import cannot read a Hebrew month, and this must not make one up."""
+def test_imported_hebrew_date_is_written_as_the_same_day():
+    """5 Tishrei 5785 is 7 October 2024."""
     source = b"""0 HEAD
 1 GEDC
 2 VERS 7.0
@@ -977,7 +977,7 @@ def test_month_lost_by_the_import_is_not_invented_on_the_way_out():
 """
     records = db_to_structures(db_from_file(io.BytesIO(source)))
     (individual,) = records_by_tag(records, g7const.INDI)
-    assert find(find(individual, g7const.BIRT), g7const.DATE).text == "HEBREW 5785"
+    assert find(find(individual, g7const.BIRT), g7const.DATE).text == "7 OCT 2024"
 
 
 def named(person, kind):
