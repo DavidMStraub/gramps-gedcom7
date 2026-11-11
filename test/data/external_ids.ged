@@ -38,4 +38,8 @@
 2 DATE 1 JAN 1970
 2 PLAC Test City
 3 EXID PLACE-123
+3 EXID 1234567
+4 TYPE https://www.findagrave.com/memorial/
+3 EXID 9876
+4 TYPE https://gedcom.io/exid-type/FamilySearch-PlaceId
 0 TRLR

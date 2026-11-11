@@ -298,6 +298,26 @@ def _create_hierarchy_place(
     return place, place.handle
 
 
+def _external_id_url(structure: g7types.GedcomStructure) -> Url:
+    """Keep a place's EXID as a link typed like the EXID attributes of other objects.
+
+    The link is TYPE + ID where TYPE is a URL prefix, otherwise the bare ID.
+    """
+    assert isinstance(structure.value, str), "Expected EXID value to be a string"
+    type_child = g7util.get_first_child_with_tag(structure, g7const.TYPE)
+    authority = type_child.value if type_child else None
+    url = Url()
+    if isinstance(authority, str) and authority:
+        url.set_type(UrlType((UrlType.CUSTOM, f"EXID:{authority}")))
+        is_url = authority.startswith(("http://", "https://"))
+        is_prefix = is_url and authority.endswith(("/", "="))
+        url.set_path(authority + structure.value if is_prefix else structure.value)
+    else:
+        url.set_type(UrlType((UrlType.CUSTOM, "EXID")))
+        url.set_path(structure.value)
+    return url
+
+
 def _apply_place_properties(
     place: Place,
     structure: g7types.GedcomStructure,
@@ -348,27 +368,7 @@ def _apply_place_properties(
             modified_place, note = util.add_note_to_object(child, place)
             objects.append(note)
         elif child.tag == g7const.EXID:
-            assert isinstance(child.value, str), "Expected EXID value to be a string"
-            url = Url()
-            url.set_type(UrlType.CUSTOM)
-            type_child = next(
-                (c for c in child.children if c.tag == g7const.TYPE), None
-            )
-            if type_child and type_child.value:
-                if isinstance(type_child.value, str) and type_child.value.startswith(
-                    "http"
-                ):
-                    url.set_path(type_child.value)
-                    url.set_description(f"External ID: {child.value}")
-                else:
-                    url.set_path(child.value)
-                    url.set_description(
-                        f"EXID:{child.value} (Type: {type_child.value})"
-                    )
-            else:
-                url.set_path(child.value)
-                url.set_description(f"External ID: {child.value}")
-            place.add_url(url)
+            place.add_url(_external_id_url(child))
         elif child.tag == g7const.FORM:
             # Already processed above
             pass

@@ -183,12 +183,17 @@ def test_place_external_ids():
     assert place is not None
     assert place.get_name().get_value() == "Test City"
     
-    # Check place URLs (EXID stored as URL for places)
-    urls = place.get_url_list()
-    exid_urls = [u for u in urls if "External ID" in u.get_description()]
-    assert len(exid_urls) == 1
-    assert exid_urls[0].get_path() == "PLACE-123"
-    assert exid_urls[0].get_description() == "External ID: PLACE-123"
+    # Places have no attributes, so EXIDs are links typed like EXID attributes
+    urls = [(u.get_type().xml_str(), u.get_path()) for u in place.get_url_list()]
+    assert urls == [
+        ("EXID", "PLACE-123"),
+        (
+            "EXID:https://www.findagrave.com/memorial/",
+            "https://www.findagrave.com/memorial/1234567",
+        ),
+        ("EXID:https://gedcom.io/exid-type/FamilySearch-PlaceId", "9876"),
+    ]
+    assert all(not u.get_description() for u in place.get_url_list())
 
 
 def test_multiple_external_ids():
