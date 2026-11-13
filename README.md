@@ -56,6 +56,20 @@ from the database. It validates the dataset before writing and raises
 `ExportValidationError` if it does not conform; pass `validate=False` to write
 anyway.
 
+### GEDZIP
+
+```python
+from gramps_gedcom7 import import_gedzip, export_gedzip
+
+import_gedzip("input.gdz", db)
+export_gedzip(db, "output.gdz", media_file)
+```
+
+Each file in the archive is named after its media object's path, which must be
+relative. `import_gedzip` gives media objects those names and stores no files.
+`media_file(media)` gives the file as bytes, a path, or a function opening it, or
+`None` if it is unavailable.
+
 ## Usage as Gramps plugin
 
 The tool cannot be used as a Gramps plugin yet, since its interaction with the Gedcom 5 core plugin is not clarified. See [this thread](https://github.com/gramps-project/addons-source/pull/744) for the discussion.

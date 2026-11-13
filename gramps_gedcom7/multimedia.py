@@ -1,5 +1,7 @@
 """Handle GEDCOM multimedia records and import them into the Gramps database."""
 
+from __future__ import annotations
+
 from typing import List
 
 from gedcom7 import const as g7const
@@ -10,6 +12,7 @@ from gramps.gen.lib.primaryobj import BasicPrimaryObject
 
 from . import util
 from .citation import handle_citation
+from .gedzip import AttachFile
 from .settings import ImportSettings
 
 
@@ -17,12 +20,14 @@ def handle_multimedia(
     structure: g7types.GedcomStructure,
     xref_handle_map: dict[str, str],
     settings: ImportSettings,
+    attach_file: AttachFile | None = None,
 ) -> List[BasicPrimaryObject]:
     """Handle a multimedia record and convert it to Gramps objects.
 
     Args:
         structure: The GEDCOM note structure to handle.
         xref_handle_map: A map of XREFs to Gramps handles.
+        attach_file: Called with the media object and its file structure.
 
     Returns:
         A list of Gramps objects created from the GEDCOM structure.
@@ -76,5 +81,7 @@ def handle_multimedia(
     # TODO handle MEDIA & PHRASE
     media = util.add_ids(media, structure=structure, xref_handle_map=xref_handle_map)
     util.set_change_date(structure=structure, obj=media)
+    if attach_file is not None:
+        attach_file(media, file_structure)
     objects.append(media)
     return objects

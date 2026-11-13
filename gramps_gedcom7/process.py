@@ -9,6 +9,7 @@ from gedcom7 import types as g7types
 from gramps.gen.db import DbTxn, DbWriteBase
 
 from .family import handle_family
+from .gedzip import AttachFile
 from .header import handle_header
 from .individual import handle_individual
 from .multimedia import handle_multimedia
@@ -78,6 +79,7 @@ def process_gedcom_structures(
     db: DbWriteBase,
     settings: ImportSettings,
     progress: Progress | None = None,
+    attach_file: AttachFile | None = None,
 ) -> Report:
     """Process GEDCOM structures and import them into the Gramps database.
 
@@ -86,6 +88,8 @@ def process_gedcom_structures(
         db: The Gramps database to import the GEDCOM structures into.
         settings: Import settings controlling how GEDCOM data is imported.
         progress: Called with how far the import has got, and how far it goes.
+        attach_file: Called with each media object and the file structure it
+            was made from.
 
     Returns:
         A report of what was not imported.
@@ -115,7 +119,7 @@ def process_gedcom_structures(
     _check_pointers(structures, xref_handle_map, settings, report)
     with collecting(report), ReadTracker(structures) as tracker:
         objects, researcher = _build_objects(
-            gedcom_structures, db, xref_handle_map, settings, progress
+            gedcom_structures, db, xref_handle_map, settings, progress, attach_file
         )
     for path, message in summarize_unread(tracker.unread()):
         report.add(path, message)
@@ -150,6 +154,7 @@ def _build_objects(
     xref_handle_map: dict[str, str],
     settings: ImportSettings,
     progress: Progress | None,
+    attach_file: AttachFile | None = None,
 ) -> tuple[list, object | None]:
     """Build the Gramps objects the records make, and the researcher if any."""
     head_subm_xref = handle_header(gedcom_structures[0], db, settings=settings)
@@ -169,6 +174,7 @@ def _build_objects(
                 xref_handle_map=xref_handle_map,
                 settings=settings,
                 place_cache=place_cache,
+                attach_file=attach_file,
             )
             or []
         )
@@ -189,6 +195,7 @@ def handle_structure(
     xref_handle_map: dict[str, str],
     settings: ImportSettings,
     place_cache: dict[tuple[tuple[str, ...], str | None], str],
+    attach_file: AttachFile | None = None,
 ) -> list | None:
     """Handle a single GEDCOM structure and import it into the Gramps database.
 
@@ -197,6 +204,7 @@ def handle_structure(
         xref_handle_map: Mapping from GEDCOM XREFs to Gramps handles.
         settings: Import settings controlling how GEDCOM data is imported.
         place_cache: Cache mapping place jurisdictions to handles for deduplication.
+        attach_file: Called with each media object and its file structure.
     """
     if structure.tag == g7const.FAM:
         return handle_family(
@@ -214,7 +222,10 @@ def handle_structure(
         )
     elif structure.tag == g7const.OBJE:
         return handle_multimedia(
-            structure, xref_handle_map=xref_handle_map, settings=settings
+            structure,
+            xref_handle_map=xref_handle_map,
+            settings=settings,
+            attach_file=attach_file,
         )
     elif structure.tag == g7const.REPO:
         return handle_repository(
