@@ -8,7 +8,10 @@ import io
 from pathlib import Path
 from typing import TextIO, BinaryIO
 
+from gedcom7 import gedzip as g7gedzip
+
 from . import process
+from .gedzip import StoreMedia, attach_from
 from .report import Progress, Report
 from .settings import ImportSettings
 
@@ -71,3 +74,39 @@ def import_gedcom(
     return process.process_gedcom_structures(
         gedcom_structures, db, settings=settings, progress=progress
     )
+
+
+def import_gedzip(
+    input_file: str | Path | BinaryIO,
+    db: DbWriteBase,
+    settings: ImportSettings | None = None,
+    progress: Progress | None = None,
+    store_media: StoreMedia | None = None,
+) -> Report:
+    """Import a GEDZIP archive into a Gramps database.
+
+    Args:
+        input_file: The archive, as a path or a file opened in binary mode.
+        db: The Gramps database to import into.
+        settings: Import settings controlling how GEDCOM data is imported.
+        progress: Called with how far the import has got, and how far it goes.
+        store_media: Stores each file the archive holds and returns the path
+            to give its media object. Without it, nothing is stored and media
+            objects get the file's name in the archive.
+
+    Returns:
+        A report of what was not imported.
+    """
+    try:
+        archive = g7gedzip.GedzipReader(input_file)
+    except gedcom7.GedcomParseError as e:
+        source = f"'{input_file}'" if isinstance(input_file, (str, Path)) else "input"
+        raise ValueError(f"{source} is not a valid GEDZIP file: {e}") from e
+    with archive:
+        return process.process_gedcom_structures(
+            archive.records,
+            db,
+            settings=settings or ImportSettings(),
+            progress=progress,
+            attach_file=attach_from(archive, store_media),
+        )

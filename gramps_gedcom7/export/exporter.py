@@ -12,11 +12,13 @@ from typing import TYPE_CHECKING, Any, BinaryIO
 
 import gedcom7
 from gedcom7 import const as g7const
+from gedcom7 import gedzip as g7gedzip
 from gedcom7 import types as g7types
 from gramps.gen.db import DbReadBase
 from gramps.gen.errors import HandleError
 
 from .. import __version__
+from ..gedzip import ArchiveNames, MediaFile
 from ..report import GrampsObject, Progress, Report
 from ..settings import ExportSettings
 from .errors import (
@@ -60,6 +62,11 @@ class ExportContext:
     origins: dict[int, GrampsObject] = field(default_factory=dict)
     missing: dict[tuple[str, str, str], MissingReference] = field(default_factory=dict)
     current: GrampsObject | None = None
+    # Set when writing a GEDZIP: where each media file comes from, the name it
+    # gets in the archive, and the content of each file to put there.
+    media_file: MediaFile | None = None
+    archive_names: ArchiveNames = field(default_factory=ArchiveNames)
+    files: dict[str, g7gedzip.FileSource | None] = field(default_factory=dict)
 
     def load(self, kind: str, handle: str) -> Any:
         """Get an object by handle, or None if it is missing or filtered out.
@@ -249,10 +256,15 @@ def _plan_notes(loaded: dict[str, list[Any]], context: ExportContext) -> None:
 
 
 def _build(
-    db: DbReadBase, settings: ExportSettings, progress: Progress | None
+    db: DbReadBase,
+    settings: ExportSettings,
+    progress: Progress | None,
+    media_file: MediaFile | None = None,
 ) -> tuple[list[g7types.GedcomStructure], ExportContext]:
     """Build the dataset, and the context that says where each part came from."""
-    context = ExportContext(db=db, xrefs=XrefMap(), settings=settings)
+    context = ExportContext(
+        db=db, xrefs=XrefMap(), settings=settings, media_file=media_file
+    )
     loaded = _load_records(context)
     _allocate_xrefs(loaded, context.xrefs)
     _plan_events(loaded, context)
@@ -330,13 +342,7 @@ def export_gedcom(
     settings = settings or ExportSettings()
     records, context = _build(db, settings, progress)
     if validate:
-        errors = gedcom7.validate(records)
-        if errors:
-            problems = [
-                ValidationProblem(error, context.origin(error.structure))
-                for error in errors
-            ]
-            raise ExportValidationError(errors, problems)
+        _validate(records, context)
     mark = settings.byte_order_mark
     if isinstance(output_file, (str, Path)):
         with open(output_file, "wb") as handle:
@@ -348,4 +354,54 @@ def export_gedcom(
         )
     else:
         gedcom7.dump(records, output_file, byte_order_mark=mark)
+    return context.report
+
+
+def _validate(records: list[g7types.GedcomStructure], context: ExportContext) -> None:
+    errors = gedcom7.validate(records)
+    if errors:
+        problems = [
+            ValidationProblem(error, context.origin(error.structure))
+            for error in errors
+        ]
+        raise ExportValidationError(errors, problems)
+
+
+def export_gedzip(
+    db: DbReadBase,
+    output_file: str | Path | BinaryIO,
+    media_file: MediaFile,
+    settings: ExportSettings | None = None,
+    validate: bool = True,
+    progress: Progress | None = None,
+) -> Report:
+    """Export a Gramps database and its media files as a GEDZIP archive.
+
+    Args:
+        db: The Gramps database to export.
+        output_file: Where to write, as a path or a file opened in binary mode.
+        media_file: Gives each media object's file, or None if it is
+            unavailable, which leaves the file out and reports it.
+        settings: Export settings controlling how the dataset is written.
+        validate: Check the dataset before writing it.
+        progress: Called with the number of records written so far and the
+            number there are in all.
+
+    Returns:
+        A report of what was not written.
+
+    Raises:
+        MissingObjectsError: Objects reference objects missing from the database.
+        ExportValidationError: The dataset does not conform.
+    """
+    settings = settings or ExportSettings()
+    records, context = _build(db, settings, progress, media_file)
+    if validate:
+        _validate(records, context)
+    g7gedzip.dump_gedzip(
+        records,
+        output_file,
+        context.files,
+        byte_order_mark=settings.byte_order_mark,
+    )
     return context.report
