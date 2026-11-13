@@ -60,16 +60,15 @@ anyway.
 
 ```python
 from gramps_gedcom7 import import_gedzip, export_gedzip
-from gramps_gedcom7.gedzip import extract_to, files_under
 
-import_gedzip("input.gdz", db, store_media=extract_to("/path/to/media"))
-export_gedzip(db, "output.gdz", files_under("/path/to/media"))
+import_gedzip("input.gdz", db)
+export_gedzip(db, "output.gdz", media_file)
 ```
 
-Where media files are stored is up to the caller. `store_media(media, name, file)`
-stores a file from the archive and returns the path for the media object; without
-it, nothing is extracted. `media_file(media)` returns the file as bytes, a path, or
-a function opening it, or `None` if it is unavailable.
+Each file in the archive is named after its media object's path, which must be
+relative. `import_gedzip` gives media objects those names and stores no files.
+`media_file(media)` gives the file as bytes, a path, or a function opening it, or
+`None` if it is unavailable.
 
 ## Usage as Gramps plugin
 

@@ -18,7 +18,7 @@ from gramps.gen.db import DbReadBase
 from gramps.gen.errors import HandleError
 
 from .. import __version__
-from ..gedzip import ArchiveNames, MediaFile
+from ..gedzip import MediaFile
 from ..report import GrampsObject, Progress, Report
 from ..settings import ExportSettings
 from .errors import (
@@ -62,10 +62,9 @@ class ExportContext:
     origins: dict[int, GrampsObject] = field(default_factory=dict)
     missing: dict[tuple[str, str, str], MissingReference] = field(default_factory=dict)
     current: GrampsObject | None = None
-    # Set when writing a GEDZIP: where each media file comes from, the name it
-    # gets in the archive, and the content of each file to put there.
+    # Set when writing a GEDZIP: where each media file comes from, and the
+    # content of each file to put in the archive.
     media_file: MediaFile | None = None
-    archive_names: ArchiveNames = field(default_factory=ArchiveNames)
     files: dict[str, g7gedzip.FileSource | None] = field(default_factory=dict)
 
     def load(self, kind: str, handle: str) -> Any:
@@ -381,7 +380,8 @@ def export_gedzip(
         db: The Gramps database to export.
         output_file: Where to write, as a path or a file opened in binary mode.
         media_file: Gives each media object's file, or None if it is
-            unavailable, which leaves the file out and reports it.
+            unavailable, which leaves the file out and reports it. A file is
+            named after its media object's path, which must be relative.
         settings: Export settings controlling how the dataset is written.
         validate: Check the dataset before writing it.
         progress: Called with the number of records written so far and the

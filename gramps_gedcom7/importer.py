@@ -11,7 +11,7 @@ from typing import TextIO, BinaryIO
 from gedcom7 import gedzip as g7gedzip
 
 from . import process
-from .gedzip import StoreMedia, attach_from
+from .gedzip import attach_from
 from .report import Progress, Report
 from .settings import ImportSettings
 
@@ -81,18 +81,17 @@ def import_gedzip(
     db: DbWriteBase,
     settings: ImportSettings | None = None,
     progress: Progress | None = None,
-    store_media: StoreMedia | None = None,
 ) -> Report:
     """Import a GEDZIP archive into a Gramps database.
+
+    Media objects get the names of their files in the archive as paths; the
+    files themselves are not stored.
 
     Args:
         input_file: The archive, as a path or a file opened in binary mode.
         db: The Gramps database to import into.
         settings: Import settings controlling how GEDCOM data is imported.
         progress: Called with how far the import has got, and how far it goes.
-        store_media: Stores each file the archive holds and returns the path
-            to give its media object. Without it, nothing is stored and media
-            objects get the file's name in the archive.
 
     Returns:
         A report of what was not imported.
@@ -108,5 +107,5 @@ def import_gedzip(
             db,
             settings=settings or ImportSettings(),
             progress=progress,
-            attach_file=attach_from(archive, store_media),
+            attach_file=attach_from(archive),
         )

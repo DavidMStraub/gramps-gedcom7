@@ -12,7 +12,7 @@ from gedcom7 import grammar as g7grammar
 from gedcom7 import types as g7types
 from gramps.gen.lib import Media
 
-from ..gedzip import WEB_SCHEMES
+from ..gedzip import archive_name, is_url
 from ..report import GrampsObject
 from . import util
 from .citation import add_citations
@@ -51,13 +51,22 @@ def media_type(media: Media) -> str:
 def file_payload(media: Media, context: ExportContext) -> str:
     """Say where a media file is: its path, or its name in a GEDZIP archive."""
     path = media.get_path() or ""
-    if context.media_file is None or not path or path.startswith(WEB_SCHEMES):
+    if context.media_file is None or not path or is_url(path):
         return path
-    payload = g7gedzip.file_path(context.archive_names.name(path))
+    owner = GrampsObject.of(media)
+    name = archive_name(path)
+    try:
+        payload = g7gedzip.file_path(name) if name else None
+    except ValueError:
+        payload = None
+    if payload is None:
+        context.report.add(
+            str(owner), f"path {path} not relative, file left out of the archive", owner
+        )
+        return path
     if payload not in context.files:
         source = context.media_file(media)
         if source is None:
-            owner = GrampsObject.of(media)
             context.report.add(
                 str(owner), f"file {path} not found, left out of the archive", owner
             )

@@ -68,8 +68,6 @@ def handle_multimedia(
     assert file_structure is not None, "Multimedia structure must have a FILE tag"
     assert isinstance(file_structure.value, str), "Expected FILE value to be a string"
     media.set_path(file_structure.value.removeprefix("file://"))
-    if attach_file is not None:
-        attach_file(media, file_structure)
     form_structure = g7util.get_first_child_with_tag(file_structure, g7const.FORM)
     assert form_structure is not None, "Multimedia file must have a FORM tag"
     assert isinstance(
@@ -83,5 +81,7 @@ def handle_multimedia(
     # TODO handle MEDIA & PHRASE
     media = util.add_ids(media, structure=structure, xref_handle_map=xref_handle_map)
     util.set_change_date(structure=structure, obj=media)
+    if attach_file is not None:
+        attach_file(media, file_structure)
     objects.append(media)
     return objects
