@@ -12,7 +12,7 @@ from gedcom7 import grammar as g7grammar
 from gedcom7 import types as g7types
 from gramps.gen.lib import Media
 
-from ..gedzip import archive_name, is_url
+from ..gedzip import archive_name, is_url, without_file_scheme
 from ..report import GrampsObject
 from . import util
 from .citation import add_citations
@@ -53,6 +53,7 @@ def file_payload(media: Media, context: ExportContext) -> str:
     path = media.get_path() or ""
     if context.media_file is None or not path or is_url(path):
         return path
+    path = without_file_scheme(path)
     owner = GrampsObject.of(media)
     name = archive_name(path)
     try:

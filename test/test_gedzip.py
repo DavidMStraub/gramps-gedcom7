@@ -109,6 +109,7 @@ def test_absolute_path_is_left_out():
         ("../a.jpg", None),
         ("C:\\pics\\a.jpg", None),
         ("C:/pics/a.jpg", None),
+        ("photos/scan:1.jpg", "photos/scan:1.jpg"),
     ],
 )
 def test_archive_name(path, name):
@@ -121,3 +122,23 @@ def test_archive_is_valid_gedzip():
     with gedcom7.GedzipReader(buffer) as archive:
         assert archive.missing() == []
         assert gedcom7.validate(archive.records) == []
+
+
+def test_file_url_is_left_out():
+    buffer = io.BytesIO()
+    report = export_gedzip(
+        db_with_media(media("m1", "file:///home/me/a.jpg")), buffer, from_content
+    )
+    assert report.messages() == [
+        "Media M1: path /home/me/a.jpg not relative, file left out of the archive"
+    ]
+
+
+def test_colon_in_file_name_is_archived():
+    buffer = io.BytesIO()
+    export_gedzip(db_with_media(media("m1", "scan:1.jpg")), buffer, lambda obj: b"one")
+    with zipfile.ZipFile(buffer) as archive:
+        assert archive.read("scan:1.jpg") == b"one"
+    imported = empty_db()
+    import_gedzip(buffer, imported)
+    assert paths(imported) == ["scan:1.jpg"]

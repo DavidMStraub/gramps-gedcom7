@@ -20,11 +20,19 @@ None if it is unavailable."""
 AttachFile = Callable[[Media, g7types.GedcomStructure], None]
 
 _URL = re.compile(r"[A-Za-z][A-Za-z0-9+.-]*://")
+_FILE_URL = re.compile(r"file:(//)?", re.IGNORECASE)
+_DRIVE = re.compile(r"[A-Za-z]:")
 
 
 def is_url(path: str) -> bool:
-    """Say whether a media path is a URL rather than a file path."""
-    return _URL.match(path) is not None
+    """Say whether a media path is a URL, other than a file URL."""
+    return _URL.match(path) is not None and not _FILE_URL.match(path)
+
+
+def without_file_scheme(path: str) -> str:
+    """Turn a file URL into the path it names."""
+    match = _FILE_URL.match(path)
+    return path[match.end() :] if match else path
 
 
 def archive_name(path: str) -> str | None:
@@ -33,7 +41,7 @@ def archive_name(path: str) -> str | None:
     A relative path is the name; an absolute one, or one leaving its folder,
     cannot be.
     """
-    if "\\" in path or ":" in path:
+    if "\\" in path or _DRIVE.match(path):
         return None
     name = posixpath.normpath(path)
     if name.startswith(("/", "../")) or name in (".", ".."):
