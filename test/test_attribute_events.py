@@ -9,7 +9,8 @@ from gedcom7 import const as g7const
 from gramps.gen.db.utils import make_database
 from gramps.gen.lib import AttributeType, EventType
 
-from gramps_gedcom7.export import db_to_structures
+from gramps_gedcom7 import process
+from gramps_gedcom7.export import db_to_structures, export_gedcom
 from gramps_gedcom7.importer import import_gedcom
 
 GEDCOM_FILE = pathlib.Path(__file__).parent / "data" / "attribute_events.ged"
@@ -115,13 +116,14 @@ def test_generic_event_keeps_its_payload(db):
     assert exam.get_description() == "Gesellenprüfung"
 
 
-def test_attribute_keeps_its_note_and_citation(db):
+def test_attribute_keeps_its_note_citation_and_privacy(db):
     (nationality,) = [
         a
         for a in person(db).get_attribute_list()
         if a.get_type() == AttributeType.NATIONAL
     ]
     assert nationality.get_value() == "deutsch"
+    assert nationality.get_privacy()
     assert notes(db, nationality) == ["According to the census"]
     assert citations(db, nationality) == [("Volkszählung 1905", "Bd. 4")]
 
@@ -141,3 +143,19 @@ def test_events_are_written_as_the_attributes_they_came_from():
     assert [t for t in tags if t[0] == g7const.EVEN] == [
         (g7const.EVEN, "Gesellenprüfung")
     ]
+
+
+def test_privacy_with_nowhere_to_go_is_reported():
+    """AGNC takes no RESN, so a private agency cannot say it is private."""
+    db = import_source(
+        io.StringIO(
+            "0 HEAD\n1 GEDC\n2 VERS 7.0\n0 @I1@ INDI\n1 BIRT\n2 AGNC Registry\n0 TRLR\n"
+        )
+    )
+    person = db.get_person_from_gramps_id("I1")
+    event = db.get_event_from_handle(person.get_event_ref_list()[0].ref)
+    (agency,) = event.get_attribute_list()
+    agency.set_privacy(True)
+    process.add_objects_to_database([event], db)
+    report = export_gedcom(db, io.BytesIO())
+    assert any("privacy of attribute" in str(entry) for entry in report)

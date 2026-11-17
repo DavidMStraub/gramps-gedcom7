@@ -364,30 +364,35 @@ def add_attributes(
         structure.text = value
         if identifier_type is not None and allows(structure, g7const.TYPE):
             add(structure, g7const.TYPE, identifier_type)
-        _add_attribute_sources(structure, attribute, obj, context)
+        _add_attribute_details(structure, attribute, obj, context)
 
 
-def _add_attribute_sources(
+def _add_attribute_details(
     structure: g7types.GedcomStructure,
     attribute: Any,
     obj: object,
     context: ExportContext,
 ) -> None:
-    """Write an attribute's notes and citations, where its structure has room."""
+    """Write an attribute's restriction, notes and citations, where its
+    structure has room for them, and report those it has none for."""
     # Imported here, these modules importing this one.
     from .citation import add_citations
     from .note import add_notes
 
     left_out = []
-    # A source's attributes have neither.
-    if not hasattr(attribute, "get_citation_list"):
-        return
-    if attribute.get_note_list():
+    if attribute.get_privacy():
+        if allows(structure, g7const.RESN):
+            add_privacy(structure, True)
+        else:
+            left_out.append("privacy")
+    # A source's attributes have no notes or citations.
+    sourced = hasattr(attribute, "get_citation_list")
+    if sourced and attribute.get_note_list():
         if allows(structure, g7const.NOTE):
             add_notes(structure, attribute, context)
         else:
             left_out.append("notes")
-    if attribute.get_citation_list():
+    if sourced and attribute.get_citation_list():
         if allows(structure, g7const.SOUR):
             add_citations(structure, attribute, context)
         else:
