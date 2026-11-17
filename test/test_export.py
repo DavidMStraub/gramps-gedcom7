@@ -43,6 +43,7 @@ from gramps.gen.lib import (
 
 from gramps_gedcom7 import process
 from gramps_gedcom7.export import db_to_structures, export_gedcom
+from gramps_gedcom7.export import exporter
 from gramps_gedcom7.export import util as export_util
 from gramps_gedcom7.export.errors import ExportValidationError, MissingObjectsError
 from gramps_gedcom7.export.xrefs import XrefMap
@@ -399,6 +400,21 @@ def test_validation_error_names_the_gramps_object():
     assert problem.from_data
     assert caught.value.from_data
     assert str(caught.value).startswith("1 validation errors: Family F0007: ")
+
+
+def test_recommendation_is_reported_rather_than_refused():
+    """A dataset that only falls short of a recommendation still conforms."""
+    records = gedcom7.loads(
+        "0 HEAD\n1 GEDC\n2 VERS 7.0\n1 SCHMA\n"
+        "2 TAG _LOC https://example.com/place\n2 TAG _GOV https://example.com/place\n"
+        "0 TRLR\n"
+    )
+    context = exporter.ExportContext(
+        db=empty_db(), xrefs=XrefMap(), settings=ExportSettings()
+    )
+    exporter._validate(records, context)
+    (entry,) = context.report
+    assert "_GOV and _LOC" in str(entry)
 
 
 def test_progress_counts_every_record():
