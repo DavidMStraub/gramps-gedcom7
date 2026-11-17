@@ -7,7 +7,7 @@ name = "gramps_gedcom7"
 dynamic = ["version"]
 description = "A GEDCOM 7 support library for Gramps genealogy software"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = "MIT"
 license-files = ["LICENSE"]
 keywords = ["gedcom", "gedcom7", "gramps", "genealogy"]
