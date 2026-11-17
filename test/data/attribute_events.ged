@@ -1,0 +1,43 @@
+0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @S1@ SOUR
+1 TITL Adressbuch Berlin 1905
+0 @S2@ SOUR
+1 TITL Volkszählung 1905
+0 @I1@ INDI
+1 NAME Hans /Schmidt/
+1 RESI Hauptstraße 5
+2 DATE FROM 1900 TO 1910
+2 PLAC Berlin, Preußen, Deutschland
+2 NOTE Lived above the bakery
+2 SOUR @S1@
+3 PAGE S. 412
+2 SOUR @S2@
+3 PAGE Bd. 3
+1 OCCU Bäcker
+2 DATE 1905
+2 PLAC Berlin, Preußen, Deutschland
+2 SOUR @S1@
+3 PAGE S. 413
+1 TITL Freiherr
+1 NATI deutsch
+2 NOTE According to the census
+2 SOUR @S2@
+3 PAGE Bd. 4
+1 EVEN Gesellenprüfung
+2 TYPE Examination
+2 DATE 1895
+1 FAMS @F1@
+0 @I2@ INDI
+1 NAME Eva /Müller/
+1 FAMS @F1@
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 RESI Gartenweg 2
+2 DATE 1920
+2 PLAC Potsdam, Preußen, Deutschland
+2 SOUR @S2@
+3 PAGE Bd. 9
+0 TRLR

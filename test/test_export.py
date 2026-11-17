@@ -286,17 +286,17 @@ def test_shared_event_is_written_once_with_the_others_as_associates():
 
 def test_custom_event_type_is_written_as_a_generic_event():
     person = make_person()
-    event = make_event(event_type=EventType.OCCUPATION)
-    event.set_description("Baker")
+    event = make_event(event_type=EventType.MILITARY_SERV)
+    event.set_description("Navy")
     event_ref = EventRef()
     event_ref.ref = "e1"
     person.add_event_ref(event_ref)
     records = db_to_structures(db_from_objects(person, event))
     (individual,) = records_by_tag(records, g7const.INDI)
     generic = find(individual, g7const.EVEN)
-    assert generic.text == "Baker"
+    assert generic.text == "Navy"
     # The untranslated name, so that the file does not depend on the locale.
-    assert find(generic, g7const.TYPE).text == "Occupation"
+    assert find(generic, g7const.TYPE).text == "Military Service"
 
 
 def test_attribute_with_nowhere_to_go_is_left_out():

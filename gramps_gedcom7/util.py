@@ -29,9 +29,8 @@ from .types import (
 )
 
 
-# Mapping of GEDCOM 7 attribute tags to Gramps AttributeType
-# For standard attributes, we use the predefined AttributeType constants
-# For attributes not in Gramps (EDUC, PROP, RELI, TITL, NMR), we use CUSTOM with the tag name
+# The GEDCOM 7 attributes imported as Gramps attributes. EDUC, OCCU, PROP, RELI,
+# RESI and TITL are imported as events instead.
 GEDCOM_ATTRIBUTE_MAP = {
     g7const.CAST: AttributeType.CASTE,
     g7const.DSCR: AttributeType.DESCRIPTION,
@@ -39,14 +38,8 @@ GEDCOM_ATTRIBUTE_MAP = {
     g7const.NATI: AttributeType.NATIONAL,
     g7const.NCHI: AttributeType.NUM_CHILD,
     g7const.SSN: AttributeType.SSN,
-    g7const.OCCU: AttributeType.OCCUPATION,
-    # These don't have direct Gramps equivalents, use CUSTOM
-    g7const.EDUC: (AttributeType.CUSTOM, "Education"),
-    g7const.PROP: (AttributeType.CUSTOM, "Property"),
-    g7const.RELI: (AttributeType.CUSTOM, "Religion"),
-    g7const.TITL: (AttributeType.CUSTOM, "Title"),
+    # No Gramps type of their own
     g7const.NMR: (AttributeType.CUSTOM, "Number of Marriages"),
-    g7const.RESI: (AttributeType.CUSTOM, "Residence"),
     g7const.FACT: (AttributeType.CUSTOM, "Fact"),
 }
 
@@ -212,6 +205,7 @@ def add_note_to_object(
         'Repository': NoteType.REPO,
         'Name': NoteType.PERSONNAME,
         'EventRef': NoteType.EVENTREF,
+        'Attribute': NoteType.ATTRIBUTE,
     }
     
     note_type = note_type_map.get(obj_class, NoteType.GENERAL)
@@ -422,8 +416,8 @@ def add_attribute_to_object(
     obj: AttributeBase | SrcAttributeBase,
     attr_type: str | int | tuple[int, str] | AttributeType | SrcAttributeType,
     value: str,
-) -> None:
-    """Add an attribute to a Gramps object.
+) -> Attribute | SrcAttribute:
+    """Add an attribute to a Gramps object, and return it.
     
     Args:
         obj: The object to add the attribute to (must support add_attribute).
@@ -462,13 +456,14 @@ def add_attribute_to_object(
     
     attr.set_value(value)
     obj.add_attribute(attr)
+    return attr
 
 
 def handle_attribute_structure(
     structure: g7types.GedcomStructure,
     obj: AttributeBase,
-) -> None:
-    """Handle a GEDCOM 7 attribute structure and add it to a Gramps object.
+) -> Attribute | SrcAttribute:
+    """Handle a GEDCOM 7 attribute structure, add it to a Gramps object and return it.
     
     Args:
         structure: The GEDCOM attribute structure (CAST, DSCR, EDUC, etc.)
@@ -476,8 +471,9 @@ def handle_attribute_structure(
     """
     if structure.tag not in GEDCOM_ATTRIBUTE_MAP:
         # Unknown attribute, add as custom
-        add_attribute_to_object(obj, (AttributeType.CUSTOM, structure.tag), str(structure.value or ""))
-        return
+        return add_attribute_to_object(
+            obj, (AttributeType.CUSTOM, structure.tag), str(structure.value or "")
+        )
     
     attr_type = GEDCOM_ATTRIBUTE_MAP[structure.tag]
     value = structure.value or ""
@@ -491,7 +487,7 @@ def handle_attribute_structure(
         type_value = type_structure.value
         attr_type = (AttributeType.CUSTOM, str(type_value))
     
-    add_attribute_to_object(obj, attr_type, str(value))
+    return add_attribute_to_object(obj, attr_type, str(value))
 
 
 def add_uid_to_object(

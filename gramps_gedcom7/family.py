@@ -17,6 +17,7 @@ from gramps.gen.lib import (
 from gramps.gen.lib.primaryobj import BasicPrimaryObject
 
 from . import util
+from .attribute import handle_attribute
 from .citation import handle_citation
 from .event import handle_event
 from .settings import ImportSettings
@@ -33,6 +34,7 @@ EVENT_TYPE_MAP = {
     g7const.MARS: EventType.MARR_SETTL,
     g7const.MARR: EventType.MARRIAGE,
     g7const.EVEN: EventType.CUSTOM,
+    g7const.RESI: EventType.RESIDENCE,
 }
 
 
@@ -58,8 +60,10 @@ def handle_family(
         if child.tag == g7const.RESN:
             util.set_privacy_on_object(resn_structure=child, obj=family)
         elif child.tag in (g7const.NCHI, g7const.FACT):
-            # Family attributes
-            util.handle_attribute_structure(child, family)
+            # Family attributes, RESI being read as an event
+            objects.extend(
+                handle_attribute(child, family, xref_handle_map, settings)
+            )
         elif (
             child.tag == g7const.HUSB
             and child.pointer
