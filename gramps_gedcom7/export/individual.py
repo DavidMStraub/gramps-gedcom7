@@ -218,38 +218,44 @@ def _add_pedigree(
 ) -> None:
     """Write how a child is related to its parents, unless by birth.
 
-    PEDI is one value for both parents. Where they differ, an adoption event
-    naming the adopting parent leaves PEDI ADOPTED to say the rest; otherwise
+    PEDI is one value for both parents. Where an adoption event names the one
+    parent who adopted, PEDI gives the other's relation, ADOPTED standing for
+    birth since that is how the import reads it. Otherwise, where they differ,
     its phrase says what each relation is.
     """
     relations = [r for r in relations if r != ChildRefType.NONE]
-    names = {_pedigree_name(r) for r in relations}
-    if not names:
+    if len({_pedigree_name(r) for r in relations}) == 1:
+        _write_pedigree(famc, relations[0])
         return
-    if len(names) == 1:
-        relation = relations[0]
-        if relation.is_custom():
-            name = _pedigree_name(relation)
-            enum = name if name in PEDIGREE_VOCABULARY else None
+    if half_adoption:
+        (other,) = [r for r in relations if r != ChildRefType.ADOPTED]
+        if other == ChildRefType.BIRTH:
+            add(famc, g7const.PEDI, "ADOPTED")
         else:
-            enum = PEDIGREE_ENUMS.get(int(relation))
-        if enum == "BIRTH":
-            return
-        pedigree = add(famc, g7const.PEDI, enum or "OTHER")
-        if enum is None:
-            add(pedigree, g7const.PHRASE, _pedigree_name(relation))
+            _write_pedigree(famc, other)
         return
-    kinds = {int(r) for r in relations if not r.is_custom()}
-    if half_adoption and kinds == {ChildRefType.ADOPTED, ChildRefType.BIRTH}:
-        add(famc, g7const.PEDI, "ADOPTED")
+    if len(relations) == 2:
+        father, mother = relations
+        pedigree = add(famc, g7const.PEDI, "OTHER")
+        add(
+            pedigree,
+            g7const.PHRASE,
+            f"{_pedigree_name(father)} (father), {_pedigree_name(mother)} (mother)",
+        )
+
+
+def _write_pedigree(famc: g7types.GedcomStructure, relation: ChildRefType) -> None:
+    """Write one relation as PEDI, unless by birth."""
+    if relation.is_custom():
+        name = _pedigree_name(relation)
+        enum = name if name in PEDIGREE_VOCABULARY else None
+    else:
+        enum = PEDIGREE_ENUMS.get(int(relation))
+    if enum == "BIRTH":
         return
-    father, mother = relations
-    pedigree = add(famc, g7const.PEDI, "OTHER")
-    add(
-        pedigree,
-        g7const.PHRASE,
-        f"{_pedigree_name(father)} (father), {_pedigree_name(mother)} (mother)",
-    )
+    pedigree = add(famc, g7const.PEDI, enum or "OTHER")
+    if enum is None:
+        add(pedigree, g7const.PHRASE, _pedigree_name(relation))
 
 
 def person_to_record(person: Person, context: ExportContext) -> g7types.GedcomStructure:

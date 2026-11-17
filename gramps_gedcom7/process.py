@@ -237,14 +237,17 @@ def _set_child_relations(objects: list) -> list:
         set_by_pedigree.add(id(ref))
         ref.set_father_relation(ChildRefType(pedigree.relation))
         ref.set_mother_relation(ChildRefType(pedigree.relation))
+    # Several adoption events may each name one parent of the same family.
+    adopted_by: dict[int, tuple[ChildRef, set[str]]] = {}
     for adoption in objects:
         if not isinstance(adoption, Adoption):
             continue
         ref = child_ref(adoption)
-        if ref is None:
-            continue
-        by_father = adoption.adopted_by in ("HUSB", "BOTH")
-        by_mother = adoption.adopted_by in ("WIFE", "BOTH")
+        if ref is not None:
+            adopted_by.setdefault(id(ref), (ref, set()))[1].add(adoption.adopted_by)
+    for ref, sides in adopted_by.values():
+        by_father = bool(sides & {"HUSB", "BOTH"})
+        by_mother = bool(sides & {"WIFE", "BOTH"})
         for adopted_here, get, set_ in (
             (by_father, ref.get_father_relation, ref.set_father_relation),
             (by_mother, ref.get_mother_relation, ref.set_mother_relation),

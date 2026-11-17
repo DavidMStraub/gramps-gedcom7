@@ -92,7 +92,7 @@ def handle_individual(
     Returns:
         A list of Gramps objects created from the GEDCOM structure.
     """
-    person = Person()
+    person = util.add_ids(Person(), structure=structure, xref_handle_map=xref_handle_map)
     objects = []
     for child in structure.children:
         if child.tag == g7const.RESN:
@@ -166,7 +166,7 @@ def handle_individual(
                 objects.append(
                     Pedigree(
                         family_handle=family_handle,
-                        person_handle=xref_handle_map[structure.xref],
+                        person_handle=person.handle,
                         relation=pedigree_to_relation(pedigree),
                         path=util.structure_path(pedigree),
                     )
@@ -211,7 +211,7 @@ def handle_individual(
             objects.append(event)
             if child.tag == g7const.ADOP:
                 adoption = handle_adoptive_family(
-                    child, xref_handle_map[structure.xref], xref_handle_map
+                    child, person.handle, xref_handle_map
                 )
                 if adoption is not None:
                     objects.append(adoption)
@@ -224,7 +224,6 @@ def handle_individual(
             objects.extend(other_objects)
             person.add_citation(citation.handle)
             objects.append(citation)
-    person = util.add_ids(person, structure=structure, xref_handle_map=xref_handle_map)
     util.set_change_date(structure=structure, obj=person)
     objects.append(person)
     return objects

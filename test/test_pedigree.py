@@ -149,3 +149,32 @@ def test_pedigree_for_a_family_without_the_child_is_reported():
         gedcom("0 @I1@ INDI\n1 FAMC @F1@\n2 PEDI ADOPTED\n0 @F1@ FAM\n")
     )
     assert any("does not list the individual as a child" in str(e) for e in report)
+
+
+def adopting(*sides, pedigree=None):
+    """A child of F1 adopted by each side in an event of its own."""
+    body = "0 @I1@ INDI\n1 FAMC @F1@\n"
+    if pedigree:
+        body += f"2 PEDI {pedigree}\n"
+    for side in sides:
+        body += f"1 ADOP\n2 FAMC @F1@\n3 ADOP {side}\n"
+    body += "0 @H1@ INDI\n0 @W1@ INDI\n0 @F1@ FAM\n1 HUSB @H1@\n1 WIFE @W1@\n1 CHIL @I1@\n"
+    return gedcom(body)
+
+
+@pytest.mark.parametrize("sides", [("HUSB", "WIFE"), ("WIFE", "HUSB")])
+def test_adoptions_by_each_parent_in_separate_events_combine(sides):
+    db, _ = import_file(adopting(*sides, pedigree="ADOPTED"))
+    assert relations(db) == {("I1", "F1"): ADOPTED}
+
+
+def test_adoption_by_one_parent_keeps_the_other_parents_foster_relation():
+    db, _ = import_file(adopting("HUSB", pedigree="FOSTER"))
+    assert relations(db) == {("I1", "F1"): ("Adopted", "Foster")}
+    records = db_to_structures(db)
+    assert gedcom7.validate(records) == []
+    assert pedigrees(records, "@I1@") == {"@F1@": ("FOSTER", None)}
+    famc = find(find(record(records, "@I1@"), g7const.ADOP), g7const.FAMC)
+    assert find(famc, g7const.ADOP).text == "HUSB"
+    reimported, _ = import_file(io.StringIO(gedcom7.dumps(records)))
+    assert relations(reimported) == {("I1", "F1"): ("Adopted", "Foster")}
