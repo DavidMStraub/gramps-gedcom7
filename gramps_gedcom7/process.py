@@ -7,14 +7,16 @@ from dataclasses import dataclass
 from gedcom7 import const as g7const
 from gedcom7 import types as g7types
 from gramps.gen.db import DbTxn, DbWriteBase
+from gramps.gen.lib import Person
 
+from .event import Participant
 from .family import handle_family
 from .gedzip import AttachFile
 from .header import handle_header
 from .individual import handle_individual
 from .multimedia import handle_multimedia
 from .note import handle_shared_note
-from .report import Progress, Report, collecting, summarize
+from .report import Progress, Report, collecting, note, summarize
 from .repository import handle_repository
 from .settings import ImportSettings
 from .source import handle_source
@@ -180,6 +182,7 @@ def _build_objects(
         )
         if progress is not None:
             progress(done, 2 * len(records))
+    objects = _add_participants(objects)
 
     researcher = None
     if head_subm_xref:
@@ -188,6 +191,20 @@ def _build_objects(
                 researcher = submitter_to_researcher(structure)
                 break
     return objects, researcher
+
+
+def _add_participants(objects: list) -> list:
+    """Give each person at an event a reference to it, and drop the placeholders."""
+    people = {obj.handle: obj for obj in objects if isinstance(obj, Person)}
+    for participant in objects:
+        if not isinstance(participant, Participant):
+            continue
+        person = people.get(participant.person_handle)
+        if person is None:
+            note(participant.path, "does not point at an individual")
+        else:
+            person.add_event_ref(participant.event_ref)
+    return [obj for obj in objects if not isinstance(obj, Participant)]
 
 
 def handle_structure(

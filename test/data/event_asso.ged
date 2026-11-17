@@ -1,0 +1,38 @@
+0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 NAME Gregor /Pate/
+0 @I2@ INDI
+1 NAME Anna /Schmidt/
+1 BIRT
+2 DATE 1 JAN 1900
+2 ASSO @I1@
+3 ROLE GODP
+3 NOTE Stood in for his brother
+2 ASSO @I3@
+3 ROLE OTHER
+4 PHRASE Midwife
+0 @I3@ INDI
+1 NAME Maria /Hebamme/
+0 @I4@ INDI
+1 NAME Karl /Zeuge/
+0 @I5@ INDI
+1 NAME Hans /Schmidt/
+1 FAMS @F1@
+0 @I6@ INDI
+1 NAME Eva /Müller/
+1 FAMS @F1@
+0 @F1@ FAM
+1 HUSB @I5@
+1 WIFE @I6@
+1 MARR
+2 DATE 5 MAY 1925
+2 ASSO @I1@
+3 ROLE WITN
+2 ASSO @I4@
+3 ROLE WITN
+4 PHRASE Best man
+2 ASSO @VOID@
+3 ROLE OFFICIATOR
+0 TRLR

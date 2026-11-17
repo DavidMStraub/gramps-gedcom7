@@ -1,5 +1,7 @@
 """Process GEDCOM 7 event data."""
 
+from dataclasses import dataclass
+
 from gedcom7 import const as g7const
 from gedcom7 import grammar as g7grammar
 from gedcom7 import types as g7types
@@ -8,6 +10,8 @@ from gramps.gen.lib import (
     AttributeType,
     Date,
     Event,
+    EventRef,
+    EventRoleType,
     EventType,
     Place,
     PlaceName,
@@ -21,6 +25,73 @@ from gramps.gen.lib.primaryobj import BasicPrimaryObject
 from . import report, util
 from .citation import handle_citation
 from .settings import ImportSettings
+
+# The inverse of export.util.ROLE_ENUMS. The other roles become custom ones.
+ROLE_MAP = {
+    "CHIL": EventRoleType.CHILD,
+    "CLERGY": EventRoleType.CLERGY,
+    "FATH": EventRoleType.FATHER,
+    "FRIEND": EventRoleType.FRIEND,
+    "GODP": EventRoleType.GODPARENT,
+    "HUSB": EventRoleType.GROOM,
+    "MOTH": EventRoleType.MOTHER,
+    "MULTIPLE": EventRoleType.MULTIPLE,
+    "NGHBR": EventRoleType.NEIGHBOR,
+    "OFFICIATOR": EventRoleType.OFFICIATOR,
+    "PARENT": EventRoleType.PARENT,
+    "WIFE": EventRoleType.BRIDE,
+    "WITN": EventRoleType.WITNESS,
+}
+
+
+@dataclass
+class Participant:
+    """A person at an event, whose reference is added once the person is built."""
+
+    person_handle: str
+    event_ref: EventRef
+    path: str
+
+
+def handle_event_association(
+    structure: g7types.GedcomStructure,
+    event_handle: str,
+    xref_handle_map: dict[str, str],
+) -> tuple[Participant | None, list[BasicPrimaryObject]]:
+    """Make an event's ASSO a reference from the person to the event."""
+    assert structure.tag == g7const.ASSO, "Expected ASSO structure"
+    if not structure.pointer or structure.pointer == g7grammar.voidptr:
+        return None, []
+    event_ref = EventRef()
+    event_ref.ref = event_handle
+    objects: list[BasicPrimaryObject] = []
+    for child in structure.children:
+        if child.tag == g7const.ROLE:
+            assert isinstance(child.value, str), "Expected ROLE to be a string"
+            phrase = g7util.get_first_child_with_tag(child, g7const.PHRASE)
+            if child.value in ROLE_MAP:
+                event_ref.set_role(EventRoleType(ROLE_MAP[child.value]))
+                if phrase and phrase.value:
+                    event_ref, note = util.add_note_to_object(phrase, event_ref)
+                    objects.append(note)
+            else:
+                name = phrase.value if phrase and phrase.value else child.value
+                event_ref.set_role(EventRoleType((EventRoleType.CUSTOM, name)))
+        elif child.tag in (g7const.PHRASE, g7const.NOTE):
+            event_ref, note = util.add_note_to_object(child, event_ref)
+            objects.append(note)
+        elif (
+            child.tag == g7const.SNOTE
+            and child.pointer
+            and child.pointer != g7grammar.voidptr
+        ):
+            event_ref.add_note(xref_handle_map[child.pointer])
+    participant = Participant(
+        person_handle=xref_handle_map[structure.pointer],
+        event_ref=event_ref,
+        path=util.structure_path(structure),
+    )
+    return participant, objects
 
 
 def _map_place_type(form_type: str) -> int:
@@ -121,7 +192,13 @@ def handle_event(
         elif child.tag == g7const.WWW:
             assert isinstance(child.value, str), "Expected value to be a string"
             util.add_attribute_to_object(event, "Website", child.value)
-        # TODO handle association
+        elif child.tag == g7const.ASSO:
+            participant, other_objects = handle_event_association(
+                child, event.handle, xref_handle_map
+            )
+            objects.extend(other_objects)
+            if participant is not None:
+                objects.append(participant)
         # TODO handle address
         elif child.tag == g7const.AGNC:
             assert isinstance(child.value, str), "Expected AGNC value to be a string"

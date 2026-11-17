@@ -15,7 +15,7 @@ from . import util
 from .citation import add_citations
 from .multimedia import add_media_refs
 from .note import add_notes
-from .util import ROLE_ENUMS, add
+from .util import ROLE_ENUMS, ROLE_VOCABULARY, add
 
 if TYPE_CHECKING:
     from .exporter import ExportContext
@@ -232,12 +232,18 @@ def _add_event_details(
     add_notes(structure, event, context)
     add_media_refs(structure, event, context)
     add_citations(structure, event, context)
-    for participant, role in context.participants(event.handle, owner):
+    for participant, event_ref in context.participants(event.handle, owner):
         pointer = context.xrefs.get(participant)
         if pointer is None:
             continue
         associate = add(structure, g7const.ASSO, pointer=pointer)
-        enum = ROLE_ENUMS.get(int(role)) if not role.is_custom() else None
+        role = event_ref.get_role()
+        name = role.xml_str() or str(role)
+        if role.is_custom():
+            enum = name if name in ROLE_VOCABULARY else None
+        else:
+            enum = ROLE_ENUMS.get(int(role))
         add(associate, g7const.ROLE, enum or "OTHER")
         if enum is None:
-            add(associate.children[-1], g7const.PHRASE, role.xml_str() or str(role))
+            add(associate.children[-1], g7const.PHRASE, name)
+        add_notes(associate, event_ref, context)

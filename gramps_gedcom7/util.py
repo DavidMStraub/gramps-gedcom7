@@ -211,6 +211,7 @@ def add_note_to_object(
         'Media': NoteType.MEDIA,
         'Repository': NoteType.REPO,
         'Name': NoteType.PERSONNAME,
+        'EventRef': NoteType.EVENTREF,
     }
     
     note_type = note_type_map.get(obj_class, NoteType.GENERAL)
