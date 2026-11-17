@@ -176,3 +176,45 @@ def test_age_not_in_gedcom_syntax_is_written_as_its_phrase():
     (individual,) = [r for r in records if r.tag == g7const.INDI]
     written = find(find(individual, g7const.DEAT), g7const.AGE)
     assert (written.text, find(written, g7const.PHRASE).text) == ("", "about 80")
+
+
+def test_multiline_age_phrase_survives_a_round_trip():
+    db, _ = import_source(
+        io.StringIO(
+            "0 HEAD\n1 GEDC\n2 VERS 7.0\n0 @I1@ INDI\n1 DEAT\n2 AGE 80y\n"
+            "3 PHRASE about eighty\n4 CONT by the parish register\n0 TRLR\n"
+        )
+    )
+    reimported, _ = reimport(db)
+    _, ref = event_and_ref(reimported, person(reimported), EventType.DEATH)
+    assert attributes(ref) == {"Age": "80y (about eighty\nby the parish register)"}
+
+
+@pytest.mark.parametrize(
+    ("date", "phrase"),
+    [("4 DATE 3 JAN 1900", "third of January"), ("4 DATE", "some winter")],
+)
+def test_citation_date_keeps_its_phrase(date, phrase):
+    db, _ = import_source(
+        io.StringIO(
+            "0 HEAD\n1 GEDC\n2 VERS 7.0\n0 @S1@ SOUR\n0 @I1@ INDI\n1 BIRT\n"
+            f"2 SOUR @S1@\n3 DATA\n{date}\n5 PHRASE {phrase}\n0 TRLR\n"
+        )
+    )
+    records = {r.xref: r for r in db_to_structures(db)}
+    data = find(find(find(records["@I1@"], g7const.BIRT), g7const.SOUR), g7const.DATA)
+    assert find(find(data, g7const.DATE), g7const.PHRASE).text == phrase
+
+
+def test_medium_phrase_beside_a_standard_value_keeps_the_value():
+    db, report = import_source(
+        io.StringIO(
+            "0 HEAD\n1 GEDC\n2 VERS 7.0\n0 @O1@ OBJE\n1 FILE a.jpg\n2 FORM image/jpeg\n"
+            "3 MEDI PHOTO\n4 PHRASE Cabinet card\n0 TRLR\n"
+        )
+    )
+    assert attributes(db.get_media_from_gramps_id("O1"))["Media-Type"] == "Photo"
+    assert any("MEDI > PHRASE" in str(entry) for entry in report)
+    records = {r.xref: r for r in db_to_structures(db)}
+    form = find(find(records["@O1@"], g7const.FILE), g7const.FORM)
+    assert find(form, g7const.MEDI).text == "PHOTO"

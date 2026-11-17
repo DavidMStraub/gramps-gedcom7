@@ -100,14 +100,12 @@ def _add_citation_details(
         if valid_role:
             add(event, g7const.ROLE, role)
 
-    date = util.date_to_date_value(citation.get_date_object())
-    texts = _source_texts(citation, context)
-    if date is not None or texts:
-        data = add(structure, g7const.DATA)
-        if date is not None:
-            add(data, g7const.DATE, date)
-        for text in texts:
-            add(data, g7const.TEXT).text = text
+    data = add(structure, g7const.DATA)
+    util.add_date(data, citation.get_date_object())
+    for text in _source_texts(citation, context):
+        add(data, g7const.TEXT).text = text
+    if not data.children:
+        structure.children.remove(data)
 
     quality = CONFIDENCE_ENUMS.get(citation.get_confidence_level())
     if quality is not None:

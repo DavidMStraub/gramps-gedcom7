@@ -136,12 +136,17 @@ def handle_source(
 
 
 def medium_to_media_type(structure: g7types.GedcomStructure) -> SourceMediaType:
-    """Map a MEDI to a Gramps source media type, OTHER being named by its phrase."""
+    """Map a MEDI to a Gramps source media type, OTHER being named by its phrase.
+
+    Gramps has one value for a medium, so the phrase beside any other value is
+    left out, and reported, rather than replacing that value.
+    """
     assert isinstance(structure.value, str), "Expected MEDI to be a string"
-    phrase = g7util.get_first_child_with_tag(structure, g7const.PHRASE)
-    if phrase and phrase.value:
-        assert isinstance(phrase.value, str), "Expected PHRASE to be a string"
-        return SourceMediaType((SourceMediaType.CUSTOM, phrase.value))
+    if structure.value == "OTHER":
+        phrase = g7util.get_first_child_with_tag(structure, g7const.PHRASE)
+        if phrase and phrase.value:
+            assert isinstance(phrase.value, str), "Expected PHRASE to be a string"
+            return SourceMediaType((SourceMediaType.CUSTOM, phrase.value))
     media_type = SourceMediaType(MEDIA_TYPE_MAP.get(structure.value, SourceMediaType.CUSTOM))
     if int(media_type) == SourceMediaType.CUSTOM:
         media_type.string = structure.value

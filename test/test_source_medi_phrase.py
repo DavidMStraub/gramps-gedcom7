@@ -1,5 +1,7 @@
 """Test MEDI PHRASE handling in SOURCE_REPOSITORY_CITATION."""
 
+import io
+
 from gramps.gen.db import DbWriteBase
 from gramps.gen.db.utils import make_database
 from gramps.gen.lib import SourceMediaType
@@ -7,32 +9,35 @@ from gramps.gen.lib import SourceMediaType
 from gramps_gedcom7.importer import import_gedcom
 
 
-def test_medi_with_phrase():
-    """Test that MEDI with PHRASE uses the phrase as custom media type."""
+def test_medi_phrase_beside_a_standard_value_is_reported():
+    """MEDI BOOK keeps BOOK; its phrase cannot replace it, Gramps having one value."""
     gedcom_file = "test/data/maximal70.ged"
     db: DbWriteBase = make_database("sqlite")
     db.load(":memory:", callback=None)
-    import_gedcom(gedcom_file, db)
+    report = import_gedcom(gedcom_file, db)
 
-    # Get the source
     source = db.get_source_from_gramps_id("S1")
-    assert source is not None
+    first = source.get_reporef_list()[0]
+    assert first.get_media_type() == SourceMediaType.BOOK
+    assert first.get_call_number() == "Call number"
+    assert any("REPO > CALN > MEDI > PHRASE" in str(entry) for entry in report)
 
-    # Get repository references
-    repo_refs = source.get_reporef_list()
-    assert len(repo_refs) > 0
 
-    # Find the repo ref with MEDI BOOK and PHRASE "Booklet"
-    # This should be stored as CUSTOM with string "Booklet"
-    booklet_ref = None
-    for repo_ref in repo_refs:
-        media_type = repo_ref.get_media_type()
-        if media_type == SourceMediaType.CUSTOM and media_type.string == "Booklet":
-            booklet_ref = repo_ref
-            break
-
-    assert booklet_ref is not None, "Should find repo ref with PHRASE 'Booklet'"
-    assert booklet_ref.get_call_number() == "Call number"
+def test_medi_other_is_named_by_its_phrase():
+    db: DbWriteBase = make_database("sqlite")
+    db.load(":memory:", callback=None)
+    import_gedcom(
+        io.StringIO(
+            "0 HEAD\n1 GEDC\n2 VERS 7.0\n0 @R1@ REPO\n1 NAME Archive\n"
+            "0 @S1@ SOUR\n1 REPO @R1@\n2 CALN 12\n3 MEDI OTHER\n4 PHRASE Booklet\n"
+            "0 TRLR\n"
+        ),
+        db,
+    )
+    (reference,) = db.get_source_from_gramps_id("S1").get_reporef_list()
+    media_type = reference.get_media_type()
+    assert media_type == SourceMediaType.CUSTOM
+    assert media_type.string == "Booklet"
 
 
 def test_medi_without_phrase():

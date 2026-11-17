@@ -270,7 +270,7 @@ SPOUSE_AGES = {
     AttributeType.MOTHER_AGE: g7const.WIFE,
 }
 # The import writes an AGE and its PHRASE as "30y (adult)".
-_AGE_WITH_PHRASE = re.compile(r"(?P<age>.*?)(?: \((?P<phrase>.*)\))?")
+_AGE_WITH_PHRASE = re.compile(r"(?P<age>.*?)(?: \((?P<phrase>.*)\))?", re.DOTALL)
 
 
 def add_age(parent: g7types.GedcomStructure, text: str) -> None:
@@ -279,8 +279,7 @@ def add_age(parent: g7types.GedcomStructure, text: str) -> None:
     if not text:
         return
     match = _AGE_WITH_PHRASE.fullmatch(text)
-    assert match is not None
-    if _AGE.fullmatch(match["age"]):
+    if match is not None and _AGE.fullmatch(match["age"]):
         age = add(parent, g7const.AGE)
         age.text = match["age"]
         if match["phrase"]:
