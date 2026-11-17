@@ -7,13 +7,13 @@ from dataclasses import dataclass
 from gedcom7 import const as g7const
 from gedcom7 import types as g7types
 from gramps.gen.db import DbTxn, DbWriteBase
-from gramps.gen.lib import Person
+from gramps.gen.lib import ChildRef, ChildRefType, Family, Person
 
 from .event import Participant
 from .family import handle_family
 from .gedzip import AttachFile
 from .header import handle_header
-from .individual import handle_individual
+from .individual import Adoption, Pedigree, handle_individual
 from .multimedia import handle_multimedia
 from .note import handle_shared_note
 from .report import Progress, Report, collecting, note, summarize
@@ -183,6 +183,7 @@ def _build_objects(
         if progress is not None:
             progress(done, 2 * len(records))
     objects = _add_participants(objects)
+    objects = _set_child_relations(objects)
 
     researcher = None
     if head_subm_xref:
@@ -205,6 +206,57 @@ def _add_participants(objects: list) -> list:
         else:
             person.add_event_ref(participant.event_ref)
     return [obj for obj in objects if not isinstance(obj, Participant)]
+
+
+def _set_child_relations(objects: list) -> list:
+    """Set how each child is related to its parents, and drop the placeholders.
+
+    An adoption refines the pedigree: one parent adopting leaves the other a
+    birth parent where the pedigree says the child was adopted by both.
+    """
+    families = {obj.handle: obj for obj in objects if isinstance(obj, Family)}
+
+    def child_ref(placeholder: Pedigree | Adoption) -> ChildRef | None:
+        family = families.get(placeholder.family_handle)
+        for ref in family.get_child_ref_list() if family is not None else []:
+            if ref.ref == placeholder.person_handle:
+                return ref
+        note(placeholder.path, "the family does not list the individual as a child")
+        return None
+
+    set_by_pedigree: set[int] = set()
+    for pedigree in objects:
+        if not isinstance(pedigree, Pedigree):
+            continue
+        ref = child_ref(pedigree)
+        if ref is None:
+            continue
+        if id(ref) in set_by_pedigree:
+            note(pedigree.path, "contradicts an earlier pedigree, so was left out")
+            continue
+        set_by_pedigree.add(id(ref))
+        ref.set_father_relation(ChildRefType(pedigree.relation))
+        ref.set_mother_relation(ChildRefType(pedigree.relation))
+    # Several adoption events may each name one parent of the same family.
+    adopted_by: dict[int, tuple[ChildRef, set[str]]] = {}
+    for adoption in objects:
+        if not isinstance(adoption, Adoption):
+            continue
+        ref = child_ref(adoption)
+        if ref is not None:
+            adopted_by.setdefault(id(ref), (ref, set()))[1].add(adoption.adopted_by)
+    for ref, sides in adopted_by.values():
+        by_father = bool(sides & {"HUSB", "BOTH"})
+        by_mother = bool(sides & {"WIFE", "BOTH"})
+        for adopted_here, get, set_ in (
+            (by_father, ref.get_father_relation, ref.set_father_relation),
+            (by_mother, ref.get_mother_relation, ref.set_mother_relation),
+        ):
+            if adopted_here:
+                set_(ChildRefType(ChildRefType.ADOPTED))
+            elif get() == ChildRefType.ADOPTED:
+                set_(ChildRefType(ChildRefType.BIRTH))
+    return [obj for obj in objects if not isinstance(obj, (Pedigree, Adoption))]
 
 
 def handle_structure(
