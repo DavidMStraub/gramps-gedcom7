@@ -69,14 +69,18 @@ def handle_event_association(
         if child.tag == g7const.ROLE:
             assert isinstance(child.value, str), "Expected ROLE to be a string"
             phrase = g7util.get_first_child_with_tag(child, g7const.PHRASE)
-            if child.value in ROLE_MAP:
-                event_ref.set_role(EventRoleType(ROLE_MAP[child.value]))
-                if phrase and phrase.value:
-                    event_ref, note = util.add_note_to_object(phrase, event_ref)
-                    objects.append(note)
+            if child.value == "OTHER" and phrase and phrase.value:
+                # The phrase is all that says what the role is.
+                role = EventRoleType((EventRoleType.CUSTOM, phrase.value))
+                phrase = None
+            elif child.value in ROLE_MAP:
+                role = EventRoleType(ROLE_MAP[child.value])
             else:
-                name = phrase.value if phrase and phrase.value else child.value
-                event_ref.set_role(EventRoleType((EventRoleType.CUSTOM, name)))
+                role = EventRoleType((EventRoleType.CUSTOM, child.value))
+            event_ref.set_role(role)
+            if phrase and phrase.value:
+                event_ref, note = util.add_note_to_object(phrase, event_ref)
+                objects.append(note)
         elif child.tag in (g7const.PHRASE, g7const.NOTE):
             event_ref, note = util.add_note_to_object(child, event_ref)
             objects.append(note)

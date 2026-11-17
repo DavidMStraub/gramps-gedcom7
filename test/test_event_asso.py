@@ -7,8 +7,17 @@ import gedcom7
 import pytest
 from gedcom7 import const as g7const
 from gramps.gen.db.utils import make_database
-from gramps.gen.lib import EventRoleType, EventType
+from gramps.gen.lib import (
+    Event,
+    EventRef,
+    EventRoleType,
+    EventType,
+    Note,
+    NoteType,
+    Person,
+)
 
+from gramps_gedcom7 import process
 from gramps_gedcom7.export import db_to_structures
 from gramps_gedcom7.importer import import_gedcom
 
@@ -153,3 +162,60 @@ def test_associate_that_is_not_an_individual_is_reported():
     assert any("does not point at an individual" in str(e) for e in report)
     (person,) = db.iter_people()
     assert len(person.get_event_ref_list()) == 1
+
+
+def test_spouse_role_keeps_its_phrase_as_a_note():
+    source = """0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 NAME A /B/
+1 CENS
+2 ASSO @I2@
+3 ROLE SPOU
+4 PHRASE Wife of the head of household
+0 @I2@ INDI
+1 NAME C /D/
+0 TRLR
+"""
+    db, _ = import_file(io.StringIO(source))
+    ((ref, _),) = refs_to(db, "I2", EventType.CENSUS)
+    assert str(ref.get_role()) == "SPOU"
+    assert note_texts(db, ref) == ["Wife of the head of household"]
+    census = find(record(db_to_structures(db), "@I1@"), g7const.CENS)
+    associate = find(census, g7const.ASSO)
+    assert find(associate, g7const.ROLE).text == "SPOU"
+    assert find(associate, g7const.NOTE).text == "Wife of the head of household"
+
+
+def test_note_shared_by_one_persons_event_references_stays_on_both():
+    """The person points at the note once, but carries it in two places."""
+    principal, witness = Person(), Person()
+    for person, handle in ((principal, "p1"), (witness, "p2")):
+        person.handle, person.gramps_id = handle, handle.upper()
+    note = Note("Village elder")
+    note.handle, note.gramps_id = "n1", "N1"
+    note.set_type(NoteType(NoteType.EVENTREF))
+    events = []
+    for handle, event_type in (("e1", EventType.BIRTH), ("e2", EventType.DEATH)):
+        event = Event()
+        event.handle, event.gramps_id = handle, handle.upper()
+        event.set_type(EventType(event_type))
+        events.append(event)
+        own = EventRef()
+        own.ref = handle
+        principal.add_event_ref(own)
+        witnessed = EventRef()
+        witnessed.ref = handle
+        witnessed.set_role(EventRoleType(EventRoleType.WITNESS))
+        witnessed.add_note("n1")
+        witness.add_event_ref(witnessed)
+    db = make_database("sqlite")
+    db.load(":memory:")
+    process.add_objects_to_database([principal, witness, note, *events], db)
+
+    records = db_to_structures(db)
+    assert gedcom7.validate(records) == []
+    reimported, _ = import_file(io.StringIO(gedcom7.dumps(records)))
+    witness = reimported.get_person_from_gramps_id("P2")
+    assert [len(ref.get_note_list()) for ref in witness.get_event_ref_list()] == [1, 1]

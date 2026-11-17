@@ -262,11 +262,29 @@ def _plan_events(loaded: dict[str, list[Any]], context: ExportContext) -> None:
 
 
 def _plan_notes(loaded: dict[str, list[Any]], context: ExportContext) -> None:
-    """Count what points at each note, which decides where the note is written."""
+    """Count what points at each note, which decides where the note is written.
+
+    Each place an object carries the note counts, a person's event reference
+    and name as much as the person.
+    """
     for note in loaded["note"]:
-        context.note_backlinks[note.handle] = sum(
-            1 for _ in context.db.find_backlink_handles(note.handle)
-        )
+        count = 0
+        for kind, handle in context.db.find_backlink_handles(note.handle):
+            referrer = context.load(kind.lower(), handle)
+            if referrer is not None:
+                count += _note_count(referrer, note.handle)
+        context.note_backlinks[note.handle] = count
+
+
+def _note_count(obj: Any, note_handle: str) -> int:
+    """Count how often an object and the objects within it carry a note."""
+    count = 0
+    if hasattr(obj, "get_note_list"):
+        count += obj.get_note_list().count(note_handle)
+    if hasattr(obj, "get_note_child_list"):
+        for child in obj.get_note_child_list():
+            count += _note_count(child, note_handle)
+    return count
 
 
 def _build(
