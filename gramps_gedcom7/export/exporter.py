@@ -390,7 +390,15 @@ def export_gedcom(
 
 
 def _validate(records: list[g7types.GedcomStructure], context: ExportContext) -> None:
-    errors = gedcom7.validate(records)
+    """Refuse a dataset that does not conform, and report what it only should do."""
+    findings = gedcom7.validate(records)
+    errors = [f for f in findings if f.severity == "error"]
+    for finding in findings:
+        if finding.severity != "error":
+            origin = context.origin(finding.structure)
+            context.report.add(
+                str(origin) if origin else "dataset", finding.message, origin
+            )
     if errors:
         problems = [
             ValidationProblem(error, context.origin(error.structure))
