@@ -22,7 +22,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install Ubuntu dependencies
-        run: sudo apt update && sudo apt-get -y install gettext appstream pkg-config libcairo2-dev gir1.2-gtk-3.0 libgirepository1.0-dev libicu-dev gir1.2-pango-1.0
+        run: sudo apt update && sudo apt-get -y install pkg-config libcairo2-dev libgirepository1.0-dev gir1.2-gtk-3.0
       - name: Generate test locale
         run: sudo locale-gen it_IT.UTF-8
       - name: Install Python dependencies
@@ -31,7 +31,7 @@ jobs:
           pip install -r requirements-dev.txt
           pip install "PYGObject<=3.50.0"
           pip install .
-          pip install gramps[all]
+          pip install gramps
       - name: Static type check
         run: |
           mypy --install-types --non-interactive gramps_gedcom7
