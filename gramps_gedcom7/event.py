@@ -8,7 +8,6 @@ from gedcom7 import types as g7types
 from gedcom7 import util as g7util
 from gramps.gen.lib import (
     AttributeType,
-    Date,
     Event,
     EventRef,
     EventRoleType,
@@ -22,7 +21,7 @@ from gramps.gen.lib import (
 )
 from gramps.gen.lib.primaryobj import BasicPrimaryObject
 
-from . import report, util
+from . import util
 from .citation import handle_citation
 from .settings import ImportSettings
 
@@ -194,6 +193,11 @@ def handle_event(
                 event_type = EventType()
                 event_type.set_from_xml_str(child.value)
                 event.set_type(event_type)
+            elif not event.get_description():
+                # What kind of birth, death etc. it was, which is what Gramps'
+                # own GEDCOM import and export keep as the description.
+                assert isinstance(child.value, str), "Expected TYPE to be a string"
+                event.set_description(child.value)
         elif child.tag == g7const.RESN:
             util.set_privacy_on_object(resn_structure=child, obj=event)
         elif child.tag == g7const.PHON:
@@ -256,44 +260,7 @@ def handle_event(
                 other_objects
             )  # other_objects contains place only if it's new
         elif child.tag == g7const.DATE:
-            # An empty payload is a date value too, and is read as no date.
-            assert child.value is None or isinstance(
-                child.value,
-                (
-                    g7types.Date,
-                    g7types.DatePeriod,
-                    g7types.DateApprox,
-                    g7types.DateRange,
-                ),
-            ), "Expected value to be a date-related object"
-            try:
-                date = (
-                    Date()
-                    if child.value is None
-                    else util.gedcom_date_value_to_gramps_date(child.value)
-                )
-            except util.MixedCalendarsError as error:
-                date = Date()
-                date.set_modifier(Date.MOD_TEXTONLY)
-                date.set_text_value(child.text)
-                report.note(
-                    util.structure_path(child),
-                    f"{child.text} imported as text, {error}",
-                )
-            # Handle PHRASE substructure
-            phrase_structure = g7util.get_first_child_with_tag(child, g7const.PHRASE)
-            if phrase_structure and phrase_structure.value:
-                assert isinstance(
-                    phrase_structure.value, str
-                ), "Expected PHRASE value to be a string"
-                if child.value is None:
-                    # The phrase is all there is of the date.
-                    date.set_as_text(phrase_structure.value)
-                elif date.get_modifier() == Date.MOD_TEXTONLY:
-                    # The text is all that is left of the date, so it is kept.
-                    date.set_text_value(f"{child.text} ({phrase_structure.value})")
-                else:
-                    date.set_text_value(phrase_structure.value)
+            date = util.date_structure_to_date(child)
             event.set_date_object(date)
             # Handle TIME substructure
             time_structure = g7util.get_first_child_with_tag(child, g7const.TIME)
@@ -549,3 +516,41 @@ def handle_place(
         _apply_place_properties(lowest_place, structure, xref_handle_map, objects)
 
     return parent_handle, objects
+
+
+def age_to_text(structure: g7types.GedcomStructure) -> str:
+    """Write an AGE and its PHRASE as one text, the phrase in parentheses."""
+    phrase = g7util.get_first_child_with_tag(structure, g7const.PHRASE)
+    phrase_text = phrase.value if phrase is not None and phrase.value else ""
+    assert isinstance(phrase_text, str), "Expected PHRASE to be a string"
+    text = structure.text or ""
+    if text and phrase_text:
+        return f"{text} ({phrase_text})"
+    return text or phrase_text
+
+
+def add_ages(
+    structure: g7types.GedcomStructure, event_ref: EventRef, in_family: bool
+) -> None:
+    """Keep the ages an event gives as attributes of the reference to it.
+
+    An individual's age is the AGE beneath the event; a family event gives the
+    husband's and the wife's beneath HUSB and WIFE. This is where Gramps' own
+    GEDCOM import keeps them.
+    """
+    if in_family:
+        for tag, attribute_type in (
+            (g7const.HUSB, AttributeType.FATHER_AGE),
+            (g7const.WIFE, AttributeType.MOTHER_AGE),
+        ):
+            spouse = g7util.get_first_child_with_tag(structure, tag)
+            if spouse is None:
+                continue
+            age = g7util.get_first_child_with_tag(spouse, g7const.AGE)
+            if age is not None:
+                text = age_to_text(age)
+                util.add_attribute_to_object(event_ref, attribute_type, text)
+        return
+    age = g7util.get_first_child_with_tag(structure, g7const.AGE)
+    if age is not None:
+        util.add_attribute_to_object(event_ref, AttributeType.AGE, age_to_text(age))

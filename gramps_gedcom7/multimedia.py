@@ -7,13 +7,17 @@ from typing import List
 from gedcom7 import const as g7const
 from gedcom7 import types as g7types
 from gedcom7 import util as g7util
-from gramps.gen.lib import Attribute, AttributeType, Media
+from gramps.gen.lib import Media
 from gramps.gen.lib.primaryobj import BasicPrimaryObject
 
 from . import util
 from .citation import handle_citation
 from .gedzip import AttachFile
 from .settings import ImportSettings
+from .source import medium_to_media_type
+
+# The attribute keeping the medium a file is on, as Gramps' GEDCOM import names it.
+MEDIA_TYPE_ATTRIBUTE = "Media-Type"
 
 
 def handle_multimedia(
@@ -78,7 +82,14 @@ def handle_multimedia(
     if title is not None:
         assert isinstance(title.value, str), "Expected TITL value to be a string"
         media.set_description(title.value)
-    # TODO handle MEDIA & PHRASE
+    medium = g7util.get_first_child_with_tag(form_structure, g7const.MEDI)
+    if medium is not None:
+        # Gramps media have no media type of their own, so it is kept as the
+        # attribute Gramps' own GEDCOM import uses.
+        media_type = medium_to_media_type(medium)
+        util.add_attribute_to_object(
+            media, MEDIA_TYPE_ATTRIBUTE, media_type.xml_str() or str(media_type)
+        )
     media = util.add_ids(media, structure=structure, xref_handle_map=xref_handle_map)
     util.set_change_date(structure=structure, obj=media)
     if attach_file is not None:

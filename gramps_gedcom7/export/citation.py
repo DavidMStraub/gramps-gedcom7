@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from gedcom7 import const as g7const
 from gedcom7 import grammar as g7grammar
 from gedcom7 import types as g7types
-from gramps.gen.lib import Citation
+from gramps.gen.lib import Citation, NoteType
 
 from ..report import GrampsObject
 from . import util
@@ -101,9 +101,13 @@ def _add_citation_details(
             add(event, g7const.ROLE, role)
 
     date = util.date_to_date_value(citation.get_date_object())
-    if date is not None:
+    texts = _source_texts(citation, context)
+    if date is not None or texts:
         data = add(structure, g7const.DATA)
-        add(data, g7const.DATE, date)
+        if date is not None:
+            add(data, g7const.DATE, date)
+        for text in texts:
+            add(data, g7const.TEXT).text = text
 
     quality = CONFIDENCE_ENUMS.get(citation.get_confidence_level())
     if quality is not None:
@@ -114,6 +118,22 @@ def _add_citation_details(
 
     add_notes(structure, citation, context)
     add_media_refs(structure, citation, context)
+
+
+def _source_texts(citation: Citation, context: ExportContext) -> list[str]:
+    """Take the text the citation quotes, which the import keeps as source text notes.
+
+    A note shared with something else keeps its own record instead.
+    """
+    texts = []
+    for handle in citation.get_note_list():
+        note = context.load("note", handle)
+        if note is None or int(note.get_type()) != NoteType.SOURCE_TEXT:
+            continue
+        if context.note_backlinks.get(handle, 0) <= 1:
+            texts.append(note.get())
+            context.written_notes.add(handle)
+    return texts
 
 
 def add_citations(

@@ -19,7 +19,7 @@ from gramps.gen.lib.primaryobj import BasicPrimaryObject
 from . import util
 from .attribute import handle_attribute
 from .citation import handle_citation
-from .event import handle_event
+from .event import add_ages, handle_event
 from .settings import ImportSettings
 
 EVENT_TYPE_MAP = {
@@ -153,6 +153,7 @@ def handle_family(
             objects.extend(other_objects)
             event_ref = EventRef()
             event_ref.ref = event.handle
+            add_ages(child, event_ref, in_family=True)
             family.add_event_ref(event_ref)
             objects.append(event)
     family = util.add_ids(family, structure=structure, xref_handle_map=xref_handle_map)

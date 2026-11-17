@@ -11,34 +11,18 @@ from gramps.gen.lib import (
     Repository,
     RepositoryType,
     Source,
-    SourceMediaType,
     UrlType,
 )
 
 from . import util
 from .multimedia import add_media_refs
 from .note import add_note, add_notes
-from .util import add
+from .util import add, add_medium
 
 if TYPE_CHECKING:
     from .exporter import ExportContext
 
 # The inverse of the map the import reads a call number's medium with.
-MEDIA_TYPE_ENUMS = {
-    SourceMediaType.AUDIO: "AUDIO",
-    SourceMediaType.BOOK: "BOOK",
-    SourceMediaType.CARD: "CARD",
-    SourceMediaType.ELECTRONIC: "ELECTRONIC",
-    SourceMediaType.FICHE: "FICHE",
-    SourceMediaType.FILM: "FILM",
-    SourceMediaType.MAGAZINE: "MAGAZINE",
-    SourceMediaType.MANUSCRIPT: "MANUSCRIPT",
-    SourceMediaType.MAP: "MAP",
-    SourceMediaType.NEWSPAPER: "NEWSPAPER",
-    SourceMediaType.PHOTO: "PHOTO",
-    SourceMediaType.TOMBSTONE: "TOMBSTONE",
-    SourceMediaType.VIDEO: "VIDEO",
-}
 
 # What the import turns a repository's contact details into, and what each one
 # is written back as.
@@ -76,9 +60,10 @@ def source_to_record(source: Source, context: ExportContext) -> g7types.GedcomSt
         if pointer is None:
             continue
         reference = add(record, g7const.REPO, pointer=pointer)
+        add_notes(reference, repo_ref, context)
         if repo_ref.get_call_number():
             call_number = add(reference, g7const.CALN, repo_ref.get_call_number())
-            _add_medium(call_number, repo_ref.get_media_type())
+            add_medium(call_number, repo_ref.get_media_type())
 
     util.add_attributes(record, source, context)
     _add_source_text(record, source, context)
@@ -101,19 +86,6 @@ def _add_source_text(
             context.written_notes.add(handle)
 
 
-def _add_medium(parent: g7types.GedcomStructure, media_type) -> None:
-    """Say what a call number leads to, naming it where it has no enumeration."""
-    if media_type is None:
-        return
-    if media_type.is_custom():
-        if not media_type.string:
-            return
-        medium = add(parent, g7const.MEDI, "OTHER")
-        add(medium, g7const.PHRASE, media_type.string)
-        return
-    enum = MEDIA_TYPE_ENUMS.get(int(media_type))
-    if enum is not None:
-        add(parent, g7const.MEDI, enum)
 
 
 def _is_submitter(repository: Repository) -> bool:

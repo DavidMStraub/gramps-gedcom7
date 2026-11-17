@@ -13,6 +13,7 @@ from gramps.gen.lib import (
     AttributeType,
     Date,
     EventRoleType,
+    SourceMediaType,
     SrcAttribute,
 )
 
@@ -73,9 +74,25 @@ CUSTOM_ATTRIBUTE_TAGS = {
     "Website": g7const.WWW,
 }
 
-# Carried by the import on a media reference and on a date, and written back
-# where those are written rather than as an attribute in their own right.
-ATTRIBUTES_WRITTEN_ELSEWHERE = ("OBJE:TITL", "Time")
+# Carried by the import on a media reference, a date and a media file, and
+# written back where those are written rather than as an attribute of their own.
+ATTRIBUTES_WRITTEN_ELSEWHERE = ("OBJE:TITL", "Time", "Media-Type")
+
+MEDIA_TYPE_ENUMS = {
+    SourceMediaType.AUDIO: "AUDIO",
+    SourceMediaType.BOOK: "BOOK",
+    SourceMediaType.CARD: "CARD",
+    SourceMediaType.ELECTRONIC: "ELECTRONIC",
+    SourceMediaType.FICHE: "FICHE",
+    SourceMediaType.FILM: "FILM",
+    SourceMediaType.MAGAZINE: "MAGAZINE",
+    SourceMediaType.MANUSCRIPT: "MANUSCRIPT",
+    SourceMediaType.MAP: "MAP",
+    SourceMediaType.NEWSPAPER: "NEWSPAPER",
+    SourceMediaType.PHOTO: "PHOTO",
+    SourceMediaType.TOMBSTONE: "TOMBSTONE",
+    SourceMediaType.VIDEO: "VIDEO",
+}
 
 # What the specification calls someone taking part in something. The whole
 # vocabulary, and what each Gramps role among them is called, one serving both
@@ -406,3 +423,19 @@ def _add_attribute_details(
             f"GEDCOM having none under {structure.tag}",
             owner,
         )
+
+
+def add_medium(parent: g7types.GedcomStructure, media_type) -> None:
+    """Write the medium of a call number or a file as MEDI, OTHER naming it by
+    its phrase where it has no enumeration value."""
+    if media_type is None:
+        return
+    if media_type.is_custom():
+        if not media_type.string:
+            return
+        medium = add(parent, g7const.MEDI, "OTHER")
+        add(medium, g7const.PHRASE, media_type.string)
+        return
+    enum = MEDIA_TYPE_ENUMS.get(int(media_type))
+    if enum is not None:
+        add(parent, g7const.MEDI, enum)

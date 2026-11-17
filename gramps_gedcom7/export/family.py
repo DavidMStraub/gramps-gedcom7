@@ -10,7 +10,7 @@ from gramps.gen.lib import Family
 
 from . import util
 from .citation import add_citations
-from .event import FAMILY_EVENT_TAGS, add_event
+from .event import FAMILY_EVENT_TAGS, add_ages, add_event
 from .multimedia import add_media_refs
 from .note import add_notes
 from .util import add, add_phrase_from_notes
@@ -31,7 +31,10 @@ def family_to_record(family: Family, context: ExportContext) -> g7types.GedcomSt
     for event_ref in family.get_event_ref_list():
         event = context.owned_event(event_ref.ref, family.handle)
         if event is not None:
-            add_event(record, event, FAMILY_EVENT_TAGS, context, family.handle)
+            structure = add_event(
+                record, event, FAMILY_EVENT_TAGS, context, family.handle
+            )
+            add_ages(structure, event_ref, in_family=True)
 
     if family.get_father_handle():
         add(record, g7const.HUSB, pointer=context.pointer("person", family.get_father_handle()))

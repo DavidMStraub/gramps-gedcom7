@@ -21,7 +21,7 @@ from gramps.gen.lib.primaryobj import BasicPrimaryObject
 
 from . import util
 from .attribute import handle_attribute
-from .event import handle_event
+from .event import add_ages, handle_event
 from .citation import handle_citation
 from .settings import ImportSettings
 
@@ -115,7 +115,9 @@ def handle_individual(
                 # Map unknown values to UNKNOWN
                 person.set_gender(Person.UNKNOWN)
         elif child.tag == g7const.NAME:
-            name, other_objects = handle_name(child, xref_handle_map=xref_handle_map)
+            name, other_objects = handle_name(
+                child, xref_handle_map=xref_handle_map, settings=settings
+            )
             objects.extend(other_objects)
             if person.primary_name.is_empty():
                 person.set_primary_name(name)
@@ -175,6 +177,7 @@ def handle_individual(
                         path=util.structure_path(pedigree),
                     )
                 )
+            objects.extend(_add_link_notes(child, person, xref_handle_map))
         elif (
             child.tag == g7const.FAMS
             and child.pointer
@@ -184,7 +187,7 @@ def handle_individual(
             if not family_handle:
                 raise ValueError(f"Family {child.pointer} not found")
             person.add_family_handle(family_handle)
-            # TODO handle FAMS PHRASE
+            objects.extend(_add_link_notes(child, person, xref_handle_map))
         elif (
             child.tag == g7const.SNOTE
             and child.pointer
@@ -211,6 +214,7 @@ def handle_individual(
             objects.extend(other_objects)
             event_ref = EventRef()
             event_ref.ref = event.handle
+            add_ages(child, event_ref, in_family=False)
             person.add_event_ref(event_ref)
             objects.append(event)
             if child.tag == g7const.ADOP:
@@ -283,6 +287,27 @@ def handle_adoptive_family(
         adopted_by=value,
         path=util.structure_path(famc),
     )
+
+
+def _add_link_notes(
+    structure: g7types.GedcomStructure,
+    person: Person,
+    xref_handle_map: dict[str, str],
+) -> list[BasicPrimaryObject]:
+    """Keep the notes on a FAMC or FAMS as the person's, as Gramps' own GEDCOM
+    import does, the link to a family having no notes of its own in Gramps."""
+    objects: list[BasicPrimaryObject] = []
+    for child in structure.children:
+        if child.tag == g7const.NOTE:
+            _, note = util.add_note_to_object(child, person)
+            objects.append(note)
+        elif (
+            child.tag == g7const.SNOTE
+            and child.pointer
+            and child.pointer != g7grammar.voidptr
+        ):
+            person.add_note(xref_handle_map[child.pointer])
+    return objects
 
 
 def handle_association_structure(
@@ -405,7 +430,9 @@ def handle_alias_structure(
 
 
 def handle_name(
-    structure: g7types.GedcomStructure, xref_handle_map: dict[str, str]
+    structure: g7types.GedcomStructure,
+    xref_handle_map: dict[str, str],
+    settings: ImportSettings,
 ) -> tuple[Name, list[BasicPrimaryObject]]:
     """Convert a GEDCOM structure to a Gramps Name object.
 
@@ -472,6 +499,15 @@ def handle_name(
         elif child.tag == g7const.NOTE:
             name, note = util.add_note_to_object(child, name)
             objects.append(note)
+        elif child.tag == g7const.SOUR:
+            citation, citation_objects = handle_citation(
+                child,
+                xref_handle_map=xref_handle_map,
+                settings=settings,
+            )
+            objects.extend(citation_objects)
+            name.add_citation(citation.handle)
+            objects.append(citation)
     # if name parts are not given, use the personal name parts
     if not name.first_name and personal_name.given:
         name.set_first_name(personal_name.given)
