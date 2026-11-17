@@ -32,10 +32,11 @@ def test_individual_attributes():
         attr.get_type().xml_str() == "Caste" for attr in attributes
     )
     
-    # OCCU maps to OCCUPATION
-    assert AttributeType.OCCUPATION in attr_types or any(
-        attr.get_type().xml_str() == "Occupation" for attr in attributes
-    )
+    # NATI maps to NATIONAL
+    assert AttributeType.NATIONAL in attr_types
+
+    # OCCU is read as an event
+    assert AttributeType.OCCUPATION not in attr_types
     
     # NCHI maps to NUM_CHILD
     assert AttributeType.NUM_CHILD in attr_types or any(
@@ -77,7 +78,7 @@ def test_family_attributes():
 
 
 def test_custom_attributes():
-    """Test that custom attributes (EDUC, RELI, etc.) are imported."""
+    """Test that attributes without a Gramps type are imported as custom ones."""
     gedcom_file = "test/data/maximal70.ged"
     db: DbWriteBase = make_database("sqlite")
     db.load(":memory:", callback=None)
@@ -94,15 +95,10 @@ def test_custom_attributes():
         if attr.get_type().value == AttributeType.CUSTOM
     ]
     
-    # Should have some custom attributes (EDUC, RELI, PROP, etc.)
-    assert len(custom_attrs) > 0
-    
-    # Check that custom attribute names are preserved
     custom_names = {attr.get_type().xml_str() for attr in custom_attrs}
-    
-    # Education, Religion, Property should be there
-    assert any("Education" in name for name in custom_names)
-    assert any("Religion" in name or "reli" in name for name in custom_names)
+    assert "Number of Marriages" in custom_names
+    # EDUC, PROP, RELI, RESI and TITL are read as events
+    assert not custom_names & {"Education", "Property", "Religion", "Residence", "Title"}
 
 
 def test_attribute_with_type():

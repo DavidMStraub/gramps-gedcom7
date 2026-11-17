@@ -98,6 +98,16 @@ def handle_event_association(
     return participant, objects
 
 
+# The events whose payload says what happened, kept as the description. The
+# payload of the others only says that the event happened.
+DESCRIBED_BY_PAYLOAD = frozenset(
+    {
+        g7const.EVEN, g7const.EDUC, g7const.OCCU, g7const.PROP,
+        g7const.RELI, g7const.RESI, g7const.TITL,
+    }
+)  # fmt: skip
+
+
 def _map_place_type(form_type: str) -> int:
     """Map a GEDCOM FORM type string to a Gramps PlaceType.
 
@@ -171,6 +181,8 @@ def handle_event(
     event.set_type(event_type_map.get(structure.tag, EventType.CUSTOM))
     event.handle = util.make_handle()
     objects = []
+    if structure.tag in DESCRIBED_BY_PAYLOAD and structure.text:
+        event.set_description(structure.text)
     for child in structure.children:
         if child.tag == g7const.TYPE:
             if event.get_type() == EventType.CUSTOM:

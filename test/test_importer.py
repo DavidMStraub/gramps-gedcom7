@@ -35,44 +35,48 @@ def test_importer_maximal70():
     # TODO attributes (lines 48-72)
 
     # events
-    assert len(family.event_ref_list) == 11
-    anulment = db.get_event_from_handle(family.event_ref_list[0].ref)
+    assert len(family.event_ref_list) == 12
+    residence = db.get_event_from_handle(family.event_ref_list[0].ref)
+    assert residence.get_type().value == EventType.RESIDENCE
+    assert residence.get_description() == "Residence"
+    event_refs = family.event_ref_list[1:]
+    anulment = db.get_event_from_handle(event_refs[0].ref)
     assert isinstance(anulment, Event)
     assert anulment.get_type().value == EventType.ANNULMENT
 
-    census = db.get_event_from_handle(family.event_ref_list[1].ref)
+    census = db.get_event_from_handle(event_refs[1].ref)
     assert isinstance(census, Event)
     assert census.get_type().value == EventType.CENSUS
 
-    divorce = db.get_event_from_handle(family.event_ref_list[2].ref)
+    divorce = db.get_event_from_handle(event_refs[2].ref)
     assert isinstance(divorce, Event)
     assert divorce.get_type().value == EventType.DIVORCE
 
-    divorce_filing = db.get_event_from_handle(family.event_ref_list[3].ref)
+    divorce_filing = db.get_event_from_handle(event_refs[3].ref)
     assert isinstance(divorce_filing, Event)
     assert divorce_filing.get_type().value == EventType.DIV_FILING
 
-    engagement = db.get_event_from_handle(family.event_ref_list[4].ref)
+    engagement = db.get_event_from_handle(event_refs[4].ref)
     assert isinstance(engagement, Event)
     assert engagement.get_type().value == EventType.ENGAGEMENT
 
-    marriage_banns = db.get_event_from_handle(family.event_ref_list[5].ref)
+    marriage_banns = db.get_event_from_handle(event_refs[5].ref)
     assert isinstance(marriage_banns, Event)
     assert marriage_banns.get_type().value == EventType.MARR_BANNS
 
-    marriage_contract = db.get_event_from_handle(family.event_ref_list[6].ref)
+    marriage_contract = db.get_event_from_handle(event_refs[6].ref)
     assert isinstance(marriage_contract, Event)
     assert marriage_contract.get_type().value == EventType.MARR_CONTR
 
-    marriage_license = db.get_event_from_handle(family.event_ref_list[7].ref)
+    marriage_license = db.get_event_from_handle(event_refs[7].ref)
     assert isinstance(marriage_license, Event)
     assert marriage_license.get_type().value == EventType.MARR_LIC
 
-    marriage_settlement = db.get_event_from_handle(family.event_ref_list[8].ref)
+    marriage_settlement = db.get_event_from_handle(event_refs[8].ref)
     assert isinstance(marriage_settlement, Event)
     assert marriage_settlement.get_type().value == EventType.MARR_SETTL
 
-    marriage = db.get_event_from_handle(family.event_ref_list[9].ref)
+    marriage = db.get_event_from_handle(event_refs[9].ref)
     assert isinstance(marriage, Event)
     assert marriage.get_type().value == EventType.MARRIAGE
     # TODO AGE
@@ -146,7 +150,7 @@ def test_importer_maximal70():
     assert len(caus_attrs) == 1
 
     # custom event (line 123)
-    event = db.get_event_from_handle(family.event_ref_list[10].ref)
+    event = db.get_event_from_handle(event_refs[10].ref)
     assert isinstance(event, Event)
     assert event.get_type().value == EventType.CUSTOM
     assert event.get_type().xml_str() == "Event type"
@@ -305,62 +309,74 @@ def test_importer_maximal70():
 
     # TODO individual attributes (lines 265-294)
 
-    # person events
-    assert len(person.event_ref_list) == 26
+    # person events, the first six read from attributes
+    assert len(person.event_ref_list) == 32
+    from_attributes = [
+        db.get_event_from_handle(ref.ref) for ref in person.event_ref_list[:6]
+    ]
+    assert [(e.get_type().value, e.get_description()) for e in from_attributes] == [
+        (EventType.EDUCATION, "Education"),
+        (EventType.OCCUPATION, "occu"),
+        (EventType.PROPERTY, "prop"),
+        (EventType.RELIGION, "reli"),
+        (EventType.RESIDENCE, "resi"),
+        (EventType.NOB_TITLE, "titl"),
+    ]
+    person_events = person.event_ref_list[6:]
 
     # BAPM - Baptism
-    event = db.get_event_from_handle(person.event_ref_list[0].ref)
+    event = db.get_event_from_handle(person_events[0].ref)
     assert isinstance(event, Event)
     assert event.get_type().value == EventType.BAPTISM
 
     # BAPM - Baptism
-    event = db.get_event_from_handle(person.event_ref_list[1].ref)
+    event = db.get_event_from_handle(person_events[1].ref)
     assert isinstance(event, Event)
     assert event.get_type().value == EventType.BAPTISM
 
     # BARM - Bar Mitzvah
-    event = db.get_event_from_handle(person.event_ref_list[2].ref)
+    event = db.get_event_from_handle(person_events[2].ref)
     assert isinstance(event, Event)
     assert event.get_type().value == EventType.BAR_MITZVAH
 
     # BASM - Bas Mitzvah
-    event = db.get_event_from_handle(person.event_ref_list[3].ref)
+    event = db.get_event_from_handle(person_events[3].ref)
     assert isinstance(event, Event)
     assert event.get_type().value == EventType.BAS_MITZVAH
 
     # BLES - Blessing
-    event = db.get_event_from_handle(person.event_ref_list[4].ref)
+    event = db.get_event_from_handle(person_events[4].ref)
     assert isinstance(event, Event)
     assert event.get_type().value == EventType.BLESS
 
     # BURI - Burial
-    event = db.get_event_from_handle(person.event_ref_list[5].ref)
+    event = db.get_event_from_handle(person_events[5].ref)
     assert isinstance(event, Event)
     assert event.get_type().value == EventType.BURIAL
     assert event.date.dateval == (30, 3, 2022, False)
 
     # CENS - Census
-    event = db.get_event_from_handle(person.event_ref_list[6].ref)
+    event = db.get_event_from_handle(person_events[6].ref)
     assert isinstance(event, Event)
     assert event.get_type().value == EventType.CENSUS
 
     # CHRA - Adult Christening
-    event = db.get_event_from_handle(person.event_ref_list[7].ref)
+    event = db.get_event_from_handle(person_events[7].ref)
     assert isinstance(event, Event)
     assert event.get_type().value == EventType.ADULT_CHRISTEN
 
     # CONF - Confirmation
-    event = db.get_event_from_handle(person.event_ref_list[8].ref)
+    event = db.get_event_from_handle(person_events[8].ref)
     assert isinstance(event, Event)
     assert event.get_type().value == EventType.CONFIRMATION
 
     # CREM - Cremation
-    event = db.get_event_from_handle(person.event_ref_list[9].ref)
+    event = db.get_event_from_handle(person_events[9].ref)
     assert isinstance(event, Event)
     assert event.get_type().value == EventType.CREMATION
 
     # DEAT - Death (line 315)
-    event = db.get_event_from_handle(person.event_ref_list[10].ref)
+    event = db.get_event_from_handle(person_events[10].ref)
     assert isinstance(event, Event)
     assert event.get_type().value == EventType.DEATH
     assert event.date.dateval == (28, 3, 2022, False)
@@ -428,71 +444,71 @@ def test_importer_maximal70():
     assert len(caus_attrs) == 1
 
     # EMIG - Emigration
-    event = db.get_event_from_handle(person.event_ref_list[11].ref)
+    event = db.get_event_from_handle(person_events[11].ref)
     assert isinstance(event, Event)
     assert event.get_type().value == EventType.EMIGRATION
 
     # FCOM - First Communion
-    event = db.get_event_from_handle(person.event_ref_list[12].ref)
+    event = db.get_event_from_handle(person_events[12].ref)
     assert isinstance(event, Event)
     assert event.get_type().value == EventType.FIRST_COMMUN
 
     # GRAD - Graduation
-    event = db.get_event_from_handle(person.event_ref_list[13].ref)
+    event = db.get_event_from_handle(person_events[13].ref)
     assert isinstance(event, Event)
     assert event.get_type().value == EventType.GRADUATION
 
     # IMMI - Immigration
-    event = db.get_event_from_handle(person.event_ref_list[14].ref)
+    event = db.get_event_from_handle(person_events[14].ref)
     assert isinstance(event, Event)
     assert event.get_type().value == EventType.IMMIGRATION
 
     # NATU - Naturalization
-    event = db.get_event_from_handle(person.event_ref_list[15].ref)
+    event = db.get_event_from_handle(person_events[15].ref)
     assert isinstance(event, Event)
     assert event.get_type().value == EventType.NATURALIZATION
 
     # ORDN - Ordination
-    event = db.get_event_from_handle(person.event_ref_list[16].ref)
+    event = db.get_event_from_handle(person_events[16].ref)
     assert isinstance(event, Event)
     assert event.get_type().value == EventType.ORDINATION
 
     # PROB - Probate
-    event = db.get_event_from_handle(person.event_ref_list[17].ref)
+    event = db.get_event_from_handle(person_events[17].ref)
     assert isinstance(event, Event)
     assert event.get_type().value == EventType.PROBATE
 
     # RETI - Retirement
-    event = db.get_event_from_handle(person.event_ref_list[18].ref)
+    event = db.get_event_from_handle(person_events[18].ref)
     assert isinstance(event, Event)
     assert event.get_type().value == EventType.RETIREMENT
 
     # WILL - Will
-    event = db.get_event_from_handle(person.event_ref_list[19].ref)
+    event = db.get_event_from_handle(person_events[19].ref)
     assert isinstance(event, Event)
     assert event.get_type().value == EventType.WILL
 
     # ADOP - Adoption
-    event = db.get_event_from_handle(person.event_ref_list[20].ref)
+    event = db.get_event_from_handle(person_events[20].ref)
     assert isinstance(event, Event)
     assert event.get_type().value == EventType.ADOPT
 
     # TODO FAMC & ADOP structure of ADOP event (lines 368-371)
 
     # BIRTH - Birth
-    event = db.get_event_from_handle(person.event_ref_list[23].ref)
+    event = db.get_event_from_handle(person_events[23].ref)
     assert isinstance(event, Event)
     assert event.get_type().value == EventType.BIRTH
     assert event.date.dateval == (1, 1, 2000, False)
 
     # CHR - Christening
-    event = db.get_event_from_handle(person.event_ref_list[24].ref)
+    event = db.get_event_from_handle(person_events[24].ref)
     assert isinstance(event, Event)
     assert event.get_type().value == EventType.CHRISTEN
     assert event.date.dateval == (9, 1, 2000, False)
 
     # EVEN - Custom event
-    event = db.get_event_from_handle(person.event_ref_list[25].ref)
+    event = db.get_event_from_handle(person_events[25].ref)
     assert isinstance(event, Event)
     assert event.get_type().value == EventType.CUSTOM
     assert event.get_type().xml_str() == "Event type"
@@ -512,8 +528,9 @@ def test_importer_maximal70():
 
     # TODO associations (lines 459-476)
 
-    # person attributes (14 GEDCOM individual attributes + REFN, UID, EXID)
-    assert len(person.attribute_list) == 20
+    # person attributes (8 GEDCOM individual attributes, the other 6 being
+    # read as events, + REFN, UID, EXID)
+    assert len(person.attribute_list) == 14
     # Check for UID attributes
     uid_attrs = [a for a in person.attribute_list if a.get_type() == "UID"]
     assert len(uid_attrs) == 2
@@ -539,25 +556,20 @@ def test_importer_maximal70():
         a for a in person.attribute_list if a.get_type().value == AttributeType.CASTE
     ]
     assert len(cast_attrs) == 1
-    occu_attrs = [
-        a
-        for a in person.attribute_list
-        if a.get_type().value == AttributeType.OCCUPATION
-    ]
-    assert len(occu_attrs) == 1
     nchi_attrs = [
         a
         for a in person.attribute_list
         if a.get_type().value == AttributeType.NUM_CHILD
     ]
     assert len(nchi_attrs) == 1
-    # Check for custom attributes (Education, Religion, etc.)
-    custom_attrs = [
-        a for a in person.attribute_list if a.get_type().value == AttributeType.CUSTOM
-    ]
-    assert (
-        len(custom_attrs) >= 4
-    )  # Education, Religion, Property, Number of Marriages, plus IDNO with TYPE
+    # Custom attributes: NMR, and IDNO and FACT named by their TYPE
+    custom_names = {
+        a.get_type().string
+        for a in person.attribute_list
+        if a.get_type().value == AttributeType.CUSTOM
+    }
+    assert {"Number of Marriages", "ID number type", "fact type"} <= custom_names
+    assert not custom_names & {"Education", "Property", "Religion", "Residence"}
 
     # person notes
     assert len(person.note_list) == 2

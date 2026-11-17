@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import gedcom7
 from gedcom7 import const as g7const
@@ -42,9 +42,9 @@ UNNAMED_MONTH_CALENDARS = {
     Date.CAL_FRENCH: "FRENCH_R",
 }
 
-# The inverse of util.GEDCOM_ATTRIBUTE_MAP, by which the import parks a GEDCOM
-# attribute in a Gramps one. Standard types are keyed by their number, since the
-# name of a standard type is translated and this one is not the English one.
+# The GEDCOM attribute each Gramps attribute is written as. Standard types are
+# keyed by their number, since the name of a standard type is translated and
+# this one is not the English one.
 STANDARD_ATTRIBUTE_TAGS = {
     AttributeType.CASTE: g7const.CAST,
     AttributeType.DESCRIPTION: g7const.DSCR,
@@ -57,8 +57,8 @@ STANDARD_ATTRIBUTE_TAGS = {
     AttributeType.CAUSE: g7const.CAUS,
 }
 
-# Custom attributes the import creates, whose name is the only record of which
-# structure they came from.
+# Custom attributes the import creates, or created before reading some of these
+# as events, whose name is the only record of which structure they came from.
 CUSTOM_ATTRIBUTE_TAGS = {
     "Education": g7const.EDUC,
     "Property": g7const.PROP,
@@ -364,3 +364,45 @@ def add_attributes(
         structure.text = value
         if identifier_type is not None and allows(structure, g7const.TYPE):
             add(structure, g7const.TYPE, identifier_type)
+        _add_attribute_details(structure, attribute, obj, context)
+
+
+def _add_attribute_details(
+    structure: g7types.GedcomStructure,
+    attribute: Any,
+    obj: object,
+    context: ExportContext,
+) -> None:
+    """Write an attribute's restriction, notes and citations, where its
+    structure has room for them, and report those it has none for."""
+    # Imported here, these modules importing this one.
+    from .citation import add_citations
+    from .note import add_notes
+
+    left_out = []
+    if attribute.get_privacy():
+        if allows(structure, g7const.RESN):
+            add_privacy(structure, True)
+        else:
+            left_out.append("privacy")
+    # A source's attributes have no notes or citations.
+    sourced = hasattr(attribute, "get_citation_list")
+    if sourced and attribute.get_note_list():
+        if allows(structure, g7const.NOTE):
+            add_notes(structure, attribute, context)
+        else:
+            left_out.append("notes")
+    if sourced and attribute.get_citation_list():
+        if allows(structure, g7const.SOUR):
+            add_citations(structure, attribute, context)
+        else:
+            left_out.append("citations")
+    if left_out:
+        owner = GrampsObject.of(obj)
+        context.report.add(
+            str(owner),
+            f"{' and '.join(left_out)} of attribute "
+            f"{attribute.get_type()} not written, "
+            f"GEDCOM having none under {structure.tag}",
+            owner,
+        )

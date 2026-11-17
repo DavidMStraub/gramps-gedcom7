@@ -20,6 +20,7 @@ from gramps.gen.lib import (
 from gramps.gen.lib.primaryobj import BasicPrimaryObject
 
 from . import util
+from .attribute import handle_attribute
 from .event import handle_event
 from .citation import handle_citation
 from .settings import ImportSettings
@@ -73,6 +74,13 @@ EVENT_TYPE_MAP = {
     g7const.RETI: EventType.RETIREMENT,
     g7const.WILL: EventType.WILL,
     g7const.EVEN: EventType.CUSTOM,
+    # Attributes, read as events so as to keep their dates, places and sources
+    g7const.EDUC: EventType.EDUCATION,
+    g7const.OCCU: EventType.OCCUPATION,
+    g7const.PROP: EventType.PROPERTY,
+    g7const.RELI: EventType.RELIGION,
+    g7const.RESI: EventType.RESIDENCE,
+    g7const.TITL: EventType.NOB_TITLE,
 }
 
 
@@ -116,21 +124,17 @@ def handle_individual(
         elif child.tag in (
             g7const.CAST,
             g7const.DSCR,
-            g7const.EDUC,
             g7const.IDNO,
             g7const.NATI,
             g7const.NCHI,
             g7const.NMR,
-            g7const.OCCU,
-            g7const.PROP,
-            g7const.RELI,
-            g7const.RESI,
             g7const.SSN,
-            g7const.TITL,
             g7const.FACT,
         ):
-            # Individual attributes
-            util.handle_attribute_structure(child, person)
+            # Individual attributes, the others being read as events
+            objects.extend(
+                handle_attribute(child, person, xref_handle_map, settings)
+            )
         # TODO handle SUBM
         # TODO handle ANCI
         # TODO handle DESI

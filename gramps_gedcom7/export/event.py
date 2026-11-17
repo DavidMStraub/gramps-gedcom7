@@ -44,6 +44,12 @@ INDIVIDUAL_EVENT_TAGS = {
     EventType.PROBATE: g7const.PROB,
     EventType.RETIREMENT: g7const.RETI,
     EventType.WILL: g7const.WILL,
+    EventType.EDUCATION: g7const.EDUC,
+    EventType.OCCUPATION: g7const.OCCU,
+    EventType.PROPERTY: g7const.PROP,
+    EventType.RELIGION: g7const.RELI,
+    EventType.RESIDENCE: g7const.RESI,
+    EventType.NOB_TITLE: g7const.TITL,
 }
 
 # Written under a family record.
@@ -58,7 +64,17 @@ FAMILY_EVENT_TAGS = {
     EventType.MARR_LIC: g7const.MARL,
     EventType.MARR_SETTL: g7const.MARS,
     EventType.MARRIAGE: g7const.MARR,
+    EventType.RESIDENCE: g7const.RESI,
 }
+
+# The structures whose payload says what happened, which is what the Gramps
+# description holds. Under the others the description is written as a note.
+DESCRIBED_BY_PAYLOAD = frozenset(
+    {
+        g7const.EVEN, g7const.EDUC, g7const.OCCU, g7const.PROP,
+        g7const.RELI, g7const.RESI, g7const.TITL,
+    }
+)  # fmt: skip
 
 _LATITUDE = re.compile(g7grammar.latitude)
 _LONGITUDE = re.compile(g7grammar.longitude)
@@ -213,9 +229,7 @@ def _add_event_details(
     if event_type is not None:
         add(structure, g7const.TYPE, event_type)
     description = event.get_description()
-    if description and tag == g7const.EVEN:
-        # The generic event structure's payload says what happened, which is
-        # what the Gramps description holds.
+    if description and tag in DESCRIBED_BY_PAYLOAD:
         structure.text = description
         description = ""
     util.add_privacy(structure, event.get_privacy())
