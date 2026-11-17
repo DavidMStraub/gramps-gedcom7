@@ -16,6 +16,7 @@ from gedcom7 import gedzip as g7gedzip
 from gedcom7 import types as g7types
 from gramps.gen.db import DbReadBase
 from gramps.gen.errors import HandleError
+from gramps.gen.lib import EventRoleType
 
 from .. import __version__
 from ..gedzip import MediaFile
@@ -36,7 +37,7 @@ from .source import repository_to_record, source_to_record
 from .xrefs import XrefMap
 
 if TYPE_CHECKING:
-    from gramps.gen.lib import Event, EventRoleType
+    from gramps.gen.lib import Event, EventRef
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +55,7 @@ class ExportContext:
     xrefs: XrefMap
     settings: ExportSettings
     owners: dict[str, set[str]] = field(default_factory=dict)
-    people_at: dict[str, list[tuple[str, EventRoleType]]] = field(default_factory=dict)
+    people_at: dict[str, list[tuple[str, EventRef]]] = field(default_factory=dict)
     note_backlinks: dict[str, int] = field(default_factory=dict)
     written_notes: set[str] = field(default_factory=set)
     report: Report = field(default_factory=Report)
@@ -150,11 +151,11 @@ class ExportContext:
 
     def participants(
         self, event_handle: str, owner_handle: str
-    ) -> list[tuple[str, EventRoleType]]:
+    ) -> list[tuple[str, EventRef]]:
         """List the people at an event other than the record writing it."""
         return [
-            (handle, role)
-            for handle, role in self.people_at.get(event_handle, [])
+            (handle, event_ref)
+            for handle, event_ref in self.people_at.get(event_handle, [])
             if handle != owner_handle
         ]
 
@@ -228,30 +229,62 @@ def _plan_events(loaded: dict[str, list[Any]], context: ExportContext) -> None:
 
     A person and a family that point at the same event each write their own copy
     of it, there being no way to name a family as an associate; two people
-    sharing one write it once, the second appearing as an associate of the first.
+    sharing one write it once, the others appearing as associates of its writer.
     """
-    for person in _in_order(loaded["person"], context.xrefs):
+    people = _in_order(loaded["person"], context.xrefs)
+    for person in people:
         for event_ref in person.get_event_ref_list():
             context.people_at.setdefault(event_ref.ref, []).append(
-                (person.handle, event_ref.get_role())
+                (person.handle, event_ref)
             )
-    # The first person to point at an event writes it, and the first family
-    # likewise, each kind independently of the other.
-    for kind in ("person", "family"):
-        owned: set[str] = set()
-        for obj in _in_order(loaded[kind], context.xrefs):
-            for event_ref in obj.get_event_ref_list():
-                if event_ref.ref not in owned:
-                    owned.add(event_ref.ref)
-                    context.owners.setdefault(event_ref.ref, set()).add(obj.handle)
+    # The first family to point at an event writes it. So does the first person
+    # who is its principal, or failing that, if no family writes it, the first
+    # person at it in any role.
+    family_events: set[str] = set()
+    for family in _in_order(loaded["family"], context.xrefs):
+        for event_ref in family.get_event_ref_list():
+            if event_ref.ref not in family_events:
+                family_events.add(event_ref.ref)
+                context.owners.setdefault(event_ref.ref, set()).add(family.handle)
+    owned: set[str] = set()
+    for principal_only in (True, False):
+        for person in people:
+            for event_ref in person.get_event_ref_list():
+                if event_ref.ref in owned:
+                    continue
+                if principal_only:
+                    if event_ref.get_role() != EventRoleType.PRIMARY:
+                        continue
+                elif event_ref.ref in family_events:
+                    continue
+                owned.add(event_ref.ref)
+                context.owners.setdefault(event_ref.ref, set()).add(person.handle)
 
 
 def _plan_notes(loaded: dict[str, list[Any]], context: ExportContext) -> None:
-    """Count what points at each note, which decides where the note is written."""
+    """Count what points at each note, which decides where the note is written.
+
+    Each place an object carries the note counts, a person's event reference
+    and name as much as the person.
+    """
     for note in loaded["note"]:
-        context.note_backlinks[note.handle] = sum(
-            1 for _ in context.db.find_backlink_handles(note.handle)
-        )
+        count = 0
+        for kind, handle in context.db.find_backlink_handles(note.handle):
+            referrer = context.load(kind.lower(), handle)
+            if referrer is not None:
+                count += _note_count(referrer, note.handle)
+        context.note_backlinks[note.handle] = count
+
+
+def _note_count(obj: Any, note_handle: str) -> int:
+    """Count how often an object and the objects within it carry a note."""
+    count = 0
+    if hasattr(obj, "get_note_list"):
+        count += obj.get_note_list().count(note_handle)
+    if hasattr(obj, "get_note_child_list"):
+        for child in obj.get_note_child_list():
+            count += _note_count(child, note_handle)
+    return count
 
 
 def _build(
