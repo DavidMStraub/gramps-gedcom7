@@ -1,0 +1,51 @@
+0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @S1@ SOUR
+1 TITL Kirchenbuch Potsdam
+1 REPO @R1@
+2 NOTE Regal 3, oben
+2 CALN KB-12
+0 @R1@ REPO
+1 NAME Landesarchiv
+0 @O1@ OBJE
+1 FILE grab.jpg
+2 FORM image/jpeg
+3 MEDI TOMBSTONE
+0 @I1@ INDI
+1 NAME Hans /Schmidt/
+2 SOUR @S1@
+3 PAGE S. 7
+1 BIRT
+2 TYPE Hausgeburt
+2 DATE 1 JAN 1900
+2 AGE 0y
+3 PHRASE newborn
+2 SOUR @S1@
+3 PAGE S. 12
+3 DATA
+4 DATE 3 JAN 1900
+4 TEXT Johann, ehelicher Sohn des ...
+1 DEAT
+2 DATE 1970
+2 AGE > 70y
+1 FAMC @F1@
+2 NOTE Raised by his grandparents
+1 FAMS @F2@
+2 NOTE His second marriage
+0 @I2@ INDI
+1 NAME Eva /Müller/
+1 FAMS @F2@
+0 @F1@ FAM
+1 CHIL @I1@
+0 @F2@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 MARR
+2 DATE 1925
+2 HUSB
+3 AGE 25y
+2 WIFE
+3 AGE
+4 PHRASE about twenty
+0 TRLR

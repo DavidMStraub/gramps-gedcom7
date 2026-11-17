@@ -19,6 +19,7 @@ from gramps.gen.lib import (
     AttributeType,
 )
 
+from .report import note as report_note
 from .types import (
     BasicPrimaryObject,
     BasicPrimaryObjectT,
@@ -206,6 +207,7 @@ def add_note_to_object(
         'Name': NoteType.PERSONNAME,
         'EventRef': NoteType.EVENTREF,
         'Attribute': NoteType.ATTRIBUTE,
+        'RepoRef': NoteType.REPOREF,
     }
     
     note_type = note_type_map.get(obj_class, NoteType.GENERAL)
@@ -535,3 +537,49 @@ def handle_external_id(
 
     # Create and add the attribute with clean value (no prefixes)
     add_attribute_to_object(obj, type_string, structure.value)
+
+
+def date_structure_to_date(structure: g7types.GedcomStructure) -> Date:
+    """Read a DATE and its PHRASE as a Gramps date.
+
+    A date mixing calendars is kept as text, and reported.
+    """
+    # An empty payload is a date value too, and is read as no date.
+    assert structure.value is None or isinstance(
+        structure.value,
+        (
+            g7types.Date,
+            g7types.DatePeriod,
+            g7types.DateApprox,
+            g7types.DateRange,
+        ),
+    ), "Expected value to be a date-related object"
+    try:
+        date = (
+            Date()
+            if structure.value is None
+            else gedcom_date_value_to_gramps_date(structure.value)
+        )
+    except MixedCalendarsError as error:
+        date = Date()
+        date.set_modifier(Date.MOD_TEXTONLY)
+        date.set_text_value(structure.text)
+        report_note(
+            structure_path(structure),
+            f"{structure.text} imported as text, {error}",
+        )
+    # Handle PHRASE substructure
+    phrase_structure = g7util.get_first_child_with_tag(structure, g7const.PHRASE)
+    if phrase_structure and phrase_structure.value:
+        assert isinstance(
+            phrase_structure.value, str
+        ), "Expected PHRASE value to be a string"
+        if structure.value is None:
+            # The phrase is all there is of the date.
+            date.set_as_text(phrase_structure.value)
+        elif date.get_modifier() == Date.MOD_TEXTONLY:
+            # The text is all that is left of the date, so it is kept.
+            date.set_text_value(f"{structure.text} ({phrase_structure.value})")
+        else:
+            date.set_text_value(phrase_structure.value)
+    return date

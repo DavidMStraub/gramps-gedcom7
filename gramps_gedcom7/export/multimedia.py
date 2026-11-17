@@ -10,7 +10,7 @@ from gedcom7 import const as g7const
 from gedcom7 import gedzip as g7gedzip
 from gedcom7 import grammar as g7grammar
 from gedcom7 import types as g7types
-from gramps.gen.lib import Media
+from gramps.gen.lib import Media, SourceMediaType
 
 from ..gedzip import archive_name, is_url, without_file_scheme
 from ..report import GrampsObject
@@ -94,7 +94,8 @@ def media_to_record(media: Media, context: ExportContext) -> g7types.GedcomStruc
             f"media type {stored!r} not a media type, written as {form}",
             owner,
         )
-    add(file_structure, g7const.FORM, g7types.MediaType(form))
+    form_structure = add(file_structure, g7const.FORM, g7types.MediaType(form))
+    util.add_medium(form_structure, _medium(media))
     if media.get_description():
         add(file_structure, g7const.TITL, media.get_description())
 
@@ -120,3 +121,13 @@ def add_media_refs(
             attribute_type = attribute.get_type()
             if attribute_type.xml_str() == TITLE_ATTRIBUTE:
                 add(reference, g7const.TITL, attribute.get_value())
+
+
+def _medium(media: Media) -> SourceMediaType | None:
+    """Get the medium the import keeps as an attribute, if any."""
+    for attribute in media.get_attribute_list():
+        if attribute.get_type().xml_str() == "Media-Type" and attribute.get_value():
+            medium = SourceMediaType()
+            medium.set_from_xml_str(attribute.get_value())
+            return medium
+    return None

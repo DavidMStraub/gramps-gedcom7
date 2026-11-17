@@ -10,7 +10,7 @@ from gramps.gen.lib import ChildRefType, Name, NameType, Person, PersonRef
 
 from . import util
 from .citation import add_citations
-from .event import INDIVIDUAL_EVENT_TAGS, add_event
+from .event import INDIVIDUAL_EVENT_TAGS, add_ages, add_event
 from .multimedia import add_media_refs
 from .note import add_notes
 from .util import ROLE_VOCABULARY, add, add_phrase_from_notes
@@ -286,6 +286,7 @@ def person_to_record(person: Person, context: ExportContext) -> g7types.GedcomSt
             structure = add_event(
                 record, event, INDIVIDUAL_EVENT_TAGS, context, person.handle
             )
+            add_ages(structure, event_ref, in_family=False)
             if (
                 structure.tag == g7const.ADOP
                 and adoptive_family is not None

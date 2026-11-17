@@ -93,38 +93,22 @@ def handle_source(
                 raise ValueError(f"Repository {child.pointer} not found")
             repo_ref.ref = repo_handle
             call_number = g7util.get_first_child_with_tag(child, g7const.CALN)
-            # TODO handle reporef notes
             if call_number:
-                # TODO handle multiple call numbers in a single REPO
+                # A Gramps repository reference has one call number.
                 repo_ref.set_call_number(call_number.value)
                 media_type = g7util.get_first_child_with_tag(call_number, g7const.MEDI)
                 if media_type:
-                    assert isinstance(
-                        media_type.value, str
-                    ), "Expected value to be a string"
-
-                    # Check for MEDI PHRASE substructure
-                    phrase_structure = g7util.get_first_child_with_tag(
-                        media_type, g7const.PHRASE
-                    )
-
-                    if phrase_structure and phrase_structure.value:
-                        # Use PHRASE as custom media type
-                        assert isinstance(
-                            phrase_structure.value, str
-                        ), "Expected PHRASE to be a string"
-                        gramps_media_type = SourceMediaType(SourceMediaType.CUSTOM)
-                        gramps_media_type.string = phrase_structure.value
-                    else:
-                        # Use enumerated MEDI value
-                        gramps_source_media_type = MEDIA_TYPE_MAP.get(
-                            media_type.value, SourceMediaType.CUSTOM
-                        )
-                        gramps_media_type = SourceMediaType(gramps_source_media_type)
-                        if gramps_source_media_type == SourceMediaType.CUSTOM:
-                            gramps_media_type.string = media_type.value
-
-                    repo_ref.set_media_type(gramps_media_type)
+                    repo_ref.set_media_type(medium_to_media_type(media_type))
+            for reference_child in child.children:
+                if reference_child.tag == g7const.NOTE:
+                    repo_ref, note = util.add_note_to_object(reference_child, repo_ref)
+                    objects.append(note)
+                elif (
+                    reference_child.tag == g7const.SNOTE
+                    and reference_child.pointer
+                    and reference_child.pointer != g7const.VOIDPTR
+                ):
+                    repo_ref.add_note(xref_handle_map[reference_child.pointer])
             source.add_repo_reference(repo_ref)
         elif child.tag == g7const.SNOTE and child.pointer != g7const.VOIDPTR:
             if not child.pointer:
@@ -149,3 +133,21 @@ def handle_source(
     util.set_change_date(structure=structure, obj=source)
     objects.append(source)
     return objects
+
+
+def medium_to_media_type(structure: g7types.GedcomStructure) -> SourceMediaType:
+    """Map a MEDI to a Gramps source media type, OTHER being named by its phrase.
+
+    Gramps has one value for a medium, so the phrase beside any other value is
+    left out, and reported, rather than replacing that value.
+    """
+    assert isinstance(structure.value, str), "Expected MEDI to be a string"
+    if structure.value == "OTHER":
+        phrase = g7util.get_first_child_with_tag(structure, g7const.PHRASE)
+        if phrase and phrase.value:
+            assert isinstance(phrase.value, str), "Expected PHRASE to be a string"
+            return SourceMediaType((SourceMediaType.CUSTOM, phrase.value))
+    media_type = SourceMediaType(MEDIA_TYPE_MAP.get(structure.value, SourceMediaType.CUSTOM))
+    if int(media_type) == SourceMediaType.CUSTOM:
+        media_type.string = structure.value
+    return media_type

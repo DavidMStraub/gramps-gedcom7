@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from gedcom7 import const as g7const
 from gedcom7 import grammar as g7grammar
 from gedcom7 import types as g7types
-from gramps.gen.lib import Event, EventType, Place, PlaceType
+from gramps.gen.lib import AttributeType, Event, EventRef, EventType, Place, PlaceType
 
 from ..report import GrampsObject
 from . import util
@@ -68,7 +68,7 @@ FAMILY_EVENT_TAGS = {
 }
 
 # The structures whose payload says what happened, which is what the Gramps
-# description holds. Under the others the description is written as a note.
+# description holds. Under the others it is written as TYPE.
 DESCRIBED_BY_PAYLOAD = frozenset(
     {
         g7const.EVEN, g7const.EDUC, g7const.OCCU, g7const.PROP,
@@ -226,12 +226,14 @@ def _add_event_details(
     owner: str,
 ) -> None:
     """Write what is known about an event beneath its structure."""
+    description = event.get_description()
     if event_type is not None:
         add(structure, g7const.TYPE, event_type)
-    description = event.get_description()
+    elif description and tag not in DESCRIBED_BY_PAYLOAD:
+        # What kind of birth, death etc. it was, as Gramps' own export has it.
+        add(structure, g7const.TYPE, description)
     if description and tag in DESCRIBED_BY_PAYLOAD:
         structure.text = description
-        description = ""
     util.add_privacy(structure, event.get_privacy())
     date = util.add_date(structure, event.get_date_object())
     if date is not None:
@@ -240,8 +242,6 @@ def _add_event_details(
         place = context.load("place", event.get_place_handle())
         if place is not None:
             add_place(structure, place, context)
-    if description:
-        add(structure, g7const.NOTE, description)
     util.add_attributes(structure, event, context)
     add_notes(structure, event, context)
     add_media_refs(structure, event, context)
@@ -261,3 +261,47 @@ def _add_event_details(
         if enum is None:
             add(associate.children[-1], g7const.PHRASE, name)
         add_notes(associate, event_ref, context)
+
+
+_AGE = re.compile(g7grammar.age)
+# Where a family event gives the age of each spouse.
+SPOUSE_AGES = {
+    AttributeType.FATHER_AGE: g7const.HUSB,
+    AttributeType.MOTHER_AGE: g7const.WIFE,
+}
+# The import writes an AGE and its PHRASE as "30y (adult)".
+_AGE_WITH_PHRASE = re.compile(r"(?P<age>.*?)(?: \((?P<phrase>.*)\))?", re.DOTALL)
+
+
+def add_age(parent: g7types.GedcomStructure, text: str) -> None:
+    """Write an age Gramps keeps as text, as AGE where it is one, else as its phrase."""
+    text = text.strip()
+    if not text:
+        return
+    match = _AGE_WITH_PHRASE.fullmatch(text)
+    if match is not None and _AGE.fullmatch(match["age"]):
+        age = add(parent, g7const.AGE)
+        age.text = match["age"]
+        if match["phrase"]:
+            add(age, g7const.PHRASE, match["phrase"])
+    else:
+        age = add(parent, g7const.AGE)
+        add(age, g7const.PHRASE, text)
+
+
+def add_ages(
+    structure: g7types.GedcomStructure, event_ref: EventRef, in_family: bool
+) -> None:
+    """Write the ages kept on the reference to an event, where the import read them."""
+    for attribute in event_ref.get_attribute_list():
+        attribute_type = attribute.get_type()
+        if attribute_type.is_custom():
+            continue
+        value = attribute.get_value() or ""
+        if not in_family and int(attribute_type) == AttributeType.AGE:
+            add_age(structure, value)
+        elif in_family and int(attribute_type) in SPOUSE_AGES:
+            tag = SPOUSE_AGES[int(attribute_type)]
+            spouse = next((c for c in structure.children if c.tag == tag), None)
+            add_age(spouse or add(structure, tag), value)
+

@@ -5,7 +5,7 @@ from gedcom7 import const as g7const
 from gedcom7 import grammar as g7grammar
 from gedcom7 import types as g7types
 from gedcom7 import util as g7util
-from gramps.gen.lib import Citation, SrcAttribute
+from gramps.gen.lib import Citation, Note, NoteType, SrcAttribute
 from gramps.gen.lib.primaryobj import BasicPrimaryObject
 from . import util
 from .settings import ImportSettings
@@ -74,5 +74,16 @@ def handle_citation(
                         if even_child.value is not None:
                             assert isinstance(even_child.value, str), "Expected value to be a string"
                             util.add_attribute_to_object(citation, "EVEN:ROLE", even_child.value)
-        # TODO handle DATA
+        elif child.tag == g7const.DATA:
+            for data_child in child.children:
+                if data_child.tag == g7const.DATE:
+                    citation.set_date_object(util.date_structure_to_date(data_child))
+                elif data_child.tag == g7const.TEXT:
+                    # As Gramps' own GEDCOM import keeps it.
+                    note = Note()
+                    note.handle = util.make_handle()
+                    note.set_type(NoteType(NoteType.SOURCE_TEXT))
+                    note.set(data_child.value or "")
+                    citation.add_note(note.handle)
+                    objects.append(note)
     return citation, objects

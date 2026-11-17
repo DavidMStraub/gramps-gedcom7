@@ -657,8 +657,10 @@ def test_importer_maximal70():
     assert media.mime == "text/plain"
     # TODO handle other files
 
-    # media attributes (REFN, UID, EXID)
-    assert len(media.attribute_list) == 6
+    # media attributes (REFN, UID, EXID, and the medium of the first file)
+    assert len(media.attribute_list) == 7
+    (medium,) = [a for a in media.attribute_list if a.get_type() == "Media-Type"]
+    assert medium.get_value() == "Transcript"  # MEDI OTHER, named by its PHRASE
     # Check for UID attributes
     uid_attrs = [a for a in media.attribute_list if a.get_type() == "UID"]
     assert len(uid_attrs) == 2
@@ -695,7 +697,11 @@ def test_importer_maximal70():
     assert isinstance(media_source1, Source)
     assert media_source1.gramps_id == "S1"
     assert media_citation1.page == "1"
-    # TODO DATA
+    # DATA: its date is the citation's, its texts source text notes
+    assert media_citation1.get_date_object().get_ymd() == (2022, 3, 28)
+    data_texts = [db.get_note_from_handle(h) for h in media_citation1.note_list[:2]]
+    assert [n.get() for n in data_texts] == ["Text 1", "Text 2"]
+    assert all(n.get_type() == NoteType.SOURCE_TEXT for n in data_texts)
     assert media_citation1.confidence == Citation.CONF_VERY_LOW
 
     # media source citation media
@@ -707,12 +713,12 @@ def test_importer_maximal70():
     assert media_citation_media1.gramps_id == "O1"
     # TODO CROP
 
-    # media source citation note
-    assert len(media_citation1.note_list) == 2
-    media_citation_note = db.get_note_from_handle(media_citation1.note_list[0])
+    # media source citation note, after the two texts of its DATA
+    assert len(media_citation1.note_list) == 4
+    media_citation_note = db.get_note_from_handle(media_citation1.note_list[2])
     assert isinstance(media_citation_note, Note)
     assert media_citation_note.text.string == "American English\n\nBritish English"
-    media_citation_note2 = db.get_note_from_handle(media_citation1.note_list[1])
+    media_citation_note2 = db.get_note_from_handle(media_citation1.note_list[3])
     assert isinstance(media_citation_note2, Note)
     assert media_citation_note2.gramps_id == "N1"
 
@@ -790,14 +796,14 @@ def test_importer_maximal70():
     assert isinstance(reporef1_repository, Repository)
     assert reporef1_repository.gramps_id == "R1"
     assert reporef1.call_number == "Call number"
-    # TODO reporef notes
-    # assert len(reporef1.note_list) == 2
-    # reporef1_note = db.get_note_from_handle(reporef1.note_list[0])
-    # assert isinstance(reporef1_note, Note)
-    # assert reporef1_note.text.string == "Note text"
-    # reporef1_note2 = db.get_note_from_handle(reporef1.note_list[1])
-    # assert isinstance(reporef1_note2, Note)
-    # assert reporef1_note2.gramps_id == "N1"
+    assert len(reporef1.note_list) == 2
+    reporef1_note = db.get_note_from_handle(reporef1.note_list[0])
+    assert isinstance(reporef1_note, Note)
+    assert reporef1_note.text.string == "Note text"
+    assert reporef1_note.get_type() == NoteType.REPOREF
+    reporef1_note2 = db.get_note_from_handle(reporef1.note_list[1])
+    assert isinstance(reporef1_note2, Note)
+    assert reporef1_note2.gramps_id == "N1"
     reporef2 = source.reporef_list[1]
     reporef2_repository = db.get_repository_from_handle(reporef2.ref)
     assert isinstance(reporef2_repository, Repository)
