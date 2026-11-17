@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from gedcom7 import const as g7const
 from gedcom7 import types as g7types
-from gramps.gen.lib import Name, NameType, Person, PersonRef
+from gramps.gen.lib import ChildRefType, Name, NameType, Person, PersonRef
 
 from . import util
 from .citation import add_citations
@@ -24,6 +24,16 @@ SEX_ENUMS = {
     Person.OTHER: "X",
     Person.UNKNOWN: "U",
 }
+
+PEDIGREE_ENUMS = {
+    ChildRefType.ADOPTED: "ADOPTED",
+    ChildRefType.BIRTH: "BIRTH",
+    ChildRefType.FOSTER: "FOSTER",
+}
+
+# The whole of g7:enumset-PEDI, a custom relation named by one of which is
+# written as that value.
+PEDIGREE_VOCABULARY = frozenset({"ADOPTED", "BIRTH", "FOSTER", "SEALING", "OTHER"})
 
 NAME_TYPE_ENUMS = {
     NameType.AKA: "AKA",
@@ -159,6 +169,89 @@ def add_association(
     add_citations(associate, person_ref, context)
 
 
+def _parent_relations(
+    person: Person, context: ExportContext
+) -> dict[str, tuple[list[ChildRefType], str | None]]:
+    """Get, for each parent family, how the person is related to its parents.
+
+    Each family gives the relations to the parents it has (to both if it has
+    neither), and which of them adopted the person: HUSB, WIFE, BOTH or None.
+    """
+    found = {}
+    for handle in person.get_parent_family_handle_list():
+        family = context.load("family", handle)
+        if family is None:
+            continue
+        child_ref = next(
+            (r for r in family.get_child_ref_list() if r.ref == person.handle), None
+        )
+        if child_ref is None:
+            continue
+        father = child_ref.get_father_relation()
+        mother = child_ref.get_mother_relation()
+        relations = []
+        if family.get_father_handle():
+            relations.append(father)
+        if family.get_mother_handle():
+            relations.append(mother)
+        relations = relations or [father, mother]
+        by_father = father == ChildRefType.ADOPTED and bool(family.get_father_handle())
+        by_mother = mother == ChildRefType.ADOPTED and bool(family.get_mother_handle())
+        adopted_by = (
+            "BOTH" if by_father and by_mother
+            else "HUSB" if by_father
+            else "WIFE" if by_mother
+            else None
+        )  # fmt: skip
+        found[handle] = (relations, adopted_by)
+    return found
+
+
+def _pedigree_name(relation: ChildRefType) -> str:
+    return relation.xml_str() or str(relation)
+
+
+def _add_pedigree(
+    famc: g7types.GedcomStructure,
+    relations: list[ChildRefType],
+    half_adoption: bool,
+) -> None:
+    """Write how a child is related to its parents, unless by birth.
+
+    PEDI is one value for both parents. Where they differ, an adoption event
+    naming the adopting parent leaves PEDI ADOPTED to say the rest; otherwise
+    its phrase says what each relation is.
+    """
+    relations = [r for r in relations if r != ChildRefType.NONE]
+    names = {_pedigree_name(r) for r in relations}
+    if not names:
+        return
+    if len(names) == 1:
+        relation = relations[0]
+        if relation.is_custom():
+            name = _pedigree_name(relation)
+            enum = name if name in PEDIGREE_VOCABULARY else None
+        else:
+            enum = PEDIGREE_ENUMS.get(int(relation))
+        if enum == "BIRTH":
+            return
+        pedigree = add(famc, g7const.PEDI, enum or "OTHER")
+        if enum is None:
+            add(pedigree, g7const.PHRASE, _pedigree_name(relation))
+        return
+    kinds = {int(r) for r in relations if not r.is_custom()}
+    if half_adoption and kinds == {ChildRefType.ADOPTED, ChildRefType.BIRTH}:
+        add(famc, g7const.PEDI, "ADOPTED")
+        return
+    father, mother = relations
+    pedigree = add(famc, g7const.PEDI, "OTHER")
+    add(
+        pedigree,
+        g7const.PHRASE,
+        f"{_pedigree_name(father)} (father), {_pedigree_name(mother)} (mother)",
+    )
+
+
 def person_to_record(person: Person, context: ExportContext) -> g7types.GedcomStructure:
     """Write a person as an individual record."""
     record = g7types.GedcomStructure(
@@ -176,13 +269,33 @@ def person_to_record(person: Person, context: ExportContext) -> g7types.GedcomSt
 
     util.add_attributes(record, person, context)
 
+    parents = _parent_relations(person, context)
+    adoptions = [(h, by) for h, (_, by) in parents.items() if by is not None]
+    # An adoption event can name the family, but only when there is one to name.
+    adoptive_family = adoptions[0] if len(adoptions) == 1 else None
+    adoption_written = False
     for event_ref in person.get_event_ref_list():
         event = context.owned_event(event_ref.ref, person.handle)
         if event is not None:
-            add_event(record, event, INDIVIDUAL_EVENT_TAGS, context, person.handle)
+            structure = add_event(
+                record, event, INDIVIDUAL_EVENT_TAGS, context, person.handle
+            )
+            if (
+                structure.tag == g7const.ADOP
+                and adoptive_family is not None
+                and not adoption_written
+            ):
+                family_handle, side = adoptive_family
+                pointer = context.pointer("family", family_handle)
+                famc = add(structure, g7const.FAMC, pointer=pointer)
+                add(famc, g7const.ADOP, side)
+                adoption_written = True
 
     for handle in person.get_parent_family_handle_list():
-        add(record, g7const.FAMC, pointer=context.pointer("family", handle))
+        famc = add(record, g7const.FAMC, pointer=context.pointer("family", handle))
+        relations, adopted_by = parents.get(handle, ([], None))
+        half_adoption = adoption_written and adopted_by in ("HUSB", "WIFE")
+        _add_pedigree(famc, relations, half_adoption)
     for handle in person.get_family_handle_list():
         add(record, g7const.FAMS, pointer=context.pointer("family", handle))
 

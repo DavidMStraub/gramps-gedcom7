@@ -1,5 +1,6 @@
 """Handle GEDCOM individual records and import them into the Gramps database."""
 
+from dataclasses import dataclass
 from typing import List
 
 from gedcom7 import const as g7const
@@ -7,6 +8,7 @@ from gedcom7 import grammar as g7grammar
 from gedcom7 import types as g7types
 from gedcom7 import util as g7util
 from gramps.gen.lib import (
+    ChildRefType,
     EventRef,
     EventType,
     Name,
@@ -37,6 +39,14 @@ NAME_TYPE_MAP = {
     "BIRTH": NameType(NameType.BIRTH),
     "MARRIED": NameType(NameType.MARRIED),
     "OTHER": NameType(NameType.CUSTOM),
+}
+
+# The values of g7:enumset-PEDI that Gramps has a child relation for. The rest
+# become custom relations named by the value, or by the phrase beside OTHER.
+PEDIGREE_MAP = {
+    "ADOPTED": ChildRefType.ADOPTED,
+    "BIRTH": ChildRefType.BIRTH,
+    "FOSTER": ChildRefType.FOSTER,
 }
 
 EVENT_TYPE_MAP = {
@@ -151,8 +161,16 @@ def handle_individual(
             if not family_handle:
                 raise ValueError(f"Family {child.pointer} not found")
             person.add_parent_family_handle(family_handle)
-            # TODO child ref type should be handled in the family!
-            # TODO handle FAMC PHRASE
+            pedigree = g7util.get_first_child_with_tag(child, g7const.PEDI)
+            if pedigree is not None:
+                objects.append(
+                    Pedigree(
+                        family_handle=family_handle,
+                        person_handle=xref_handle_map[structure.xref],
+                        relation=pedigree_to_relation(pedigree),
+                        path=util.structure_path(pedigree),
+                    )
+                )
         elif (
             child.tag == g7const.FAMS
             and child.pointer
@@ -191,6 +209,12 @@ def handle_individual(
             event_ref.ref = event.handle
             person.add_event_ref(event_ref)
             objects.append(event)
+            if child.tag == g7const.ADOP:
+                adoption = handle_adoptive_family(
+                    child, xref_handle_map[structure.xref], xref_handle_map
+                )
+                if adoption is not None:
+                    objects.append(adoption)
         elif child.tag == g7const.SOUR:
             citation, other_objects = handle_citation(
                 child,
@@ -204,6 +228,58 @@ def handle_individual(
     util.set_change_date(structure=structure, obj=person)
     objects.append(person)
     return objects
+
+
+@dataclass
+class Pedigree:
+    """How a person is the child of a family, set once the family is built."""
+
+    family_handle: str
+    person_handle: str
+    relation: ChildRefType
+    path: str
+
+
+@dataclass
+class Adoption:
+    """Which parents of a family adopted a person, set once the family is built."""
+
+    family_handle: str
+    person_handle: str
+    # HUSB, WIFE or BOTH
+    adopted_by: str
+    path: str
+
+
+def pedigree_to_relation(structure: g7types.GedcomStructure) -> ChildRefType:
+    """Map a PEDI to a child relation, the ones Gramps lacks becoming custom."""
+    assert isinstance(structure.value, str), "Expected PEDI to be a string"
+    if structure.value in PEDIGREE_MAP:
+        return ChildRefType(PEDIGREE_MAP[structure.value])
+    phrase = g7util.get_first_child_with_tag(structure, g7const.PHRASE)
+    if structure.value == "OTHER" and phrase and phrase.value:
+        return ChildRefType((ChildRefType.CUSTOM, phrase.value))
+    return ChildRefType((ChildRefType.CUSTOM, structure.value))
+
+
+def handle_adoptive_family(
+    structure: g7types.GedcomStructure,
+    person_handle: str,
+    xref_handle_map: dict[str, str],
+) -> Adoption | None:
+    """Read the family an ADOP event names, and which of its parents adopted."""
+    famc = g7util.get_first_child_with_tag(structure, g7const.FAMC)
+    if famc is None or not famc.pointer or famc.pointer == g7grammar.voidptr:
+        return None
+    adopted_by = g7util.get_first_child_with_tag(famc, g7const.ADOP)
+    value = adopted_by.value if adopted_by is not None else "BOTH"
+    assert isinstance(value, str), "Expected ADOP to be a string"
+    return Adoption(
+        family_handle=xref_handle_map[famc.pointer],
+        person_handle=person_handle,
+        adopted_by=value,
+        path=util.structure_path(famc),
+    )
 
 
 def handle_association_structure(

@@ -1,0 +1,64 @@
+0 HEAD
+1 GEDC
+2 VERS 7.0
+0 @I1@ INDI
+1 NAME Hans /Schmidt/
+1 FAMS @F1@
+0 @I2@ INDI
+1 NAME Eva /Müller/
+1 FAMS @F1@
+0 @I3@ INDI
+1 NAME Born /Schmidt/
+1 FAMC @F1@
+0 @I4@ INDI
+1 NAME Adopted /Schmidt/
+1 FAMC @F1@
+2 PEDI ADOPTED
+1 FAMC @F2@
+2 PEDI BIRTH
+0 @I5@ INDI
+1 NAME Foster /Kind/
+1 FAMC @F1@
+2 PEDI FOSTER
+0 @I6@ INDI
+1 NAME Ward /Mündel/
+1 FAMC @F1@
+2 PEDI OTHER
+3 PHRASE Ward
+0 @I7@ INDI
+1 NAME Sealed /Schmidt/
+1 FAMC @F1@
+2 PEDI SEALING
+0 @I8@ INDI
+1 NAME Karl /Leiblich/
+1 FAMS @F2@
+0 @I9@ INDI
+1 NAME Step /Kind/
+1 FAMC @F3@
+2 PEDI ADOPTED
+1 ADOP
+2 DATE 1930
+2 FAMC @F3@
+3 ADOP HUSB
+0 @I10@ INDI
+1 NAME Otto /Stiefvater/
+1 FAMS @F3@
+0 @I11@ INDI
+1 NAME Lina /Mutter/
+1 FAMS @F3@
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 CHIL @I3@
+1 CHIL @I4@
+1 CHIL @I5@
+1 CHIL @I6@
+1 CHIL @I7@
+0 @F2@ FAM
+1 HUSB @I8@
+1 CHIL @I4@
+0 @F3@ FAM
+1 HUSB @I10@
+1 WIFE @I11@
+1 CHIL @I9@
+0 TRLR
